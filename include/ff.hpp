@@ -48,6 +48,20 @@ struct ff_t
     const uint32_t tmp = Q - this->v;
     return ff_t{ tmp };
   }
+
+  // Multiplication over prime field Z_q | q = 2^23 - 2^13 + 1
+  constexpr ff_t operator*(const ff_t& rhs) const
+  {
+    const uint64_t t0 = static_cast<uint64_t>(this->v);
+    const uint64_t t1 = static_cast<uint64_t>(rhs.v);
+    const uint64_t t2 = t0 * t1;
+
+    const uint64_t t3 = t2 / Q;
+    const uint64_t t4 = t3 * Q;
+    const uint32_t t5 = static_cast<uint32_t>(t2 - t4);
+
+    return ff_t{ t5 };
+  }
 };
 
 }
