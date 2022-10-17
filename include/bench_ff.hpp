@@ -55,4 +55,23 @@ ff_sub(benchmark::State& state)
   assert(c == b);
 }
 
+// Benchmark negation over prime field Z_q | q = 2^23 - 2^13 + 1
+void
+ff_neg(benchmark::State& state)
+{
+  ff::ff_t a = ff::ff_t::random();
+  ff::ff_t b{};
+
+  for (auto _ : state) {
+    b = -a;
+
+    benchmark::DoNotOptimize(b);
+    benchmark::DoNotOptimize(a);
+    benchmark::ClobberMemory();
+  }
+
+  ff::ff_t c = -a;
+  assert(c == b);
+}
+
 }
