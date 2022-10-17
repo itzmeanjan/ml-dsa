@@ -3,6 +3,7 @@
 #include <bit>
 #include <cstddef>
 #include <cstdint>
+#include <ostream>
 #include <random>
 
 // Prime field arithmetic over Z_q, for Dilithium PQC s.t. Q = 2^23 - 2^13 + 1
@@ -183,6 +184,15 @@ struct ff_t
 
     return ff_t{ dis(gen) };
   }
+
+  // Writes element of Z_q to output stream | q = 2^23 - 2^13 + 1
+  friend std::ostream& operator<<(std::ostream& os, const ff_t& elm);
 };
+
+std::ostream&
+operator<<(std::ostream& os, const ff_t& elm)
+{
+  return os << "Z_q(" << elm.v << ", " << Q << ")";
+}
 
 }
