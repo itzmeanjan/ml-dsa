@@ -76,11 +76,8 @@ struct ff_t
   // Subtraction over prime field Z_q | q = 2^23 - 2^13 + 1
   constexpr ff_t operator-(const ff_t& rhs) const
   {
-    const uint32_t t0 = (Q + this->v) - rhs.v;
-    const bool flg = t0 >= Q;
-    const uint32_t t1 = t0 - flg * Q;
-
-    return ff_t{ t1 };
+    const ff_t t0 = -rhs;
+    return *this + t0;
   }
 
   // Negation over prime field Z_q | q = 2^23 - 2^13 + 1
