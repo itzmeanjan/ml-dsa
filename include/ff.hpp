@@ -41,6 +41,13 @@ struct ff_t
 
     return ff_t{ t1 };
   }
+
+  // Negation over prime field Z_q | q = 2^23 - 2^13 + 1
+  constexpr ff_t operator-() const
+  {
+    const uint32_t tmp = Q - this->v;
+    return ff_t{ tmp };
+  }
 };
 
 }
