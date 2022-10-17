@@ -160,6 +160,18 @@ struct ff_t
 
     return r;
   }
+
+  // Equality check between two field elements ∈ Z_q | q = 2^23 - 2^13 + 1
+  constexpr bool operator==(const ff_t& rhs) const
+  {
+    return !static_cast<bool>(this->v ^ rhs.v);
+  }
+
+  // Non-equality check between two field elements ∈ Z_q | q = 2^23 - 2^13 + 1
+  constexpr bool operator!=(const ff_t& rhs) const
+  {
+    return static_cast<bool>(this->v ^ rhs.v);
+  }
 };
 
 }
