@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <cstdint>
 
 // Prime field arithmetic over Z_q, for Dilithium PQC s.t. Q = 2^23 - 2^13 + 1
@@ -6,6 +7,42 @@ namespace ff {
 
 // Dilithium Prime Field Modulus
 constexpr uint32_t Q = (1u << 23) - (1u << 13) + 1u;
+
+// Extended GCD algorithm for computing multiplicative inverse of prime ( = Q )
+// field element
+//
+// Taken from
+// https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ff.hpp#L49-L82
+static constexpr std::array<int32_t, 3>
+xgcd(const uint32_t x, const uint32_t y)
+{
+  int32_t old_r = static_cast<int32_t>(x), r = static_cast<int32_t>(y);
+  int32_t old_s = 1, s = 0;
+  int32_t old_t = 0, t = 1;
+
+  while (r != 0) {
+    int32_t quotient = old_r / r;
+    int32_t tmp = 0;
+
+    tmp = old_r;
+    old_r = r;
+    r = tmp - quotient * r;
+
+    tmp = old_s;
+    old_s = s;
+    s = tmp - quotient * s;
+
+    tmp = old_t;
+    old_t = t;
+    t = tmp - quotient * t;
+  }
+
+  return {
+    old_s, // a
+    old_t, // b
+    old_r  // g
+  };       // s.t. `ax + by = g`
+}
 
 // Dilithium Prime Field element e ∈ [0, Q), with arithmetic operations defined
 // & implemented over it.
