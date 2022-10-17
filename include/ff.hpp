@@ -99,6 +99,34 @@ struct ff_t
 
     return ff_t{ t5 };
   }
+
+  // Multiplicative inverse over prime field Z_q | q = 2^23 - 2^13 + 1
+  //
+  // Say input is a & return value of this function is b, then
+  //
+  // assert (a * b) % q == 1
+  //
+  // When input a = 0, multiplicative inverse can't be computed, hence return
+  // value is 0.
+  //
+  // Taken from
+  // https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ff.hpp#L190-L216
+  constexpr ff_t inv() const
+  {
+    const bool flg0 = this->v == 0;
+    const uint32_t t0 = this->v + flg0 * 1;
+
+    auto res = xgcd(t0, Q);
+
+    const bool flg1 = res[0] < 0;
+    const uint32_t t1 = static_cast<uint32_t>(flg1 * Q + res[0]);
+
+    const bool flg2 = t1 >= Q;
+    const uint32_t t2 = t1 - flg2 * Q;
+    const uint32_t t3 = t2 - flg0 * 1;
+
+    return ff_t{ t3 };
+  }
 };
 
 }
