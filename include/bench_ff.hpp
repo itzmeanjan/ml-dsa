@@ -74,4 +74,29 @@ ff_neg(benchmark::State& state)
   assert(c == b);
 }
 
+// Benchmark multiplication over prime field Z_q | q = 2^23 - 2^13 + 1
+void
+ff_mul(benchmark::State& state)
+{
+  ff::ff_t a = ff::ff_t::random();
+  ff::ff_t b{ 1 };
+
+  for (auto _ : state) {
+    b = b * a;
+
+    benchmark::DoNotOptimize(b);
+    benchmark::DoNotOptimize(a);
+    benchmark::ClobberMemory();
+  }
+
+  const size_t itr = state.iterations();
+
+  ff::ff_t c{ 1 };
+  for (size_t i = 0; i < itr; i++) {
+    c = c * a;
+  }
+
+  assert(c == b);
+}
+
 }
