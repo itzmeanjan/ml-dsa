@@ -8,13 +8,13 @@ namespace test_dilithium {
 // Test functional correctness of Dilithium prime field operations, by running
 // through multiple rounds ( see template parameter ) of execution of field
 // operations on randomly generated field element
-template<const size_t rounds = 4096ul>
+template<const size_t rounds = 1024ul>
 static void
 test_field_ops()
 {
   std::random_device rd;
   std::mt19937_64 gen(rd());
-  std::uniform_int_distribution<size_t> dis;
+  std::uniform_int_distribution<size_t> dis{ 0ul, 1ul << 24 };
 
   for (size_t i = 0; i < rounds; i++) {
     const auto a = ff::ff_t::random();
