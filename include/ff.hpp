@@ -127,6 +127,12 @@ struct ff_t
 
     return ff_t{ t3 };
   }
+
+  // Division over prime field Z_q | q = 2^23 - 2^13 + 1
+  constexpr ff_t operator/(const ff_t& rhs) const
+  {
+    return (*this) * rhs.inv();
+  }
 };
 
 }
