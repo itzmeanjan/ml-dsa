@@ -1,5 +1,7 @@
 #pragma once
 #include <array>
+#include <bit>
+#include <cstddef>
 #include <cstdint>
 
 // Prime field arithmetic over Z_q, for Dilithium PQC s.t. Q = 2^23 - 2^13 + 1
@@ -132,6 +134,31 @@ struct ff_t
   constexpr ff_t operator/(const ff_t& rhs) const
   {
     return (*this) * rhs.inv();
+  }
+
+  // Raises field element to N -th power, using exponentiation by repeated
+  // squaring rule
+  //
+  // Taken from
+  // https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ff.hpp#L224-L246
+  constexpr ff_t operator^(const size_t n) const
+  {
+    ff_t base = *this;
+
+    const ff_t br[]{ ff_t{ 1u }, base };
+    ff_t r = br[n & 0b1ul];
+
+    const size_t zeros = std::countl_zero(n);
+    const size_t till = 64ul - zeros;
+
+    for (size_t i = 1; i < till; i++) {
+      base = base * base;
+
+      const ff_t br[]{ ff_t{ 1u }, base };
+      r = r * br[(n >> i) & 0b1ul];
+    }
+
+    return r;
   }
 };
 
