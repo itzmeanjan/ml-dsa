@@ -87,7 +87,7 @@ intt(ff::ff_t* const __restrict poly)
 
     for (size_t start = 0; start < N; start += lenx2) {
       const size_t k_now = k_beg - (start >> (l + 1));
-      const ff::ff_t neg_ζ_exp = -(ζ ^ bit_rev<LOG2N - 1>(k_now));
+      const ff::ff_t neg_ζ_exp = -(ζ ^ bit_rev<LOG2N>(k_now));
 
       for (size_t i = start; i < start + len; i++) {
         const auto tmp = poly[i];
