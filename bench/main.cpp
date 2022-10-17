@@ -9,5 +9,8 @@ BENCHMARK(bench_dilithium::ff_inv);
 BENCHMARK(bench_dilithium::ff_div);
 BENCHMARK(bench_dilithium::ff_exp);
 
+// register for benchmarking (i)NTT
+BENCHMARK(bench_dilithium::ntt);
+
 // benchmark runner main routine
 BENCHMARK_MAIN();
