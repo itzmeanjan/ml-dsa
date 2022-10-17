@@ -5,6 +5,7 @@ BENCHMARK(bench_dilithium::ff_add);
 BENCHMARK(bench_dilithium::ff_sub);
 BENCHMARK(bench_dilithium::ff_neg);
 BENCHMARK(bench_dilithium::ff_mul);
+BENCHMARK(bench_dilithium::ff_inv);
 
 // benchmark runner main routine
 BENCHMARK_MAIN();
