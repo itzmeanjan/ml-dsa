@@ -37,16 +37,25 @@ test_field_ops()
       assert(g == a);
     }
 
+    const auto h = a.inv();
+    const auto k = h * a;
+
+    if (a == ff::ff_t::zero()) {
+      assert(k == ff::ff_t::zero());
+    } else {
+      assert(k == ff::ff_t::one());
+    }
+
     // exponentiation, multiplication
     const size_t exp = dis(gen);
-    const auto h = a ^ exp;
+    const auto l = a ^ exp;
 
     auto res = ff::ff_t::one();
     for (size_t j = 0; j < exp; j++) {
       res = res * a;
     }
 
-    assert(res == h);
+    assert(res == l);
   }
 }
 

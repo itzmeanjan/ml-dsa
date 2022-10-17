@@ -148,7 +148,7 @@ struct ff_t
     ff_t base = *this;
 
     const ff_t br[]{ ff_t{ 1u }, base };
-    ff_t r = br[n & 0b1ul];
+    ff_t res = br[n & 0b1ul];
 
     const size_t zeros = std::countl_zero(n);
     const size_t till = 64ul - zeros;
@@ -157,10 +157,10 @@ struct ff_t
       base = base * base;
 
       const ff_t br[]{ ff_t{ 1u }, base };
-      r = r * br[(n >> i) & 0b1ul];
+      res = res * br[(n >> i) & 0b1ul];
     }
 
-    return r;
+    return res;
   }
 
   // Equality check between two field elements ∈ Z_q | q = 2^23 - 2^13 + 1
