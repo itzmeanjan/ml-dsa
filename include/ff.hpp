@@ -3,6 +3,7 @@
 #include <bit>
 #include <cstddef>
 #include <cstdint>
+#include <random>
 
 // Prime field arithmetic over Z_q, for Dilithium PQC s.t. Q = 2^23 - 2^13 + 1
 namespace ff {
@@ -171,6 +172,16 @@ struct ff_t
   constexpr bool operator!=(const ff_t& rhs) const
   {
     return static_cast<bool>(this->v ^ rhs.v);
+  }
+
+  // Generate a random field element ∈ Z_q | q = 2^23 - 2^13 + 1
+  static ff_t random()
+  {
+    std::random_device rd;
+    std::mt19937_64 gen(rd());
+    std::uniform_int_distribution<uint32_t> dis{ 0, Q - 1ul };
+
+    return ff_t{ dis(gen) };
   }
 };
 
