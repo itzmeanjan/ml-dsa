@@ -1,4 +1,5 @@
 #pragma once
+#include "bit_packing.hpp"
 #include "poly.hpp"
 
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
@@ -95,6 +96,38 @@ polyvec_add_to(const ff::ff_t* const __restrict src,
     for (size_t l = 0; l < ntt::N; l++) {
       dst[off + l] = dst[off + l] + src[off + l];
     }
+  }
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
+// encodes each of those polynomials into 32 x sbw -bytes, writing to a
+// (k x 32 x sbw) -bytes destination array
+template<const size_t k, const size_t sbw>
+inline static void
+polyvec_encode(const ff::ff_t* const __restrict src,
+               uint8_t* const __restrict dst)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off0 = i * ntt::N;
+    const size_t off1 = i * sbw * 32;
+
+    encode<sbw>(src + off0, dst + off1);
+  }
+}
+
+// Given a byte array of length (k x 32 x sbw) -bytes, this routine decodes them
+// into k degree-255 polynomials, writing them to a column vector of dimension
+// k x 1
+template<const size_t k, const size_t sbw>
+inline static void
+polyvec_decode(const uint8_t* const __restrict src,
+               ff::ff_t* const __restrict dst)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off0 = i * sbw * 32;
+    const size_t off1 = i * ntt::N;
+
+    decode<sbw>(src + off0, dst + off1);
   }
 }
 
