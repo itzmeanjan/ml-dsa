@@ -6,7 +6,7 @@ namespace dilithium_utils {
 
 // Applies NTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
 template<const size_t k>
-static void
+inline static void
 polyvec_ntt(ff::ff_t* const __restrict vec)
 {
   for (size_t i = 0; i < k; i++) {
@@ -17,7 +17,7 @@ polyvec_ntt(ff::ff_t* const __restrict vec)
 
 // Applies iNTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
 template<const size_t k>
-static void
+inline static void
 polyvec_intt(ff::ff_t* const __restrict vec)
 {
   for (size_t i = 0; i < k; i++) {
@@ -29,7 +29,7 @@ polyvec_intt(ff::ff_t* const __restrict vec)
 // Compresses vector ( of dimension k x 1 ) of degree-255 polynomials by
 // extracting out high and low order bits
 template<const size_t k, const size_t d>
-static void
+inline static void
 polyvec_power2round(const ff::ff_t* const __restrict poly,
                     ff::ff_t* const __restrict poly_hi,
                     ff::ff_t* const __restrict poly_lo) requires(check_d(d))
@@ -77,6 +77,23 @@ matrix_multiply(const ff::ff_t* const __restrict a,
           c[coff + l] = c[coff + l] + tmp[l];
         }
       }
+    }
+  }
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this
+// routine adds it to another polynomial vector of same dimension s.t.
+// destination vector is mutated.
+template<const size_t k>
+inline static void
+polyvec_add_to(const ff::ff_t* const __restrict src,
+               ff::ff_t* const __restrict dst)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+
+    for (size_t l = 0; l < ntt::N; l++) {
+      dst[off + l] = dst[off + l] + src[off + l];
     }
   }
 }
