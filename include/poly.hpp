@@ -21,4 +21,16 @@ poly_power2round(const ff::ff_t* const __restrict poly,
   }
 }
 
+// Given two degree-255 polynomials in NTT representation, this routine performs
+// element-wise multiplication over Z_q | q = 2^23 - 2^13 + 1
+static void
+polymul(const ff::ff_t* const __restrict polya,
+        const ff::ff_t* const __restrict polyb,
+        ff::ff_t* const __restrict polyc)
+{
+  for (size_t i = 0; i < ntt::N; i++) {
+    polyc[i] = polya[i] * polyb[i];
+  }
+}
+
 }
