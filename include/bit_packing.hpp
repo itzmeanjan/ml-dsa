@@ -33,4 +33,28 @@ encode(const ff::ff_t* const __restrict poly, uint8_t* const __restrict arr)
   }
 }
 
+// Given a byte array of length 32 * sbw -bytes, this routine attempts to
+// extract out 256 coefficients of degree-255 polynomial s.t. significant
+// portion of each coefficient ∈ [0, 2^sbw)
+template<const size_t sbw>
+static void
+decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
+{
+  constexpr size_t blen = ntt::N * sbw;
+  constexpr size_t len = blen >> 3;
+
+  std::memset(poly, 0, ntt::N * sizeof(ff::ff_t));
+
+  for (size_t i = 0; i < blen; i++) {
+    const size_t aidx = i >> 3;
+    const size_t aoff = i & 7ul;
+
+    const size_t pidx = i / sbw;
+    const size_t poff = i % sbw;
+
+    const uint8_t bit = (arr[aidx] >> aoff) & 0b1;
+    poly[pidx].v = poly[pidx].v ^ static_cast<uint32_t>(bit) << poff;
+  }
+}
+
 }
