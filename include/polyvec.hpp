@@ -99,6 +99,19 @@ polyvec_add_to(const ff::ff_t* const __restrict src,
   }
 }
 
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials s.t. each
+// coefficient ∈ [-η, η], this routine subtracts each coefficient from η so that
+// coefficients now stay in [0, 2η].
+template<const size_t k, const uint32_t eta>
+inline static void
+polyvec_sub_from_eta(ff::ff_t* const vec)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_sub_from_eta<eta>(vec + off);
+  }
+}
+
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
 // encodes each of those polynomials into 32 x sbw -bytes, writing to a
 // (k x 32 x sbw) -bytes destination array

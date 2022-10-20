@@ -57,7 +57,7 @@ expand_a(const uint8_t* const __restrict rho, ff::ff_t* const __restrict mat)
 // Compile-time check to ensure that η ∈ {2, 4}, so that sampled secret key
 // range stays short i.e. [-η, η]
 inline static constexpr bool
-check_eta(const uint32_teta)
+check_eta(const uint32_t eta)
 {
   return (eta == 2u) || (eta == 4u);
 }
@@ -88,8 +88,10 @@ uniform_sample_eta(const uint8_t* const __restrict sigma,
                    ff::ff_t* const __restrict vec) requires(check_eta(eta) &&
                                                             check_nonce(nonce))
 {
-  uint8_t msg[33];
-  uint8_t buf;
+  constexpr ff::ff_t eta_{ eta };
+
+  uint8_t msg[33]{};
+  uint8_t buf = 0;
 
   std::memcpy(msg, sigma, 32);
 
@@ -112,24 +114,24 @@ uniform_sample_eta(const uint8_t* const __restrict sigma,
         if (t0 < 15) {
           const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
 
-          vec[off + n] = ff::ff_t{ 2u } - ff::ff_t{ t2 };
+          vec[off + n] = eta_ - ff::ff_t{ t2 };
           n += 1;
         }
 
         if ((t1 < 15) && (n < ntt::N)) {
           const uint32_t t2 = static_cast<uint32_t>(t1 % 5);
 
-          vec[off + n] = ff::ff_t{ 2u } - ff::ff_t{ t2 };
+          vec[off + n] = eta_ - ff::ff_t{ t2 };
           n += 1;
         }
       } else {
         if (t0 < 9) {
-          vec[off + n] = ff::ff_t{ 4u } - ff::ff_t{ static_cast<uint32_t>(t0) };
+          vec[off + n] = eta_ - ff::ff_t{ static_cast<uint32_t>(t0) };
           n += 1;
         }
 
         if ((t1 < 9) && (n < ntt::N)) {
-          vec[off + n] = ff::ff_t{ 4u } - ff::ff_t{ static_cast<uint32_t>(t1) };
+          vec[off + n] = eta_ - ff::ff_t{ static_cast<uint32_t>(t1) };
           n += 1;
         }
       }
