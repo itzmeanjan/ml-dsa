@@ -72,7 +72,7 @@ matrix_multiply(const ff::ff_t* const __restrict a,
         const size_t aoff = (i * a_cols + k) * ntt::N;
         const size_t boff = (k * b_cols + j) * ntt::N;
 
-        polymul(a + coff, b + boff, tmp);
+        polymul(a + aoff, b + boff, tmp);
 
         for (size_t l = 0; l < ntt::N; l++) {
           c[coff + l] = c[coff + l] + tmp[l];
