@@ -1,6 +1,7 @@
 #pragma once
 #include "ntt.hpp"
 #include "reduction.hpp"
+#include "sampling.hpp"
 
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium_utils {
