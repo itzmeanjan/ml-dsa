@@ -21,17 +21,18 @@ template<const size_t k, const size_t l>
 static void
 expand_a(const uint8_t* const __restrict rho, ff::ff_t* const __restrict mat)
 {
-  uint8_t msg[34];
-  uint8_t buf[3];
+  uint8_t msg[34]{};
+  uint8_t buf[3]{};
 
   std::memcpy(msg, rho, 32);
 
   for (size_t i = 0; i < k; i++) {
     for (size_t j = 0; j < l; j++) {
       const size_t off = (i * k + j) * ntt::N;
+      const uint16_t nonce = static_cast<uint16_t>(i * 256ul + j);
 
-      msg[32] = j;
-      msg[33] = i;
+      msg[32] = static_cast<uint8_t>(nonce >> 0);
+      msg[33] = static_cast<uint8_t>(nonce >> 8);
 
       shake128::shake128 hasher{};
       hasher.hash(msg, sizeof(msg));
@@ -44,7 +45,7 @@ expand_a(const uint8_t* const __restrict rho, ff::ff_t* const __restrict mat)
         const uint32_t t1 = static_cast<uint32_t>(buf[1]);
         const uint32_t t2 = static_cast<uint32_t>(buf[0]);
 
-        const uint32_t t3 = (t0 << 16) ^ (t1 << 8) ^ (t0 << 0);
+        const uint32_t t3 = (t0 << 16) ^ (t1 << 8) ^ (t2 << 0);
         const bool flg = t3 < ff::Q;
 
         mat[off + n] = ff::ff_t{ static_cast<uint32_t>(t3 * flg) };
@@ -90,15 +91,17 @@ uniform_sample_eta(const uint8_t* const __restrict sigma,
 {
   constexpr ff::ff_t eta_{ eta };
 
-  uint8_t msg[33]{};
+  uint8_t msg[34]{};
   uint8_t buf = 0;
 
   std::memcpy(msg, sigma, 32);
 
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
+    const uint16_t nonce_ = static_cast<uint16_t>(nonce + i);
 
-    msg[32] = nonce + i;
+    msg[32] = static_cast<uint8_t>(nonce_ >> 0);
+    msg[33] = static_cast<uint8_t>(nonce_ >> 8);
 
     shake256::shake256 hasher{};
     hasher.hash(msg, sizeof(msg));
