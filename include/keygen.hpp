@@ -54,7 +54,7 @@ keygen(
 
   ff::ff_t t[k * ntt::N]{};
 
-  dilithium_utils::matrix_multiply<k, l, l, 1>(A, s1, t);
+  dilithium_utils::matrix_multiply<k, l, l, 1>(A, s1_prime, t);
   dilithium_utils::polyvec_intt<k>(t);
   dilithium_utils::polyvec_add_to<k>(s2, t);
 
