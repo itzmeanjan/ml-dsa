@@ -78,8 +78,8 @@ keygen(
   std::memcpy(seckey + 32, key, 32);
   std::memcpy(seckey + 64, tr, 48);
 
-  dilithium_utils::polyvec_sub_from_eta<l, eta>(s1);
-  dilithium_utils::polyvec_sub_from_eta<k, eta>(s2);
+  dilithium_utils::polyvec_sub_from_x<l, eta>(s1);
+  dilithium_utils::polyvec_sub_from_x<k, eta>(s2);
 
   constexpr size_t eta_bw = std::bit_width(2 * eta);
   constexpr size_t s1_len = l * eta_bw * 32;
@@ -87,6 +87,10 @@ keygen(
 
   dilithium_utils::polyvec_encode<l, eta_bw>(s1, seckey + 112);
   dilithium_utils::polyvec_encode<k, eta_bw>(s2, seckey + 112 + s1_len);
+
+  constexpr uint32_t t0_rng = 1u << (d - 1);
+
+  dilithium_utils::polyvec_sub_from_x<k, t0_rng>(t0);
   dilithium_utils::polyvec_encode<k, d>(t0, seckey + 112 + s1_len + s2_len);
 }
 

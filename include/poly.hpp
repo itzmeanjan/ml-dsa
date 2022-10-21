@@ -1,7 +1,6 @@
 #pragma once
 #include "ntt.hpp"
 #include "reduction.hpp"
-#include "sampling.hpp"
 
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium_utils {
@@ -34,17 +33,17 @@ polymul(const ff::ff_t* const __restrict polya,
   }
 }
 
-// Given a degree-255 polynomial, which has all of its coefficients in [-η, η],
-// this routine subtracts each coefficient from η, so that they stay in [0, 2η]
+// Given a degree-255 polynomial, which has all of its coefficients in [-x, x],
+// this routine subtracts each coefficient from x, so that they stay in [0, 2x]
 // range
-template<const uint32_t eta>
+template<const uint32_t x>
 inline static void
-poly_sub_from_eta(ff::ff_t* const poly) requires(check_eta(eta))
+poly_sub_from_x(ff::ff_t* const poly)
 {
-  constexpr ff::ff_t eta_{ eta };
+  constexpr ff::ff_t x_cap{ x };
 
   for (size_t i = 0; i < ntt::N; i++) {
-    poly[i] = eta_ - poly[i];
+    poly[i] = x_cap - poly[i];
   }
 }
 
