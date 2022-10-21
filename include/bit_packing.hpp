@@ -41,7 +41,6 @@ static void
 decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
 {
   constexpr size_t blen = ntt::N * sbw;
-  constexpr size_t len = blen >> 3;
 
   std::memset(poly, 0, ntt::N * sizeof(ff::ff_t));
 
