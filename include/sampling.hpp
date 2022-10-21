@@ -28,7 +28,7 @@ expand_a(const uint8_t* const __restrict rho, ff::ff_t* const __restrict mat)
 
   for (size_t i = 0; i < k; i++) {
     for (size_t j = 0; j < l; j++) {
-      const size_t off = (i * k + j) * ntt::N;
+      const size_t off = (i * l + j) * ntt::N;
       const uint16_t nonce = static_cast<uint16_t>(i * 256ul + j);
 
       msg[32] = static_cast<uint8_t>(nonce >> 0);
