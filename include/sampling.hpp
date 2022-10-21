@@ -72,7 +72,7 @@ check_nonce(const size_t nonce)
 }
 
 // Uniform sampling k -many degree-255 polynomials s.t. each coefficient of
-// those polynomials belong to [-η, η].
+// those polynomials ∈ [-η, η].
 //
 // Sampling is performed deterministically, by seeding SHAKE256 XOF with
 // 32 -bytes seed and single byte nonce, whose starting value is provided ( see

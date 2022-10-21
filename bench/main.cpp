@@ -20,6 +20,12 @@ BENCHMARK(bench_dilithium::power2round);
 BENCHMARK(bench_dilithium::expand_a<4, 4>);
 BENCHMARK(bench_dilithium::expand_a<6, 5>);
 BENCHMARK(bench_dilithium::expand_a<8, 7>);
+BENCHMARK(bench_dilithium::uniform_sampling_eta<2, 4>);
+BENCHMARK(bench_dilithium::uniform_sampling_eta<2, 6>);
+BENCHMARK(bench_dilithium::uniform_sampling_eta<2, 8>);
+BENCHMARK(bench_dilithium::uniform_sampling_eta<4, 4>);
+BENCHMARK(bench_dilithium::uniform_sampling_eta<4, 6>);
+BENCHMARK(bench_dilithium::uniform_sampling_eta<4, 8>);
 
 // register for benchmarking serialization/ deserialization of polynomials
 BENCHMARK(bench_dilithium::encode<3>);
