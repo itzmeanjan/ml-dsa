@@ -13,5 +13,8 @@ BENCHMARK(bench_dilithium::ff_exp);
 BENCHMARK(bench_dilithium::ntt);
 BENCHMARK(bench_dilithium::intt);
 
+// register for benchmarking coefficient reduction techniques
+BENCHMARK(bench_dilithium::power2round);
+
 // benchmark runner main routine
 BENCHMARK_MAIN();
