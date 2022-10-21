@@ -18,9 +18,13 @@ BENCHMARK(bench_dilithium::power2round);
 
 // register for benchmarking serialization/ deserialization of polynomials
 BENCHMARK(bench_dilithium::encode<3>);
+BENCHMARK(bench_dilithium::decode<3>);
 BENCHMARK(bench_dilithium::encode<4>);
+BENCHMARK(bench_dilithium::decode<4>);
 BENCHMARK(bench_dilithium::encode<10>);
+BENCHMARK(bench_dilithium::decode<10>);
 BENCHMARK(bench_dilithium::encode<13>);
+BENCHMARK(bench_dilithium::decode<13>);
 
 // benchmark runner main routine
 BENCHMARK_MAIN();
