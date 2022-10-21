@@ -114,29 +114,30 @@ uniform_sample_eta(const uint8_t* const __restrict sigma,
       const uint8_t t1 = buf >> 4;
 
       if constexpr (eta == 2u) {
-        if (t0 < 15) {
-          const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
+        const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
+        const bool flg0 = t0 < 15;
 
-          vec[off + n] = eta_ - ff::ff_t{ t2 };
-          n += 1;
-        }
+        vec[off + n] = eta_ - ff::ff_t{ t2 };
+        n += flg0 * 1;
 
-        if ((t1 < 15) && (n < ntt::N)) {
-          const uint32_t t2 = static_cast<uint32_t>(t1 % 5);
+        const uint32_t t3 = static_cast<uint32_t>(t1 % 5);
+        const bool flg1 = (t1 < 15) & (n < ntt::N);
+        const ff::ff_t br[]{ vec[off], eta_ - ff::ff_t{ t3 } };
 
-          vec[off + n] = eta_ - ff::ff_t{ t2 };
-          n += 1;
-        }
+        vec[off + flg1 * n] = br[flg1];
+        n += flg1 * 1;
       } else {
-        if (t0 < 9) {
-          vec[off + n] = eta_ - ff::ff_t{ static_cast<uint32_t>(t0) };
-          n += 1;
-        }
+        const bool flg0 = t0 < 9;
 
-        if ((t1 < 9) && (n < ntt::N)) {
-          vec[off + n] = eta_ - ff::ff_t{ static_cast<uint32_t>(t1) };
-          n += 1;
-        }
+        vec[off + n] = eta_ - ff::ff_t{ static_cast<uint32_t>(t0) };
+        n += flg0 * 1;
+
+        const bool flg1 = (t1 < 9) & (n < ntt::N);
+        const ff::ff_t t2 = eta_ - ff::ff_t{ static_cast<uint32_t>(t1) };
+        const ff::ff_t br[]{ vec[off], t2 };
+
+        vec[off + flg1 * n] = br[flg1];
+        n += flg1 * 1;
       }
     }
   }
