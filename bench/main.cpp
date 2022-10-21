@@ -16,6 +16,11 @@ BENCHMARK(bench_dilithium::intt);
 // register for benchmarking coefficient reduction techniques
 BENCHMARK(bench_dilithium::power2round);
 
+// register for benchmarking sampling vector/ matrix from XOF
+BENCHMARK(bench_dilithium::expand_a<4, 4>);
+BENCHMARK(bench_dilithium::expand_a<6, 5>);
+BENCHMARK(bench_dilithium::expand_a<8, 7>);
+
 // register for benchmarking serialization/ deserialization of polynomials
 BENCHMARK(bench_dilithium::encode<3>);
 BENCHMARK(bench_dilithium::decode<3>);

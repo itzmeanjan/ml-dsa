@@ -3,3 +3,4 @@
 #include "bench_ff.hpp"
 #include "bench_ntt.hpp"
 #include "bench_reduction.hpp"
+#include "bench_sampling.hpp"
