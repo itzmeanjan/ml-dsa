@@ -42,4 +42,37 @@ power2round(const ff::ff_t r) requires(check_d(d))
   return std::make_pair(hi, lo);
 }
 
+// Given an element of Z_q | q = 2^23 - 2^13 + 1, this routine computes high and
+// low order bits s.t.
+//
+// r mod^+ q = r1 * α + r0 | -α/2 < r0 <= α/2
+//
+// If r1 = (q - 1)/ α then r1 = 0; r0 = r0 - 1
+//
+// See definition of this routine in figure 3 of Dilithium specification, as
+// submitted to NIST final round call
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+template<const uint32_t alpha>
+inline static std::pair<ff::ff_t, ff::ff_t>
+decompose(const ff::ff_t r)
+{
+  constexpr uint32_t t0 = alpha >> 1;
+  constexpr uint32_t t1 = ff::Q - 1u;
+
+  const uint32_t t2 = r.v + t0 - 1u;
+  const uint32_t t3 = t2 / alpha;
+  const uint32_t t4 = t3 * alpha;
+
+  const ff::ff_t r0 = r - ff::ff_t{ t4 };
+  const ff::ff_t t5 = r - r0;
+
+  const bool flg = !static_cast<bool>(t5.v ^ t1);
+  const ff::ff_t br[]{ t5.v / alpha, 0u };
+
+  const ff::ff_t r1 = br[flg];
+  const ff::ff_t r0_ = r0 - ff::ff_t{ 1u * flg };
+
+  return std::make_pair(r1, r0_);
+}
+
 }
