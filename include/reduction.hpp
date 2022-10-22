@@ -77,6 +77,10 @@ decompose(const ff::ff_t r)
 
 // Given an element ∈ Z_q, this routine uses decompose routine ( defined above )
 // to extract out high order bits of r.
+//
+// See definition of this routine in figure 3 of Dilithium specification, as
+// submitted to NIST final round call
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
 template<const uint32_t alpha>
 inline static ff::ff_t
 highbits(const ff::ff_t r)
@@ -87,12 +91,62 @@ highbits(const ff::ff_t r)
 
 // Given an element ∈ Z_q, this routine uses decompose routine ( defined above )
 // to extract out low order bits of r.
+//
+// See definition of this routine in figure 3 of Dilithium specification, as
+// submitted to NIST final round call
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
 template<const uint32_t alpha>
 inline static ff::ff_t
 lowbits(const ff::ff_t r)
 {
   const auto s = decompose<alpha>(r);
   return s.second;
+}
+
+// This algorithm takes r, z ∈ Z_q, producing a 1 -bit hint h such that
+// it allows one to compute the higher order bits of r + z just using r and h.
+//
+// This hint is essentially the “carry” caused by z in the addition.
+//
+// See definition of this routine in figure 3 of Dilithium specification, as
+// submitted to NIST final round call
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+template<const uint32_t alpha>
+inline static ff::ff_t
+make_hint(const ff::ff_t z, const ff::ff_t r)
+{
+  const ff::ff_t r1 = highbits<alpha>(r);
+  const ff::ff_t v1 = highbits<alpha>(r + z);
+
+  return ff::ff_t{ static_cast<uint32_t>(r1 != v1) };
+}
+
+// 1 -bit hint ( read h ) is used to recover higher order bits of r + z s.t.
+// hint bit was computed using make_hint routine ( defined above ).
+//
+// See definition of this routine in figure 3 of Dilithium specification, as
+// submitted to NIST final round call
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+template<const uint32_t alpha>
+inline static ff::ff_t
+use_hint(const ff::ff_t h, const ff::ff_t r)
+{
+  constexpr uint32_t m = (ff::Q - 1) / alpha;
+  constexpr ff::ff_t t0{ alpha >> 1 };
+  constexpr ff::ff_t t1 = ff::ff_t{ ff::Q } - t0;
+  constexpr ff::ff_t t2{ 1u };
+
+  const auto s = decompose<alpha>(r);
+
+  if ((h == t2) && (s.second.v > 0u)) {
+    const ff::ff_t t3 = s.first + t2;
+    return ff::ff_t{ t3.v % m };
+  } else if ((h == t2) && (s.second.v >= t1.v)) {
+    const ff::ff_t t3 = s.first - t2;
+    return ff::ff_t{ t3.v % m };
+  } else {
+    return s.first;
+  }
 }
 
 }
