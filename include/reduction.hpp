@@ -75,4 +75,24 @@ decompose(const ff::ff_t r)
   return std::make_pair(r1, r0_);
 }
 
+// Given an element ∈ Z_q, this routine uses decompose routine ( defined above )
+// to extract out high order bits of r.
+template<const uint32_t alpha>
+inline static ff::ff_t
+highbits(const ff::ff_t r)
+{
+  const auto s = decompose<alpha>(r);
+  return s.first;
+}
+
+// Given an element ∈ Z_q, this routine uses decompose routine ( defined above )
+// to extract out low order bits of r.
+template<const uint32_t alpha>
+inline static ff::ff_t
+lowbits(const ff::ff_t r)
+{
+  const auto s = decompose<alpha>(r);
+  return s.second;
+}
+
 }
