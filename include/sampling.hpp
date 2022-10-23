@@ -160,7 +160,7 @@ expand_mask(const uint8_t* const __restrict seed,
             const uint16_t nonce,
             ff::ff_t* const __restrict vec) requires(check_gamma1(gamma1))
 {
-  constexpr size_t gbw = std::bit_width(gamma1);
+  constexpr size_t gbw = std::bit_width(2 * gamma1 - 1u);
 
   uint8_t msg[50]{};
   uint8_t buf[gbw * 32]{};
