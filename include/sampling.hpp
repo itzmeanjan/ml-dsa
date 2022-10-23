@@ -183,6 +183,14 @@ expand_mask(const uint8_t* const __restrict seed,
   }
 }
 
+// Compile-time check to ensure that τ is set to parameter recommended in
+// Dilithium specification
+static inline constexpr bool
+check_tau(const uint32_t tau)
+{
+  return (tau == 39) || (tau == 49) || (tau == 60);
+}
+
 // Given a 32 -bytes seed, this routine creates a degree-255 polynomial with τ
 // -many coefficients set to +/- 1, while remaining (256 - τ) -many set to 0.
 //
@@ -201,8 +209,8 @@ sample_in_ball(const uint8_t* const __restrict seed,
   hasher.hash(seed, 32);
   hasher.read(tau_bits, sizeof(tau_bits));
 
-  size_t i = 256ul - tau;
-  while (i < 255ul) {
+  size_t i = ntt::N - tau;
+  while (i < ntt::N) {
     const size_t tau_bit = i - 196ul;
 
     const size_t tau_byte_off = tau_bit >> 3;
@@ -214,8 +222,9 @@ sample_in_ball(const uint8_t* const __restrict seed,
     hasher.read(&buf, 1);
 
     const bool flg = buf <= static_cast<uint8_t>(i);
+
     const ff::ff_t br0[]{ poly[i], poly[buf] };
-    const ff::ff_t br1[]{ poly[buf], -ff::ff_t{ 1u * s_ } };
+    const ff::ff_t br1[]{ poly[buf], ff::ff_t{ 1u } - ff::ff_t{ 2u * s_ } };
 
     poly[i] = br0[flg];
     poly[buf] = br1[flg];
