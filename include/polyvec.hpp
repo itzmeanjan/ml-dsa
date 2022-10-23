@@ -99,6 +99,23 @@ polyvec_add_to(const ff::ff_t* const __restrict src,
   }
 }
 
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this
+// routine subtracts it from another polynomial vector of same dimension s.t.
+// destination vector is mutated.
+template<const size_t k>
+inline static void
+polyvec_sub_from(const ff::ff_t* const __restrict src,
+                 ff::ff_t* const __restrict dst)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+
+    for (size_t l = 0; l < ntt::N; l++) {
+      dst[off + l] = dst[off + l] - src[off + l];
+    }
+  }
+}
+
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials s.t. each
 // coefficient ∈ [-x, x], this routine subtracts each coefficient from x so that
 // coefficients now stay in [0, 2x].
