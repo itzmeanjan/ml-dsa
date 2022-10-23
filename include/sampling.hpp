@@ -151,7 +151,7 @@ check_gamma1(const uint32_t gamma1)
   return (gamma1 == (1u << 17)) || (gamma1 == (1u << 19));
 }
 
-// Given a 32 -bytes seed and 2 -bytes nonce, this routine does uniform sampling
+// Given a 48-bytes seed and 2 -bytes nonce, this routine does uniform sampling
 // from output of SHAKE256 XOF, computing a l x 1 vector of degree-255
 // polynomials s.t. each coefficient ∈ [-(γ1-1), γ1]
 template<const uint32_t gamma1, const size_t l>
@@ -162,17 +162,17 @@ expand_mask(const uint8_t* const __restrict seed,
 {
   constexpr size_t gbw = std::bit_width(gamma1);
 
-  uint8_t msg[34]{};
+  uint8_t msg[50]{};
   uint8_t buf[gbw * 32]{};
 
-  std::memcpy(msg, seed, 32);
+  std::memcpy(msg, seed, 48);
 
   for (size_t i = 0; i < l; i++) {
     const size_t off = i * ntt::N;
     const uint16_t nonce_ = static_cast<uint16_t>(nonce + i);
 
-    msg[32] = static_cast<uint8_t>(nonce_ >> 0);
-    msg[33] = static_cast<uint8_t>(nonce_ >> 8);
+    msg[48] = static_cast<uint8_t>(nonce_ >> 0);
+    msg[49] = static_cast<uint8_t>(nonce_ >> 8);
 
     shake256::shake256 hasher{};
     hasher.hash(msg, sizeof(msg));
