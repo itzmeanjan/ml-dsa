@@ -157,4 +157,20 @@ polyvec_highbits(const ff::ff_t* const __restrict src,
   }
 }
 
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials and one
+// multiplier polynomial, this routine performs k pointwise polynomial
+// multiplications when each of these polynomials are in their NTT
+// representation, while not mutating operand polynomials.
+template<const size_t k>
+inline static void
+polyvec_mul_poly(const ff::ff_t* const __restrict poly,
+                 const ff::ff_t* const __restrict src_vec,
+                 ff::ff_t* const __restrict dst_vec)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    polymul(poly, src_vec + off, dst_vec + off);
+  }
+}
+
 }
