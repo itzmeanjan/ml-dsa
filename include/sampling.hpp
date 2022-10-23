@@ -1,6 +1,7 @@
 #pragma once
 #include "ff.hpp"
 #include "ntt.hpp"
+#include "poly.hpp"
 #include "shake128.hpp"
 #include "shake256.hpp"
 #include <cstring>
@@ -140,6 +141,45 @@ uniform_sample_eta(const uint8_t* const __restrict sigma,
         n += flg1 * 1;
       }
     }
+  }
+}
+
+// Compile-time check to ensure that γ1 has recommended value
+static inline constexpr bool
+check_gamma1(const uint32_t gamma1)
+{
+  return (gamma1 == (1u << 17)) || (gamma1 == (1u << 19));
+}
+
+// Given a 32 -bytes seed and 2 -bytes nonce, this routine does uniform sampling
+// from output of SHAKE256 XOF, computing a l x 1 vector of degree-255
+// polynomials s.t. each coefficient ∈ [-(γ1-1), γ1]
+template<const uint32_t gamma1, const size_t l>
+static void
+expand_mask(const uint8_t* const __restrict seed,
+            const uint16_t nonce,
+            ff::ff_t* const __restrict vec) requires(check_gamma1(gamma1))
+{
+  constexpr size_t gbw = std::bit_width(gamma1);
+
+  uint8_t msg[34]{};
+  uint8_t buf[gbw * 32]{};
+
+  std::memcpy(msg, seed, 32);
+
+  for (size_t i = 0; i < l; i++) {
+    const size_t off = i * ntt::N;
+    const uint16_t nonce_ = static_cast<uint16_t>(nonce + i);
+
+    msg[32] = static_cast<uint8_t>(nonce_ >> 0);
+    msg[33] = static_cast<uint8_t>(nonce_ >> 8);
+
+    shake256::shake256 hasher{};
+    hasher.hash(msg, sizeof(msg));
+    hasher.read(buf, sizeof(buf));
+
+    decode<gbw>(buf, vec + off);
+    poly_sub_from_x<gamma1>(vec + off);
   }
 }
 
