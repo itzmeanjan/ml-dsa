@@ -144,4 +144,17 @@ polyvec_decode(const uint8_t* const __restrict src,
   }
 }
 
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
+// extracts out high order bits from each coefficient
+template<const size_t k, const uint32_t alpha>
+inline static void
+polyvec_highbits(const ff::ff_t* const __restrict src,
+                 ff::ff_t* const __restrict dst)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_highbits<alpha>(src + off, dst + off);
+  }
+}
+
 }

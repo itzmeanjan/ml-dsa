@@ -47,4 +47,16 @@ poly_sub_from_x(ff::ff_t* const poly)
   }
 }
 
+// Given a degree-255 polynomial, this routine extracts out high order bits (
+// using decompose routine ), while not mutating source polynomial
+template<const uint32_t alpha>
+inline static void
+poly_highbits(const ff::ff_t* const __restrict polya,
+              ff::ff_t* const __restrict polyb)
+{
+  for (size_t i = 0; i < ntt::N; i++) {
+    polyb[i] = highbits<alpha>(polya[i]);
+  }
+}
+
 }
