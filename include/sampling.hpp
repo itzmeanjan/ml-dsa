@@ -183,4 +183,45 @@ expand_mask(const uint8_t* const __restrict seed,
   }
 }
 
+// Given a 32 -bytes seed, this routine creates a degree-255 polynomial with τ
+// -many coefficients set to +/- 1, while remaining (256 - τ) -many set to 0.
+//
+// See hashing to a ball algorithm described in figure 2 and section 5.3 of
+// Dilithium specification, as submitted to NIST final round call
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+template<const uint32_t tau>
+static void
+sample_in_ball(const uint8_t* const __restrict seed,
+               ff::ff_t* const __restrict poly)
+{
+  uint8_t tau_bits[8]{};
+  uint8_t buf = 0;
+
+  shake256::shake256 hasher{};
+  hasher.hash(seed, 32);
+  hasher.read(tau_bits, sizeof(tau_bits));
+
+  size_t i = 256ul - tau;
+  while (i < 255ul) {
+    const size_t tau_bit = i - 196ul;
+
+    const size_t tau_byte_off = tau_bit >> 3;
+    const size_t tau_bit_off = tau_bit & 7ul;
+
+    const uint8_t s = (tau_bits[tau_byte_off] >> tau_bit_off) & 0b1;
+    const bool s_ = static_cast<bool>(s);
+
+    hasher.read(&buf, 1);
+
+    const bool flg = buf <= static_cast<uint8_t>(i);
+    const ff::ff_t br0[]{ poly[i], poly[buf] };
+    const ff::ff_t br1[]{ poly[buf], -ff::ff_t{ 1u * s_ } };
+
+    poly[i] = br0[flg];
+    poly[buf] = br1[flg];
+
+    i += 1ul * flg;
+  };
+}
+
 }
