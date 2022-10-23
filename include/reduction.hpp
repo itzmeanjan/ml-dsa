@@ -107,6 +107,7 @@ lowbits(const ff::ff_t r)
 // it allows one to compute the higher order bits of r + z just using r and h.
 //
 // This hint is essentially the “carry” caused by z in the addition.
+// Note, z is small.
 //
 // See definition of this routine in figure 3 of Dilithium specification, as
 // submitted to NIST final round call
@@ -138,7 +139,7 @@ use_hint(const ff::ff_t h, const ff::ff_t r)
 
   const auto s = decompose<alpha>(r);
 
-  if ((h == t2) && (s.second.v > 0u)) {
+  if ((h == t2) && ((s.second.v > 0u) && (s.second.v < t1.v))) {
     const ff::ff_t t3 = s.first + t2;
     return ff::ff_t{ t3.v % m };
   } else if ((h == t2) && (s.second.v >= t1.v)) {

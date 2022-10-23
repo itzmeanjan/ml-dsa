@@ -25,4 +25,28 @@ test_power2round()
   }
 }
 
+// Given any arbitrary element r ∈ Z_q and a small element z ∈ Z_q | q = 2^23 -
+// 2^13 + 1, this routine tries to test correctness of decompose routine, which
+// is used for computing a hint bit ( say h ) s.t. one doesn't need to store r,
+// z both, but they can still recover high order bits of r + z
+//
+// Read section 2.4 of Dilithium specification
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+template<const uint32_t alpha, const uint32_t z, const size_t rounds = 65536ul>
+static void
+test_decompose()
+{
+  for (size_t i = 0; i < rounds; i++) {
+    const ff::ff_t r = ff::ff_t::random();
+    constexpr ff::ff_t z_{ z };
+
+    const ff::ff_t h = dilithium_utils::make_hint<alpha>(z_, r);
+    const ff::ff_t rz = dilithium_utils::use_hint<alpha>(h, r);
+
+    const ff::ff_t rz_ = dilithium_utils::highbits<alpha>(r + z_);
+
+    assert(rz == rz_);
+  }
+}
+
 }
