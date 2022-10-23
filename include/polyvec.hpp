@@ -72,7 +72,7 @@ matrix_multiply(const ff::ff_t* const __restrict a,
         const size_t aoff = (i * a_cols + k) * ntt::N;
         const size_t boff = (k * b_cols + j) * ntt::N;
 
-        polymul(a + coff, b + boff, tmp);
+        polymul(a + aoff, b + boff, tmp);
 
         for (size_t l = 0; l < ntt::N; l++) {
           c[coff + l] = c[coff + l] + tmp[l];
@@ -96,6 +96,19 @@ polyvec_add_to(const ff::ff_t* const __restrict src,
     for (size_t l = 0; l < ntt::N; l++) {
       dst[off + l] = dst[off + l] + src[off + l];
     }
+  }
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials s.t. each
+// coefficient ∈ [-x, x], this routine subtracts each coefficient from x so that
+// coefficients now stay in [0, 2x].
+template<const size_t k, const uint32_t x>
+inline static void
+polyvec_sub_from_x(ff::ff_t* const vec)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_sub_from_x<x>(vec + off);
   }
 }
 
