@@ -120,4 +120,15 @@ count_1s(const ff::ff_t* const __restrict poly)
   return cnt;
 }
 
+// Given a degree-255 polynomial, this routine shifts each coefficient
+// leftwards, by d bits
+template<const size_t d>
+inline static void
+poly_shl(ff::ff_t* const __restrict poly)
+{
+  for (size_t i = 0; i < ntt::N; i++) {
+    poly[i] = poly[i] << d;
+  }
+}
+
 }
