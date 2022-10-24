@@ -100,18 +100,16 @@ polyvec_add_to(const ff::ff_t* const __restrict src,
 }
 
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this
-// routine subtracts it from another polynomial vector of same dimension s.t.
-// destination vector is mutated.
+// routine negates each coefficient.
 template<const size_t k>
 inline static void
-polyvec_sub_from(const ff::ff_t* const __restrict src,
-                 ff::ff_t* const __restrict dst)
+polyvec_neg(ff::ff_t* const __restrict vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
 
     for (size_t l = 0; l < ntt::N; l++) {
-      dst[off + l] = dst[off + l] - src[off + l];
+      vec[off + l] = -vec[off + l];
     }
   }
 }
@@ -171,6 +169,18 @@ polyvec_highbits(const ff::ff_t* const __restrict src,
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
     poly_highbits<alpha>(src + off, dst + off);
+  }
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
+// extracts out low order bits from each coefficient, while mutating operand
+template<const size_t k, const uint32_t alpha>
+inline static void
+polyvec_mut_lowbits(const ff::ff_t* const __restrict vec)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_mut_lowbits<alpha>(vec + off);
   }
 }
 
