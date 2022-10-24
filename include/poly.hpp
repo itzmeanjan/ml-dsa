@@ -79,10 +79,14 @@ poly_lowbits(const ff::ff_t* const __restrict src,
 inline static ff::ff_t
 poly_infinity_norm(const ff::ff_t* const __restrict poly)
 {
+  constexpr ff::ff_t qby2{ ff::Q >> 1 };
   ff::ff_t res{ 0u };
 
   for (size_t i = 0; i < ntt::N; i++) {
-    res = std::max(res, poly[i]);
+    const bool flg = poly[i] > qby2;
+    const ff::ff_t br[]{ poly[i], -poly[i] };
+
+    res = std::max(res, br[flg]);
   }
 
   return res;
