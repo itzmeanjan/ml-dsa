@@ -172,6 +172,18 @@ struct ff_t
     return static_cast<bool>(this->v ^ rhs.v);
   }
 
+  // Greater than operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
+  constexpr bool operator>(const ff_t& rhs) const { return this->v > rhs.v; }
+
+  // Greater than equal operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
+  constexpr bool operator>=(const ff_t& rhs) const { return this->v >= rhs.v; }
+
+  // Lesser than operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
+  constexpr bool operator<(const ff_t& rhs) const { return this->v < rhs.v; }
+
+  // Lesser than equal operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
+  constexpr bool operator<=(const ff_t& rhs) const { return this->v <= rhs.v; }
+
   // Generate a random field element ∈ Z_q | q = 2^23 - 2^13 + 1
   static ff_t random()
   {
