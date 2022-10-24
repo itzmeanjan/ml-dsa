@@ -5,8 +5,8 @@
 // Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium {
 
-// Given secret key and message ( of statically known length = mlen ), this
-// routine uses Dilithium signature generation algorithm for computing
+// Given a Dilithium secret key and message ( of statically known length = mlen
+// ), this routine uses Dilithium signature generation algorithm for computing
 // deterministic signature over input messsage, using provided parameters.
 //
 // Signing algorithm is described in figure 4 of Dilithium specification, as

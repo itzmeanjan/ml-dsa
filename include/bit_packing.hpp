@@ -88,6 +88,9 @@ encode_hint_bits(const ff::ff_t* const __restrict h,
 // Given a serialized byte array holding hint bits, this routine unpacks hint
 // bits into a vector ( of dimension k x 1 ) of degree-255 polynomials s.t. <= ω
 // many hint bits are set.
+//
+// Returns boolean result denoting status of decoding of byte serialized hint
+// bits. Say return value is true, it denotes that decoding has failed.
 template<const size_t k, const size_t omega>
 static bool
 decode_hint_bits(const uint8_t* const __restrict arr,
