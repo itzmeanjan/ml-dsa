@@ -87,4 +87,17 @@ poly_infinity_norm(const ff::ff_t* const __restrict poly)
   return res;
 }
 
+// Given two degree-255 polynomials, this routine computes hint bit for each
+// coefficient, using `make_hint` routine.
+template<const uint32_t alpha>
+inline static void
+poly_make_hint(const ff::ff_t* const __restrict polya,
+               const ff::ff_t* const __restrict polyb,
+               ff::ff_t* const __restrict polyc)
+{
+  for (size_t i = 0; i < ntt::N; i++) {
+    polyc[i] = make_hint<alpha>(polya[i], polyb[i]);
+  }
+}
+
 }

@@ -219,4 +219,18 @@ polyvec_infinity_norm(const ff::ff_t* const __restrict vec)
   return res;
 }
 
+// Given two vector ( of dimension k x 1 ) of degree-255 polynomials, this
+// routine computes hint bit for each coefficient, using `make_hint` routine.
+template<const size_t k, const uint32_t alpha>
+inline static void
+polyvec_make_hint(const ff::ff_t* const __restrict polya,
+                  const ff::ff_t* const __restrict polyb,
+                  ff::ff_t* const __restrict polyc)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_make_hint<alpha>(polya + off, polyb + off, polyc + off);
+  }
+}
+
 }
