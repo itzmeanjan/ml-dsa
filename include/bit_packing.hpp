@@ -56,4 +56,33 @@ decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
   }
 }
 
+// Given a vector of hint bits ( of dimension k x 1 ), this routine encodes hint
+// bits into (ω + k) -bytes, following the description in section 5.4 of
+// Dilithium specification
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+template<const size_t k, const size_t omega>
+static void
+encode_hint_bits(const ff::ff_t* const __restrict h,
+                 uint8_t* const __restrict arr)
+{
+  constexpr size_t len = omega + k;
+  constexpr ff::ff_t zero{ 0u };
+
+  std::memset(arr, 0, len);
+
+  size_t idx = 0;
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+
+    for (size_t j = 0; j < ntt::N; j++) {
+      const bool flg = h[off + j] != zero;
+
+      arr[idx] = j * flg;
+      idx = idx + 1 * flg;
+    }
+
+    arr[omega + i] = idx;
+  }
+}
+
 }
