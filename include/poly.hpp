@@ -1,6 +1,7 @@
 #pragma once
 #include "ntt.hpp"
 #include "reduction.hpp"
+#include <algorithm>
 
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium_utils {
@@ -68,6 +69,22 @@ poly_mut_lowbits(ff::ff_t* const __restrict poly)
   for (size_t i = 0; i < ntt::N; i++) {
     poly[i] = lowbits<alpha>(poly[i]);
   }
+}
+
+// Computes infinity norm of a degree-255 polynomial
+//
+// See point `Sizes of elements` in section 2.1 of Dilithium specification
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+inline static ff::ff_t
+poly_infinity_norm(const ff::ff_t* const __restrict poly)
+{
+  ff::ff_t res{ 0u };
+
+  for (size_t i = 0; i < ntt::N; i++) {
+    res = std::max(res, poly[i]);
+  }
+
+  return res;
 }
 
 }

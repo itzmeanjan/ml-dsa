@@ -200,4 +200,23 @@ polyvec_mul_poly(const ff::ff_t* const __restrict poly,
   }
 }
 
+// Computes infinity norm of a vector ( of dimension k x 1 ) of degree-255
+// polynomials
+//
+// See point `Sizes of elements` in section 2.1 of Dilithium specification
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+template<const size_t k>
+inline static ff::ff_t
+polyvec_infinity_norm(const ff::ff_t* const __restrict vec)
+{
+  ff::ff_t res{ 0u };
+
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    res = std::max(res, poly_infinity_norm(vec + off));
+  }
+
+  return res;
+}
+
 }
