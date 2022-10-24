@@ -105,6 +105,21 @@ poly_make_hint(const ff::ff_t* const __restrict polya,
   }
 }
 
+// Given a hint bit polynomial ( of degree-255 ) and another degree-255
+// polynomial r with arbitrary coefficients ∈ Z_q, this routine recovers high
+// order bits of r + z s.t. hint bit was computed using `make_hint` routine and
+// z is another degree-255 polynomial with small coefficients.
+template<const uint32_t alpha>
+inline static void
+poly_use_hint(const ff::ff_t* const __restrict polyh,
+              const ff::ff_t* const __restrict polyr,
+              ff::ff_t* const __restrict polyrz)
+{
+  for (size_t i = 0; i < ntt::N; i++) {
+    polyrz[i] = use_hint<alpha>(polyh[i], polyr[i]);
+  }
+}
+
 // Given a degree-255 polynomial, this routine counts number of coefficients
 // having value 1.
 inline static size_t
