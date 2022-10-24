@@ -48,6 +48,23 @@ seckey_length() requires(check_d(d))
   return sklen;
 }
 
+// Compile-time compute how many bytes to reserve for storing serialized
+// Dilithium signature, for specified parameter set
+//
+// See table 2 of Dilithium specification
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+template<const size_t k,
+         const size_t l,
+         const uint32_t gamma1,
+         const size_t omega>
+inline static constexpr size_t
+signature_length()
+{
+  constexpr size_t gamma1_bw = std::bit_width(gamma1);
+  constexpr size_t siglen = 32 * l * gamma1_bw + omega + k + 32;
+  return siglen;
+}
+
 // Given a bytearray of length N, this function converts it to human readable
 // hex string of length N << 1 | N >= 0
 static inline const std::string
