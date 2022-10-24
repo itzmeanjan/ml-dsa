@@ -61,13 +61,14 @@ poly_highbits(const ff::ff_t* const __restrict polya,
 }
 
 // Given a degree-255 polynomial, this routine extracts out low order bits (
-// using decompose routine ), while mutating source polynomial
+// using decompose routine ), while not mutating source polynomial
 template<const uint32_t alpha>
 inline static void
-poly_mut_lowbits(ff::ff_t* const __restrict poly)
+poly_lowbits(const ff::ff_t* const __restrict src,
+             ff::ff_t* const __restrict dst)
 {
   for (size_t i = 0; i < ntt::N; i++) {
-    poly[i] = lowbits<alpha>(poly[i]);
+    dst[i] = lowbits<alpha>(src[i]);
   }
 }
 
@@ -98,6 +99,21 @@ poly_make_hint(const ff::ff_t* const __restrict polya,
   for (size_t i = 0; i < ntt::N; i++) {
     polyc[i] = make_hint<alpha>(polya[i], polyb[i]);
   }
+}
+
+// Given a degree-255 polynomial, this routine counts number of coefficients
+// having value 1.
+inline static size_t
+count_1s(const ff::ff_t* const __restrict poly)
+{
+  constexpr ff::ff_t one{ 1u };
+  size_t cnt = 0;
+
+  for (size_t i = 0; i < ntt::N; i++) {
+    cnt += 1 * (poly[i] == one);
+  }
+
+  return cnt;
 }
 
 }

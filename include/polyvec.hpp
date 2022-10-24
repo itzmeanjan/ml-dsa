@@ -173,14 +173,15 @@ polyvec_highbits(const ff::ff_t* const __restrict src,
 }
 
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
-// extracts out low order bits from each coefficient, while mutating operand
+// extracts out low order bits from each coefficient, while not mutating operand
 template<const size_t k, const uint32_t alpha>
 inline static void
-polyvec_mut_lowbits(const ff::ff_t* const __restrict vec)
+polyvec_lowbits(const ff::ff_t* const __restrict src,
+                ff::ff_t* const __restrict dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly_mut_lowbits<alpha>(vec + off);
+    poly_lowbits<alpha>(src + off, dst + off);
   }
 }
 
@@ -231,6 +232,22 @@ polyvec_make_hint(const ff::ff_t* const __restrict polya,
     const size_t off = i * ntt::N;
     poly_make_hint<alpha>(polya + off, polyb + off, polyc + off);
   }
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
+// counts number of coefficients having value 1.
+template<const size_t k>
+inline static size_t
+polyvec_count_1s(const ff::ff_t* const __restrict vec)
+{
+  size_t cnt = 0;
+
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    cnt += count_1s(vec + off);
+  }
+
+  return cnt;
 }
 
 }
