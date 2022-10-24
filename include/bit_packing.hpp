@@ -85,4 +85,47 @@ encode_hint_bits(const ff::ff_t* const __restrict h,
   }
 }
 
+// Given a serialized byte array holding hint bits, this routine unpacks hint
+// bits into a vector ( of dimension k x 1 ) of degree-255 polynomials s.t. <= ω
+// many hint bits are set.
+template<const size_t k, const size_t omega>
+static bool
+decode_hint_bits(const uint8_t* const __restrict arr,
+                 ff::ff_t* const __restrict h)
+{
+  std::memset(h, 0, sizeof(ff::ff_t) * k * ntt::N);
+
+  size_t idx = 0;
+  bool failed = false;
+
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+
+    const bool flg0 = arr[omega + i] < idx;
+    const bool flg1 = arr[omega + i] > omega;
+    const bool flg2 = flg0 | flg1;
+
+    failed |= flg2;
+
+    const size_t till = arr[omega + i];
+    for (size_t j = idx; j < till; j++) {
+      const bool flg0 = j > idx;
+      const bool flg1 = flg0 & (arr[j] <= arr[j - flg0 * 1]);
+
+      failed |= flg1;
+
+      h[off + arr[j]] = ff::ff_t{ 1u };
+    }
+
+    idx = arr[omega + i];
+  }
+
+  for (size_t i = idx; i < omega; i++) {
+    const bool flg = arr[i] != 0;
+    failed |= flg;
+  }
+
+  return failed;
+}
+
 }
