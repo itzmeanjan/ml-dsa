@@ -88,8 +88,11 @@ encode_hint_bits(const ff::ff_t* const __restrict h,
     for (size_t j = 0; j < ntt::N; j++) {
       const bool flg = h[off + j] != zero;
 
-      arr[idx] = j * flg;
-      idx = idx + 1 * flg;
+      const uint8_t br0[]{ arr[idx], static_cast<uint8_t>(j) };
+      const uint8_t br1[]{ 0, 1 };
+
+      arr[idx] = br0[flg];
+      idx = idx + br1[flg];
     }
 
     arr[omega + i] = idx;
