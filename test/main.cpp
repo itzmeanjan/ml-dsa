@@ -33,5 +33,10 @@ main()
   test_dilithium::test_encode_decode<20>();
   std::cout << "[test] Polynomial encoding/ decoding\n";
 
+  test_dilithium::test_encode_decode_hint_bits<4, 80>();
+  test_dilithium::test_encode_decode_hint_bits<6, 55>();
+  test_dilithium::test_encode_decode_hint_bits<8, 75>();
+  std::cout << "[test] Hint bit polynomial encoding/ decoding\n";
+
   return EXIT_SUCCESS;
 }
