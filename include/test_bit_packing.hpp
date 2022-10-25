@@ -33,11 +33,11 @@ test_encode_decode() requires(dilithium_utils::check_sbw(sbw))
     flg |= static_cast<bool>((polya[i].v & mask) ^ polyb[i].v);
   }
 
-  assert(!flg);
-
   std::free(polya);
   std::free(polyb);
   std::free(arr);
+
+  assert(!flg);
 }
 
 // Generates random hint bit polynomial vector of dimension k x 1, with <= ω
@@ -72,11 +72,18 @@ test_encode_decode_hint_bits()
 
   ff::ff_t* h0 = static_cast<ff::ff_t*>(std::malloc(hlen));
   ff::ff_t* h1 = static_cast<ff::ff_t*>(std::malloc(hlen));
-  uint8_t* arr = static_cast<uint8_t*>(std::malloc(alen));
+  ff::ff_t* h2 = static_cast<ff::ff_t*>(std::malloc(hlen));
+  uint8_t* arr0 = static_cast<uint8_t*>(std::malloc(alen));
+  uint8_t* arr1 = static_cast<uint8_t*>(std::malloc(alen));
 
   generate_random_hint_bits<k, omega>(h0);
-  dilithium_utils::encode_hint_bits<k, omega>(h0, arr);
-  dilithium_utils::decode_hint_bits<k, omega>(arr, h1);
+
+  dilithium_utils::encode_hint_bits<k, omega>(h0, arr0);
+  std::memcpy(arr1, arr0, alen);
+  arr1[alen - 1] = ~arr1[alen - 1];
+
+  const bool failed0 = dilithium_utils::decode_hint_bits<k, omega>(arr0, h1);
+  const bool failed1 = dilithium_utils::decode_hint_bits<k, omega>(arr1, h2);
 
   bool flg = true;
 
@@ -84,11 +91,13 @@ test_encode_decode_hint_bits()
     flg &= (h0[i] == h1[i]);
   }
 
-  assert(flg);
-
   std::free(h0);
   std::free(h1);
-  std::free(arr);
+  std::free(h2);
+  std::free(arr0);
+  std::free(arr1);
+
+  assert(flg & !failed0 & failed1);
 }
 
 }
