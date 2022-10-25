@@ -1,6 +1,7 @@
 #pragma once
 #include "polyvec.hpp"
 #include "sampling.hpp"
+#include <iostream>
 
 // Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium {
@@ -57,23 +58,24 @@ sign(const uint8_t* const __restrict seckey,
 
   dilithium_utils::expand_a<k, l>(rho, A);
 
-  uint8_t crh_in[48 + mlen]{};
+  uint8_t crh_in0[48 + mlen]{};
+  uint8_t crh_in1[32 + 48]{};
   uint8_t mu[48]{};
 
-  std::memcpy(crh_in + 0, tr, 48);
-  std::memcpy(crh_in + 48, msg, mlen);
+  std::memcpy(crh_in0 + 0, tr, 48);
+  std::memcpy(crh_in0 + 48, msg, mlen);
 
   shake256::shake256 crh0{};
-  crh0.hash(crh_in, sizeof(crh_in));
+  crh0.hash(crh_in0, sizeof(crh_in0));
   crh0.read(mu, sizeof(mu));
 
   uint8_t rho_prime[48]{};
 
-  std::memcpy(crh_in + 0, key, 32);
-  std::memcpy(crh_in + 32, mu, sizeof(mu));
+  std::memcpy(crh_in1 + 0, key, 32);
+  std::memcpy(crh_in1 + 32, mu, sizeof(mu));
 
   shake256::shake256 crh1{};
-  crh1.hash(crh_in, 32 + sizeof(mu));
+  crh1.hash(crh_in1, sizeof(crh_in1));
   crh1.read(rho_prime, sizeof(rho_prime));
 
   ff::ff_t s1[l * ntt::N]{};
@@ -106,6 +108,11 @@ sign(const uint8_t* const __restrict seckey,
 
     dilithium_utils::expand_mask<gamma1, l>(rho_prime, nonce, y);
     std::memcpy(y_prime, y, sizeof(y));
+
+    for (size_t i = 0; i < ntt::N; i++) {
+      std::cout << y[i].v << ", ";
+    }
+    std::cout << std::endl;
 
     dilithium_utils::polyvec_ntt<l>(y_prime);
     dilithium_utils::matrix_multiply<k, l, l, 1>(A, y_prime, w);
