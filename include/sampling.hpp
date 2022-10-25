@@ -209,9 +209,11 @@ sample_in_ball(const uint8_t* const __restrict seed,
   hasher.hash(seed, 32);
   hasher.read(tau_bits, sizeof(tau_bits));
 
-  size_t i = ntt::N - tau;
+  constexpr size_t frm = ntt::N - tau;
+  size_t i = frm;
+
   while (i < ntt::N) {
-    const size_t tau_bit = i - 196ul;
+    const size_t tau_bit = i - frm;
 
     const size_t tau_byte_off = tau_bit >> 3;
     const size_t tau_bit_off = tau_bit & 7ul;
