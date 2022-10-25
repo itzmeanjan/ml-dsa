@@ -5,6 +5,15 @@
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium_utils {
 
+// Compile-time check to ensure that significant bit width of Z_q element
+// doesn't cross maximum bit width of field prime q ( = 2^23 - 2^13 + 1 )
+static inline constexpr bool
+check_sbw(const size_t sbw)
+{
+  constexpr size_t mbw = std::bit_width(ff::Q - 1);
+  return sbw <= mbw;
+}
+
 // Given a degree-255 polynomial, where significant portion of each ( total 256
 // of them ) coefficient ∈ [0, 2^sbw), this routine serializes the polynomial to
 // a byte array of length 32 * sbw -bytes
@@ -14,7 +23,8 @@ namespace dilithium_utils {
 // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
 template<const size_t sbw>
 static void
-encode(const ff::ff_t* const __restrict poly, uint8_t* const __restrict arr)
+encode(const ff::ff_t* const __restrict poly,
+       uint8_t* const __restrict arr) requires(check_sbw(sbw))
 {
   constexpr size_t blen = ntt::N * sbw;
   constexpr size_t len = blen >> 3;
@@ -38,7 +48,8 @@ encode(const ff::ff_t* const __restrict poly, uint8_t* const __restrict arr)
 // portion of each coefficient ∈ [0, 2^sbw)
 template<const size_t sbw>
 static void
-decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
+decode(const uint8_t* const __restrict arr,
+       ff::ff_t* const __restrict poly) requires(check_sbw(sbw))
 {
   constexpr size_t blen = ntt::N * sbw;
 

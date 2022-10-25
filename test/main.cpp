@@ -24,5 +24,14 @@ main()
   test_dilithium::test_sample_in_ball<60u>();
   std::cout << "[test] Hashing to a ball\n";
 
+  test_dilithium::test_encode_decode<3>();
+  test_dilithium::test_encode_decode<4>();
+  test_dilithium::test_encode_decode<6>();
+  test_dilithium::test_encode_decode<10>();
+  test_dilithium::test_encode_decode<13>();
+  test_dilithium::test_encode_decode<18>();
+  test_dilithium::test_encode_decode<20>();
+  std::cout << "[test] Polynomial encoding/ decoding\n";
+
   return EXIT_SUCCESS;
 }
