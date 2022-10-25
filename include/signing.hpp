@@ -1,7 +1,6 @@
 #pragma once
 #include "polyvec.hpp"
 #include "sampling.hpp"
-#include <iostream>
 
 // Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium {
@@ -108,11 +107,6 @@ sign(const uint8_t* const __restrict seckey,
 
     dilithium_utils::expand_mask<gamma1, l>(rho_prime, nonce, y);
     std::memcpy(y_prime, y, sizeof(y));
-
-    for (size_t i = 0; i < ntt::N; i++) {
-      std::cout << y[i].v << ", ";
-    }
-    std::cout << std::endl;
 
     dilithium_utils::polyvec_ntt<l>(y_prime);
     dilithium_utils::matrix_multiply<k, l, l, 1>(A, y_prime, w);
