@@ -32,6 +32,9 @@ BENCHMARK(bench_dilithium::uniform_sampling_eta<4, 6>);
 BENCHMARK(bench_dilithium::expand_mask<1u << 17, 4>);
 BENCHMARK(bench_dilithium::expand_mask<1u << 19, 5>);
 BENCHMARK(bench_dilithium::expand_mask<1u << 19, 7>);
+BENCHMARK(bench_dilithium::sample_in_ball<39>);
+BENCHMARK(bench_dilithium::sample_in_ball<49>);
+BENCHMARK(bench_dilithium::sample_in_ball<60>);
 
 // register for benchmarking serialization/ deserialization of polynomials
 BENCHMARK(bench_dilithium::encode<3>);

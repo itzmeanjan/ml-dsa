@@ -90,4 +90,29 @@ expand_mask(benchmark::State& state)
   std::free(vec);
 }
 
+// Benchmarks performance of hashing to a ball routine
+template<const uint32_t τ>
+void
+sample_in_ball(benchmark::State& state)
+{
+  constexpr size_t slen = 32;
+  constexpr size_t plen = ntt::N * sizeof(ff::ff_t);
+
+  uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
+  ff::ff_t* poly = static_cast<ff::ff_t*>(std::malloc(plen));
+
+  dilithium_utils::random_data<uint8_t>(seed, slen);
+
+  for (auto _ : state) {
+    dilithium_utils::sample_in_ball<τ>(seed, poly);
+
+    benchmark::DoNotOptimize(seed);
+    benchmark::DoNotOptimize(poly);
+    benchmark::ClobberMemory();
+  }
+
+  std::free(seed);
+  std::free(poly);
+}
+
 }
