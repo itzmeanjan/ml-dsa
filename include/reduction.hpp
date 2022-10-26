@@ -42,6 +42,15 @@ power2round(const ff::ff_t r) requires(check_d(d))
   return std::make_pair(hi, lo);
 }
 
+inline static constexpr bool
+check_α(const uint32_t alpha)
+{
+  constexpr uint32_t a = ((ff::Q - 1) / 88) << 1;
+  constexpr uint32_t b = ((ff::Q - 1) / 32) << 1;
+
+  return (alpha == a) || (alpha == b);
+}
+
 // Given an element of Z_q | q = 2^23 - 2^13 + 1, this routine computes high and
 // low order bits s.t.
 //
@@ -54,7 +63,7 @@ power2round(const ff::ff_t r) requires(check_d(d))
 // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
 template<const uint32_t alpha>
 inline static std::pair<ff::ff_t, ff::ff_t>
-decompose(const ff::ff_t r)
+decompose(const ff::ff_t r) requires(check_α(alpha))
 {
   constexpr uint32_t t0 = alpha >> 1;
   constexpr uint32_t t1 = ff::Q - 1u;
@@ -83,7 +92,7 @@ decompose(const ff::ff_t r)
 // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
 template<const uint32_t alpha>
 inline static ff::ff_t
-highbits(const ff::ff_t r)
+highbits(const ff::ff_t r) requires(check_α(alpha))
 {
   const auto s = decompose<alpha>(r);
   return s.first;
@@ -97,7 +106,7 @@ highbits(const ff::ff_t r)
 // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
 template<const uint32_t alpha>
 inline static ff::ff_t
-lowbits(const ff::ff_t r)
+lowbits(const ff::ff_t r) requires(check_α(alpha))
 {
   const auto s = decompose<alpha>(r);
   return s.second;
@@ -114,7 +123,7 @@ lowbits(const ff::ff_t r)
 // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
 template<const uint32_t alpha>
 inline static ff::ff_t
-make_hint(const ff::ff_t z, const ff::ff_t r)
+make_hint(const ff::ff_t z, const ff::ff_t r) requires(check_α(alpha))
 {
   const ff::ff_t r1 = highbits<alpha>(r);
   const ff::ff_t v1 = highbits<alpha>(r + z);
@@ -130,7 +139,7 @@ make_hint(const ff::ff_t z, const ff::ff_t r)
 // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
 template<const uint32_t alpha>
 inline static ff::ff_t
-use_hint(const ff::ff_t h, const ff::ff_t r)
+use_hint(const ff::ff_t h, const ff::ff_t r) requires(check_α(alpha))
 {
   constexpr uint32_t m = (ff::Q - 1) / alpha;
   constexpr ff::ff_t t0{ alpha >> 1 };
