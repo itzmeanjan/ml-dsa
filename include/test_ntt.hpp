@@ -31,12 +31,16 @@ test_ntt_intt()
   ntt::ntt(poly_b);
   ntt::intt(poly_b);
 
+  bool flg = true;
+
   for (size_t i = 0; i < ntt::N; i++) {
-    assert(poly_a[i] == poly_b[i]);
+    flg &= (poly_a[i] == poly_b[i]);
   }
 
   std::free(poly_a);
   std::free(poly_b);
+
+  assert(flg);
 }
 
 }

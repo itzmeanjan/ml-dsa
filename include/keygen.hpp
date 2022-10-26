@@ -15,16 +15,16 @@ namespace dilithium {
 // Generated public key is of (32 + k * 320) -bytes.
 // Generated secret key is of (112 + 32 * (k * ebw + l * ebw + k * d)) -bytes
 //
-// Note, ebw = ceil(log2(2 * eta + 1))
+// Note, ebw = ceil(log2(2 * η + 1))
 //
 // See section 5.4 of specification for public key and secret key byte length.
-template<const size_t k, const size_t l, const uint32_t eta, const size_t d>
+template<const size_t k, const size_t l, const uint32_t η, const size_t d>
 static void
 keygen(
   const uint8_t* const __restrict seed, // 32 -bytes seed
   uint8_t* const __restrict pubkey,     // (32 + k * 320) -bytes
   uint8_t* const __restrict seckey // (112 + 32 * (ebw*(k + l) + k*d)) -bytes
-  ) requires(dilithium_utils::check_eta(eta) && dilithium_utils::check_d(d))
+  ) requires(dilithium_utils::check_η(η) && dilithium_utils::check_d(d))
 {
   uint8_t seed_hash[32 * 3]{};
 
@@ -39,13 +39,13 @@ keygen(
   ff::ff_t s1[l * ntt::N]{};
   ff::ff_t s1_prime[l * ntt::N]{};
 
-  dilithium_utils::uniform_sample_eta<eta, l, 0>(sigma, s1);
+  dilithium_utils::uniform_sample_eta<η, l, 0>(sigma, s1);
   std::memcpy(s1_prime, s1, sizeof(s1));
   dilithium_utils::polyvec_ntt<l>(s1_prime);
 
   ff::ff_t s2[k * ntt::N]{};
 
-  dilithium_utils::uniform_sample_eta<eta, k, l>(sigma, s2);
+  dilithium_utils::uniform_sample_eta<η, k, l>(sigma, s2);
 
   ff::ff_t A[k * l * ntt::N]{};
 
@@ -78,10 +78,10 @@ keygen(
   std::memcpy(seckey + 32, key, 32);
   std::memcpy(seckey + 64, tr, 48);
 
-  dilithium_utils::polyvec_sub_from_x<l, eta>(s1);
-  dilithium_utils::polyvec_sub_from_x<k, eta>(s2);
+  dilithium_utils::polyvec_sub_from_x<l, η>(s1);
+  dilithium_utils::polyvec_sub_from_x<k, η>(s2);
 
-  constexpr size_t eta_bw = std::bit_width(2 * eta);
+  constexpr size_t eta_bw = std::bit_width(2 * η);
   constexpr size_t s1_len = l * eta_bw * 32;
   constexpr size_t s2_len = k * eta_bw * 32;
 

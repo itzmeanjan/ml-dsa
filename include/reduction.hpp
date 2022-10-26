@@ -140,11 +140,15 @@ use_hint(const ff::ff_t h, const ff::ff_t r)
   const auto s = decompose<alpha>(r);
 
   if ((h == t2) && ((s.second.v > 0u) && (s.second.v < t1.v))) {
-    const ff::ff_t t3 = s.first + t2;
-    return ff::ff_t{ t3.v % m };
+    const bool flg = s.first == ff::ff_t{ m - 1u };
+    const ff::ff_t br[]{ s.first + t2, ff::ff_t{ 0u } };
+
+    return br[flg];
   } else if ((h == t2) && (s.second.v >= t1.v)) {
-    const ff::ff_t t3 = s.first - t2;
-    return ff::ff_t{ t3.v % m };
+    const bool flg = s.first == ff::ff_t{ 0u };
+    const ff::ff_t br[]{ s.first - t2, ff::ff_t{ m - 1 } };
+
+    return br[flg];
   } else {
     return s.first;
   }
