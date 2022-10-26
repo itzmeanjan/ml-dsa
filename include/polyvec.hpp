@@ -234,6 +234,21 @@ polyvec_make_hint(const ff::ff_t* const __restrict polya,
   }
 }
 
+// Recovers high order bits of a vector of degree-255 polynomials (  i.e. r + z
+// ) s.t. hint bits ( say h ) and another polynomial vector ( say r ) are
+// provided.
+template<const size_t k, const uint32_t alpha>
+inline static void
+polyvec_use_hint(const ff::ff_t* const __restrict polyh,
+                 const ff::ff_t* const __restrict polyr,
+                 ff::ff_t* const __restrict polyrz)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_use_hint<alpha>(polyh + off, polyr + off, polyrz + off);
+  }
+}
+
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
 // counts number of coefficients having value 1.
 template<const size_t k>
@@ -248,6 +263,18 @@ polyvec_count_1s(const ff::ff_t* const __restrict vec)
   }
 
   return cnt;
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
+// shifts each coefficient leftwards by d bits
+template<const size_t k, const size_t d>
+inline static void
+polyvec_shl(ff::ff_t* const __restrict vec)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_shl<d>(vec + off);
+  }
 }
 
 }
