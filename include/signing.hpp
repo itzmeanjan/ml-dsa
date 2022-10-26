@@ -34,7 +34,11 @@ template<const size_t k,
 static void
 sign(const uint8_t* const __restrict seckey,
      const uint8_t* const __restrict msg,
-     uint8_t* const __restrict sig)
+     uint8_t* const __restrict sig) requires(dilithium_utils::check_eta(eta) &&
+                                             dilithium_utils::check_d(d) &&
+                                             dilithium_utils::check_gamma1(
+                                               gamma1) &&
+                                             dilithium_utils::check_tau(tau))
 {
   constexpr uint32_t t0_rng = 1u << (d - 1);
 

@@ -200,7 +200,7 @@ check_tau(const uint32_t tau)
 template<const uint32_t tau>
 static void
 sample_in_ball(const uint8_t* const __restrict seed,
-               ff::ff_t* const __restrict poly)
+               ff::ff_t* const __restrict poly) requires(check_tau(tau))
 {
   uint8_t tau_bits[8]{};
   uint8_t buf = 0;
