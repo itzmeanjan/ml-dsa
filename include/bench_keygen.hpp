@@ -6,8 +6,8 @@
 // Benchmark Dilithium PQC suite implementation on CPU, using google-benchmark
 namespace bench_dilithium {
 
-// Benchmark Dilithium Key Generation Algorithm, for different parameter sets
-template<const size_t k, const size_t l, const uint32_t η, const size_t d>
+// Benchmark Dilithium Key Generation Algorithm
+template<const size_t k, const size_t l, const size_t d, const uint32_t η>
 void
 keygen(benchmark::State& state)
 {
@@ -22,7 +22,7 @@ keygen(benchmark::State& state)
   dilithium_utils::random_data<uint8_t>(seed, slen);
 
   for (auto _ : state) {
-    dilithium::keygen<k, l, η, d>(seed, pubkey, seckey);
+    dilithium::keygen<k, l, d, η>(seed, pubkey, seckey);
 
     benchmark::DoNotOptimize(seed);
     benchmark::DoNotOptimize(pubkey);
