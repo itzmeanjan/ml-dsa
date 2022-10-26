@@ -99,6 +99,21 @@ polyvec_add_to(const ff::ff_t* const __restrict src,
   }
 }
 
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this
+// routine negates each coefficient.
+template<const size_t k>
+inline static void
+polyvec_neg(ff::ff_t* const __restrict vec)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+
+    for (size_t l = 0; l < ntt::N; l++) {
+      vec[off + l] = -vec[off + l];
+    }
+  }
+}
+
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials s.t. each
 // coefficient ∈ [-x, x], this routine subtracts each coefficient from x so that
 // coefficients now stay in [0, 2x].
@@ -141,6 +156,124 @@ polyvec_decode(const uint8_t* const __restrict src,
     const size_t off1 = i * ntt::N;
 
     decode<sbw>(src + off0, dst + off1);
+  }
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
+// extracts out high order bits from each coefficient
+template<const size_t k, const uint32_t alpha>
+inline static void
+polyvec_highbits(const ff::ff_t* const __restrict src,
+                 ff::ff_t* const __restrict dst)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_highbits<alpha>(src + off, dst + off);
+  }
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
+// extracts out low order bits from each coefficient, while not mutating operand
+template<const size_t k, const uint32_t alpha>
+inline static void
+polyvec_lowbits(const ff::ff_t* const __restrict src,
+                ff::ff_t* const __restrict dst)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_lowbits<alpha>(src + off, dst + off);
+  }
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials and one
+// multiplier polynomial, this routine performs k pointwise polynomial
+// multiplications when each of these polynomials are in their NTT
+// representation, while not mutating operand polynomials.
+template<const size_t k>
+inline static void
+polyvec_mul_poly(const ff::ff_t* const __restrict poly,
+                 const ff::ff_t* const __restrict src_vec,
+                 ff::ff_t* const __restrict dst_vec)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    polymul(poly, src_vec + off, dst_vec + off);
+  }
+}
+
+// Computes infinity norm of a vector ( of dimension k x 1 ) of degree-255
+// polynomials
+//
+// See point `Sizes of elements` in section 2.1 of Dilithium specification
+// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+template<const size_t k>
+inline static ff::ff_t
+polyvec_infinity_norm(const ff::ff_t* const __restrict vec)
+{
+  ff::ff_t res{ 0u };
+
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    res = std::max(res, poly_infinity_norm(vec + off));
+  }
+
+  return res;
+}
+
+// Given two vector ( of dimension k x 1 ) of degree-255 polynomials, this
+// routine computes hint bit for each coefficient, using `make_hint` routine.
+template<const size_t k, const uint32_t alpha>
+inline static void
+polyvec_make_hint(const ff::ff_t* const __restrict polya,
+                  const ff::ff_t* const __restrict polyb,
+                  ff::ff_t* const __restrict polyc)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_make_hint<alpha>(polya + off, polyb + off, polyc + off);
+  }
+}
+
+// Recovers high order bits of a vector of degree-255 polynomials (  i.e. r + z
+// ) s.t. hint bits ( say h ) and another polynomial vector ( say r ) are
+// provided.
+template<const size_t k, const uint32_t alpha>
+inline static void
+polyvec_use_hint(const ff::ff_t* const __restrict polyh,
+                 const ff::ff_t* const __restrict polyr,
+                 ff::ff_t* const __restrict polyrz)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_use_hint<alpha>(polyh + off, polyr + off, polyrz + off);
+  }
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
+// counts number of coefficients having value 1.
+template<const size_t k>
+inline static size_t
+polyvec_count_1s(const ff::ff_t* const __restrict vec)
+{
+  size_t cnt = 0;
+
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    cnt += count_1s(vec + off);
+  }
+
+  return cnt;
+}
+
+// Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
+// shifts each coefficient leftwards by d bits
+template<const size_t k, const size_t d>
+inline static void
+polyvec_shl(ff::ff_t* const __restrict vec)
+{
+  for (size_t i = 0; i < k; i++) {
+    const size_t off = i * ntt::N;
+    poly_shl<d>(vec + off);
   }
 }
 
