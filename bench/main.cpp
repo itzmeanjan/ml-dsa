@@ -15,6 +15,12 @@ BENCHMARK(bench_dilithium::intt);
 
 // register for benchmarking coefficient reduction techniques
 BENCHMARK(bench_dilithium::power2round);
+BENCHMARK(bench_dilithium::decompose<190464>);
+BENCHMARK(bench_dilithium::make_hint<190464>);
+BENCHMARK(bench_dilithium::use_hint<190464>);
+BENCHMARK(bench_dilithium::decompose<523776>);
+BENCHMARK(bench_dilithium::make_hint<523776>);
+BENCHMARK(bench_dilithium::use_hint<523776>);
 
 // register for benchmarking sampling vector/ matrix from XOF
 BENCHMARK(bench_dilithium::expand_a<4, 4>);
