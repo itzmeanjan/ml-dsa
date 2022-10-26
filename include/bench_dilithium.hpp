@@ -5,3 +5,4 @@
 #include "bench_ntt.hpp"
 #include "bench_reduction.hpp"
 #include "bench_sampling.hpp"
+#include "bench_signing.hpp"

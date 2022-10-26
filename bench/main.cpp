@@ -60,10 +60,13 @@ BENCHMARK(bench_dilithium::decode_hint_bits<6, 55>);
 BENCHMARK(bench_dilithium::encode_hint_bits<8, 75>);
 BENCHMARK(bench_dilithium::decode_hint_bits<8, 75>);
 
-// register for benchmarking Dilithium Key Generation Algorithm
-BENCHMARK(bench_dilithium::keygen<4, 4, 2, 13>); // NIST security level 2
-BENCHMARK(bench_dilithium::keygen<6, 5, 4, 13>); // NIST security level 3
-BENCHMARK(bench_dilithium::keygen<8, 7, 2, 13>); // NIST security level 5
+// register for benchmarking Dilithium Key Generation, Signing Algorithm
+BENCHMARK(bench_dilithium::keygen<4, 4, 13, 2>);
+BENCHMARK(bench_dilithium::sign<4, 4, 13, 2, 1u << 17, 95232, 39, 78, 80>);
+BENCHMARK(bench_dilithium::keygen<6, 5, 13, 4>);
+BENCHMARK(bench_dilithium::sign<6, 5, 13, 4, 1u << 19, 261888, 49, 196, 55>);
+BENCHMARK(bench_dilithium::keygen<8, 7, 13, 2>);
+BENCHMARK(bench_dilithium::sign<8, 7, 13, 2, 1u << 19, 261888, 60, 120, 75>);
 
 // benchmark runner main routine
 BENCHMARK_MAIN();

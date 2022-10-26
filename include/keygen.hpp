@@ -18,7 +18,7 @@ namespace dilithium {
 // Note, ebw = ceil(log2(2 * η + 1))
 //
 // See section 5.4 of specification for public key and secret key byte length.
-template<const size_t k, const size_t l, const uint32_t η, const size_t d>
+template<const size_t k, const size_t l, const size_t d, const uint32_t η>
 static void
 keygen(
   const uint8_t* const __restrict seed, // 32 -bytes seed

@@ -44,7 +44,7 @@ test_signing()
 
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
-  dilithium::keygen<k, l, η, d>(seed, pkey0, skey);
+  dilithium::keygen<k, l, d, η>(seed, pkey0, skey);
   dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, mlen>(skey, msg0, sig0);
 
   std::memcpy(sig1, sig0, siglen);
