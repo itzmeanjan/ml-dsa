@@ -29,10 +29,24 @@ BENCHMARK(bench_dilithium::encode<3>);
 BENCHMARK(bench_dilithium::decode<3>);
 BENCHMARK(bench_dilithium::encode<4>);
 BENCHMARK(bench_dilithium::decode<4>);
+BENCHMARK(bench_dilithium::encode<6>);
+BENCHMARK(bench_dilithium::decode<6>);
 BENCHMARK(bench_dilithium::encode<10>);
 BENCHMARK(bench_dilithium::decode<10>);
 BENCHMARK(bench_dilithium::encode<13>);
 BENCHMARK(bench_dilithium::decode<13>);
+BENCHMARK(bench_dilithium::encode<18>);
+BENCHMARK(bench_dilithium::decode<18>);
+BENCHMARK(bench_dilithium::encode<20>);
+BENCHMARK(bench_dilithium::decode<20>);
+
+// register for benchmarking serialization/ deserialization of hint bits
+BENCHMARK(bench_dilithium::encode_hint_bits<4, 80>);
+BENCHMARK(bench_dilithium::decode_hint_bits<4, 80>);
+BENCHMARK(bench_dilithium::encode_hint_bits<6, 55>);
+BENCHMARK(bench_dilithium::decode_hint_bits<6, 55>);
+BENCHMARK(bench_dilithium::encode_hint_bits<8, 75>);
+BENCHMARK(bench_dilithium::decode_hint_bits<8, 75>);
 
 // register for benchmarking Dilithium Key Generation Algorithm
 BENCHMARK(bench_dilithium::keygen<4, 4, 2, 13>); // NIST security level 2
