@@ -6,7 +6,7 @@
 // Benchmark Dilithium PQC suite implementation on CPU, using google-benchmark
 namespace bench_dilithium {
 
-// Benchmark Dilithium Key Generation Algorithm, for different parameter sets
+// Benchmark Dilithium Key Generation Algorithm
 template<const size_t k, const size_t l, const size_t d, const uint32_t η>
 void
 keygen(benchmark::State& state)

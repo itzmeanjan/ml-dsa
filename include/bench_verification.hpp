@@ -6,7 +6,7 @@
 // Benchmark Dilithium PQC suite implementation on CPU, using google-benchmark
 namespace bench_dilithium {
 
-// Benchmark Dilithium signing algorithm's performance
+// Benchmark Dilithium signature verification routine
 template<const size_t k,
          const size_t l,
          const size_t d,
@@ -17,7 +17,7 @@ template<const size_t k,
          const uint32_t β,
          const size_t ω>
 void
-sign(benchmark::State& state)
+verify(benchmark::State& state)
 {
   constexpr size_t slen = 32;
   constexpr size_t mlen = 32;
@@ -35,11 +35,15 @@ sign(benchmark::State& state)
   dilithium_utils::random_data<uint8_t>(msg, mlen);
 
   dilithium::keygen<k, l, d, η>(seed, pkey, skey);
+  dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, mlen>(skey, msg, sig);
 
   for (auto _ : state) {
-    dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, mlen>(skey, msg, sig);
+    bool flg = false;
+    flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω, mlen>(pkey, msg, sig);
+    assert(flg);
 
-    benchmark::DoNotOptimize(skey);
+    benchmark::DoNotOptimize(flg);
+    benchmark::DoNotOptimize(pkey);
     benchmark::DoNotOptimize(msg);
     benchmark::DoNotOptimize(sig);
     benchmark::ClobberMemory();
@@ -47,15 +51,11 @@ sign(benchmark::State& state)
 
   state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
 
-  bool flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω, mlen>(pkey, msg, sig);
-
   std::free(seed);
   std::free(pkey);
   std::free(skey);
   std::free(sig);
   std::free(msg);
-
-  assert(flg);
 }
 
 }
