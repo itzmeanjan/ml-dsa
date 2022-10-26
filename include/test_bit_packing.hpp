@@ -1,5 +1,6 @@
 #pragma once
 #include "bit_packing.hpp"
+#include <cassert>
 
 // Test functional correctness of Dilithium PQC suite implementation
 namespace test_dilithium {
