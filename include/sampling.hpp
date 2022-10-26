@@ -59,9 +59,9 @@ expand_a(const uint8_t* const __restrict rho, ff::ff_t* const __restrict mat)
 // Compile-time check to ensure that η ∈ {2, 4}, so that sampled secret key
 // range stays short i.e. [-η, η]
 inline static constexpr bool
-check_eta(const uint32_t eta)
+check_η(const uint32_t η)
 {
-  return (eta == 2u) || (eta == 4u);
+  return (η == 2u) || (η == 4u);
 }
 
 // Compile-time check to ensure that starting nonce belongs to allowed set of
@@ -84,13 +84,13 @@ check_nonce(const size_t nonce)
 // https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/poly.c#L370-L417
 //
 // Note, sampled polynomial coefficients are kept in canonical form.
-template<const uint32_t eta, const size_t k, const size_t nonce>
+template<const uint32_t η, const size_t k, const size_t nonce>
 static void
 uniform_sample_eta(const uint8_t* const __restrict sigma,
-                   ff::ff_t* const __restrict vec) requires(check_eta(eta) &&
+                   ff::ff_t* const __restrict vec) requires(check_η(η) &&
                                                             check_nonce(nonce))
 {
-  constexpr ff::ff_t eta_{ eta };
+  constexpr ff::ff_t eta_{ η };
 
   uint8_t msg[34]{};
   uint8_t buf = 0;
@@ -114,7 +114,7 @@ uniform_sample_eta(const uint8_t* const __restrict sigma,
       const uint8_t t0 = buf & 0x0f;
       const uint8_t t1 = buf >> 4;
 
-      if constexpr (eta == 2u) {
+      if constexpr (η == 2u) {
         const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
         const bool flg0 = t0 < 15;
 
@@ -146,21 +146,21 @@ uniform_sample_eta(const uint8_t* const __restrict sigma,
 
 // Compile-time check to ensure that γ1 has recommended value
 static inline constexpr bool
-check_gamma1(const uint32_t gamma1)
+check_γ1(const uint32_t γ1)
 {
-  return (gamma1 == (1u << 17)) || (gamma1 == (1u << 19));
+  return (γ1 == (1u << 17)) || (γ1 == (1u << 19));
 }
 
 // Given a 48-bytes seed and 2 -bytes nonce, this routine does uniform sampling
 // from output of SHAKE256 XOF, computing a l x 1 vector of degree-255
 // polynomials s.t. each coefficient ∈ [-(γ1-1), γ1]
-template<const uint32_t gamma1, const size_t l>
+template<const uint32_t γ1, const size_t l>
 static void
 expand_mask(const uint8_t* const __restrict seed,
             const uint16_t nonce,
-            ff::ff_t* const __restrict vec) requires(check_gamma1(gamma1))
+            ff::ff_t* const __restrict vec) requires(check_γ1(γ1))
 {
-  constexpr size_t gbw = std::bit_width(2 * gamma1 - 1u);
+  constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);
 
   uint8_t msg[50]{};
   uint8_t buf[gbw * 32]{};
@@ -179,16 +179,16 @@ expand_mask(const uint8_t* const __restrict seed,
     hasher.read(buf, sizeof(buf));
 
     decode<gbw>(buf, vec + off);
-    poly_sub_from_x<gamma1>(vec + off);
+    poly_sub_from_x<γ1>(vec + off);
   }
 }
 
 // Compile-time check to ensure that τ is set to parameter recommended in
 // Dilithium specification
 static inline constexpr bool
-check_tau(const uint32_t tau)
+check_τ(const uint32_t τ)
 {
-  return (tau == 39) || (tau == 49) || (tau == 60);
+  return (τ == 39) || (τ == 49) || (τ == 60);
 }
 
 // Given a 32 -bytes seed, this routine creates a degree-255 polynomial with τ
@@ -197,10 +197,10 @@ check_tau(const uint32_t tau)
 // See hashing to a ball algorithm described in figure 2 and section 5.3 of
 // Dilithium specification, as submitted to NIST final round call
 // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
-template<const uint32_t tau>
+template<const uint32_t τ>
 static void
 sample_in_ball(const uint8_t* const __restrict seed,
-               ff::ff_t* const __restrict poly) requires(check_tau(tau))
+               ff::ff_t* const __restrict poly) requires(check_τ(τ))
 {
   uint8_t tau_bits[8]{};
   uint8_t buf = 0;
@@ -209,7 +209,7 @@ sample_in_ball(const uint8_t* const __restrict seed,
   hasher.hash(seed, 32);
   hasher.read(tau_bits, sizeof(tau_bits));
 
-  constexpr size_t frm = ntt::N - tau;
+  constexpr size_t frm = ntt::N - τ;
   size_t i = frm;
 
   while (i < ntt::N) {

@@ -16,20 +16,19 @@ namespace dilithium {
 template<const size_t k,
          const size_t l,
          const size_t d,
-         const uint32_t gamma1,
-         const uint32_t gamma2,
-         const uint32_t tau,
-         const uint32_t beta,
-         const size_t omega,
+         const uint32_t γ1,
+         const uint32_t γ2,
+         const uint32_t τ,
+         const uint32_t β,
+         const size_t ω,
          const size_t mlen>
 static bool
 verify(
   const uint8_t* const __restrict pubkey,
   const uint8_t* const __restrict msg,
   const uint8_t* const __restrict sig) requires(dilithium_utils::check_d(d) &&
-                                                dilithium_utils::check_gamma1(
-                                                  gamma1) &&
-                                                dilithium_utils::check_tau(tau))
+                                                dilithium_utils::check_γ1(γ1) &&
+                                                dilithium_utils::check_τ(τ))
 {
   constexpr size_t t1_bw = std::bit_width(ff::Q) - d;
   constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();
@@ -37,10 +36,10 @@ verify(
   constexpr size_t puboff0 = 0;
   constexpr size_t puboff1 = puboff0 + 32;
 
-  constexpr size_t gamma1_bw = std::bit_width(gamma1);
+  constexpr size_t gamma1_bw = std::bit_width(γ1);
   constexpr size_t sigoff0 = 0;
   constexpr size_t sigoff1 = sigoff0 + (32 * l * gamma1_bw);
-  constexpr size_t sigoff2 = sigoff1 + (omega + k);
+  constexpr size_t sigoff2 = sigoff1 + (ω + k);
 
   ff::ff_t A[k * l * ntt::N]{};
   ff::ff_t t1[k * ntt::N]{};
@@ -63,15 +62,15 @@ verify(
 
   ff::ff_t c[ntt::N]{};
 
-  dilithium_utils::sample_in_ball<tau>(sig + sigoff2, c);
+  dilithium_utils::sample_in_ball<τ>(sig + sigoff2, c);
   ntt::ntt(c);
 
   ff::ff_t z[l * ntt::N]{};
   ff::ff_t h[k * ntt::N]{};
 
   dilithium_utils::polyvec_decode<l, gamma1_bw>(sig + sigoff0, z);
-  dilithium_utils::polyvec_sub_from_x<l, gamma1>(z);
-  bool failed = dilithium_utils::decode_hint_bits<k, omega>(sig + sigoff1, h);
+  dilithium_utils::polyvec_sub_from_x<l, γ1>(z);
+  bool failed = dilithium_utils::decode_hint_bits<k, ω>(sig + sigoff1, h);
 
   ff::ff_t w0[k * ntt::N]{};
   ff::ff_t w1[k * ntt::N]{};
@@ -91,9 +90,9 @@ verify(
   dilithium_utils::polyvec_add_to<k>(w0, w2);
   dilithium_utils::polyvec_intt<k>(w2);
 
-  dilithium_utils::polyvec_use_hint<k, gamma2 << 1>(h, w2, w1);
+  dilithium_utils::polyvec_use_hint<k, γ2 << 1>(h, w2, w1);
 
-  constexpr uint32_t m = (ff::Q - 1u) / (gamma2 << 1);
+  constexpr uint32_t m = (ff::Q - 1u) / (γ2 << 1);
   constexpr size_t w1bw = std::bit_width(m - 1u);
 
   uint8_t hash_in[48 + (k * w1bw * 32)]{};
@@ -106,11 +105,11 @@ verify(
   hasher2.hash(hash_in, sizeof(hash_in));
   hasher2.read(hash_out, sizeof(hash_out));
 
-  constexpr ff::ff_t bound0{ gamma1 - beta };
+  constexpr ff::ff_t bound0{ γ1 - β };
 
   const bool flg0 = z_norm < bound0;
   bool flg1 = false;
-  const bool flg2 = count_1 <= omega;
+  const bool flg2 = count_1 <= ω;
 
   for (size_t i = 0; i < 32; i++) {
     flg1 |= static_cast<bool>(sig[sigoff2 + i] ^ hash_out[i]);

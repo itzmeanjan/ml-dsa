@@ -39,11 +39,11 @@ pubkey_length() requires(check_d(d))
 //
 // See table 2 of Dilithium specification
 // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
-template<const size_t k, const size_t l, const uint32_t eta, const size_t d>
+template<const size_t k, const size_t l, const uint32_t η, const size_t d>
 inline static constexpr size_t
 seckey_length() requires(check_d(d))
 {
-  constexpr size_t eta_bw = std::bit_width(2 * eta);
+  constexpr size_t eta_bw = std::bit_width(2 * η);
   constexpr size_t sklen = 32 + 32 + 48 + 32 * (eta_bw * (k + l) + k * d);
   return sklen;
 }
@@ -53,15 +53,12 @@ seckey_length() requires(check_d(d))
 //
 // See table 2 of Dilithium specification
 // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
-template<const size_t k,
-         const size_t l,
-         const uint32_t gamma1,
-         const size_t omega>
+template<const size_t k, const size_t l, const uint32_t γ1, const size_t ω>
 inline static constexpr size_t
 signature_length()
 {
-  constexpr size_t gamma1_bw = std::bit_width(gamma1);
-  constexpr size_t siglen = 32 * l * gamma1_bw + omega + k + 32;
+  constexpr size_t gamma1_bw = std::bit_width(γ1);
+  constexpr size_t siglen = 32 * l * gamma1_bw + ω + k + 32;
   return siglen;
 }
 

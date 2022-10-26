@@ -42,7 +42,7 @@ test_encode_decode() requires(dilithium_utils::check_sbw(sbw))
 
 // Generates random hint bit polynomial vector of dimension k x 1, with <= ω
 // coefficients set to 1.
-template<const size_t k, const size_t omega>
+template<const size_t k, const size_t ω>
 inline static void
 generate_random_hint_bits(ff::ff_t* const __restrict poly)
 {
@@ -55,7 +55,7 @@ generate_random_hint_bits(ff::ff_t* const __restrict poly)
   std::mt19937_64 gen(rd());
   std::uniform_int_distribution<size_t> dis{ frm, to };
 
-  for (size_t i = 0; i < omega; i++) {
+  for (size_t i = 0; i < ω; i++) {
     const size_t idx = dis(gen);
     poly[idx] = ff::ff_t{ 1u };
   }
@@ -63,12 +63,12 @@ generate_random_hint_bits(ff::ff_t* const __restrict poly)
 
 // Test functional correctness of encoding and decoding of hint bit polynomial
 // vector.
-template<const size_t k, const size_t omega>
+template<const size_t k, const size_t ω>
 static void
 test_encode_decode_hint_bits()
 {
   constexpr size_t hlen = sizeof(ff::ff_t) * k * ntt::N;
-  constexpr size_t alen = omega + k;
+  constexpr size_t alen = ω + k;
 
   ff::ff_t* h0 = static_cast<ff::ff_t*>(std::malloc(hlen));
   ff::ff_t* h1 = static_cast<ff::ff_t*>(std::malloc(hlen));
@@ -76,14 +76,14 @@ test_encode_decode_hint_bits()
   uint8_t* arr0 = static_cast<uint8_t*>(std::malloc(alen));
   uint8_t* arr1 = static_cast<uint8_t*>(std::malloc(alen));
 
-  generate_random_hint_bits<k, omega>(h0);
+  generate_random_hint_bits<k, ω>(h0);
 
-  dilithium_utils::encode_hint_bits<k, omega>(h0, arr0);
+  dilithium_utils::encode_hint_bits<k, ω>(h0, arr0);
   std::memcpy(arr1, arr0, alen);
   arr1[alen - 1] = ~arr1[alen - 1];
 
-  const bool failed0 = dilithium_utils::decode_hint_bits<k, omega>(arr0, h1);
-  const bool failed1 = dilithium_utils::decode_hint_bits<k, omega>(arr1, h2);
+  const bool failed0 = dilithium_utils::decode_hint_bits<k, ω>(arr0, h1);
+  const bool failed1 = dilithium_utils::decode_hint_bits<k, ω>(arr1, h2);
 
   bool flg = true;
 

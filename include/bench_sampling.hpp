@@ -36,7 +36,7 @@ expand_a(benchmark::State& state)
 // Benchmark uniform sampling of k degree-255 polynomials s.t. each coefficient
 // ∈ [-η, η]. Coefficients are sampled from a XOF ( read SHAKE256 ), while it's
 // seeded with 32 -bytes randomness and 2 -bytes nonce.
-template<const uint32_t eta, const size_t k>
+template<const uint32_t η, const size_t k>
 void
 uniform_sampling_eta(benchmark::State& state)
 {
@@ -50,7 +50,7 @@ uniform_sampling_eta(benchmark::State& state)
   dilithium_utils::random_data<uint8_t>(seed, slen);
 
   for (auto _ : state) {
-    dilithium_utils::uniform_sample_eta<eta, k, nonce>(seed, vec);
+    dilithium_utils::uniform_sample_eta<η, k, nonce>(seed, vec);
 
     benchmark::DoNotOptimize(seed);
     benchmark::DoNotOptimize(vec);

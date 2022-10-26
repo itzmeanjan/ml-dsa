@@ -71,12 +71,12 @@ decode(const uint8_t* const __restrict arr,
 // bits into (ω + k) -bytes, following the description in section 5.4 of
 // Dilithium specification
 // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
-template<const size_t k, const size_t omega>
+template<const size_t k, const size_t ω>
 static void
 encode_hint_bits(const ff::ff_t* const __restrict h,
                  uint8_t* const __restrict arr)
 {
-  constexpr size_t len = omega + k;
+  constexpr size_t len = ω + k;
   constexpr ff::ff_t zero{ 0u };
 
   std::memset(arr, 0, len);
@@ -95,7 +95,7 @@ encode_hint_bits(const ff::ff_t* const __restrict h,
       idx = idx + br1[flg];
     }
 
-    arr[omega + i] = idx;
+    arr[ω + i] = idx;
   }
 }
 
@@ -105,7 +105,7 @@ encode_hint_bits(const ff::ff_t* const __restrict h,
 //
 // Returns boolean result denoting status of decoding of byte serialized hint
 // bits. Say return value is true, it denotes that decoding has failed.
-template<const size_t k, const size_t omega>
+template<const size_t k, const size_t ω>
 static bool
 decode_hint_bits(const uint8_t* const __restrict arr,
                  ff::ff_t* const __restrict h)
@@ -118,13 +118,13 @@ decode_hint_bits(const uint8_t* const __restrict arr,
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
 
-    const bool flg0 = arr[omega + i] < idx;
-    const bool flg1 = arr[omega + i] > omega;
+    const bool flg0 = arr[ω + i] < idx;
+    const bool flg1 = arr[ω + i] > ω;
     const bool flg2 = flg0 | flg1;
 
     failed |= flg2;
 
-    const size_t till = arr[omega + i];
+    const size_t till = arr[ω + i];
     for (size_t j = idx; j < till; j++) {
       const bool flg0 = j > idx;
       const bool flg1 = flg0 & (arr[j] <= arr[j - flg0 * 1]);
@@ -134,10 +134,10 @@ decode_hint_bits(const uint8_t* const __restrict arr,
       h[off + arr[j]] = ff::ff_t{ 1u };
     }
 
-    idx = arr[omega + i];
+    idx = arr[ω + i];
   }
 
-  for (size_t i = idx; i < omega; i++) {
+  for (size_t i = idx; i < ω; i++) {
     const bool flg = arr[i] != 0;
     failed |= flg;
   }
