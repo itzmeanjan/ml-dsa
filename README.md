@@ -3,7 +3,35 @@ CRYSTALS-Dilithium: Post-Quantum Digital Signature Algorithm
 
 ## Motivation
 
+Dilithium is one of those post-quantum digital signature algorithms ( DSA ), which are selected by NIST for standardization purpose. Dilithium's security is based on hardness of finding short vectors in lattice i.e. it's lattice based Post Quantum Cryptographic (PQC) construction.
 
+Dilithium DSA has three main algorithms
+
+- KeyGen
+- Sign
+- Verify
+
+**KeyGen** takes a 32 -bytes seed, which is used for deterministically computing both public key and secret key.
+
+**Sign** takes secret key and N (>0) -bytes message as input, which is used for deterministically signing message, producing signature bytes.
+
+> **Note**
+
+> This implementation of Dilithium doesn't **yet** support randomized signing.
+
+**Verify** takes public key, N (>0) -bytes message and signature, returning boolean value, denoting status of successful signature verification operation.
+
+Here I'm maintaining Dilithium as zero-dependency, header-only & easy-to-use C++ library, offering Dilithium key generation, signing & verification API for three NIST security level ( i.e. 2, 3, 5 ) parameters, as defined in table 2 of Dilithium specification. 
+
+`sha3` is the only dependency of this project, which itself is a zero-dependency, header-only C++ library, implementing SHA3 specification of NIST ( i.e. FIPS PUB 202 ). This is done purposefully, in order to modularize commonly seen symmetric key dependency in post-quantum cryptographic constructions.
+
+> **Note**
+
+> `sha3` is pinned to specific commit, using git submodule. See [usage](#usage) below in order to understand how to use `dilithium` as dependency in your project.
+
+> Find Dilithium specification [here](https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf), which should be referred to when understanding this implementation.
+
+> Follow progress of NIST PQC standardization effort [here](https://csrc.nist.gov/projects/post-quantum-cryptography).
 
 ## Prerequisites
 
