@@ -205,7 +205,7 @@ polyvec_mul_poly(const ff::ff_t* const __restrict poly,
 // polynomials
 //
 // See point `Sizes of elements` in section 2.1 of Dilithium specification
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k>
 inline static ff::ff_t
 polyvec_infinity_norm(const ff::ff_t* const __restrict vec)

@@ -19,8 +19,8 @@ template<const size_t k,
 void
 verify(benchmark::State& state)
 {
+  const size_t mlen = state.range(0);
   constexpr size_t slen = 32;
-  constexpr size_t mlen = 32;
   constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();
   constexpr size_t sklen = dilithium_utils::seckey_length<k, l, η, d>();
   constexpr size_t siglen = dilithium_utils::signature_length<k, l, γ1, ω>();

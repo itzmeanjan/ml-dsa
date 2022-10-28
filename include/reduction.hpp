@@ -20,9 +20,8 @@ check_d(const size_t d)
 //
 // so that public key can be compressed.
 //
-// See definition of this routine in figure 3 of Dilithium specification, as
-// submitted to NIST final round call
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See definition of this routine in figure 3 of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 //
 // This implementation collects some ideas from
 // https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23
@@ -58,9 +57,8 @@ check_α(const uint32_t alpha)
 //
 // If r1 = (q - 1)/ α then r1 = 0; r0 = r0 - 1
 //
-// See definition of this routine in figure 3 of Dilithium specification, as
-// submitted to NIST final round call
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See definition of this routine in figure 3 of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
 inline static std::pair<ff::ff_t, ff::ff_t>
 decompose(const ff::ff_t r) requires(check_α(alpha))
@@ -87,9 +85,8 @@ decompose(const ff::ff_t r) requires(check_α(alpha))
 // Given an element ∈ Z_q, this routine uses decompose routine ( defined above )
 // to extract out high order bits of r.
 //
-// See definition of this routine in figure 3 of Dilithium specification, as
-// submitted to NIST final round call
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See definition of this routine in figure 3 of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
 inline static ff::ff_t
 highbits(const ff::ff_t r) requires(check_α(alpha))
@@ -101,9 +98,8 @@ highbits(const ff::ff_t r) requires(check_α(alpha))
 // Given an element ∈ Z_q, this routine uses decompose routine ( defined above )
 // to extract out low order bits of r.
 //
-// See definition of this routine in figure 3 of Dilithium specification, as
-// submitted to NIST final round call
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See definition of this routine in figure 3 of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
 inline static ff::ff_t
 lowbits(const ff::ff_t r) requires(check_α(alpha))
@@ -118,9 +114,8 @@ lowbits(const ff::ff_t r) requires(check_α(alpha))
 // This hint is essentially the “carry” caused by z in the addition.
 // Note, z is small.
 //
-// See definition of this routine in figure 3 of Dilithium specification, as
-// submitted to NIST final round call
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See definition of this routine in figure 3 of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
 inline static ff::ff_t
 make_hint(const ff::ff_t z, const ff::ff_t r) requires(check_α(alpha))
@@ -134,9 +129,8 @@ make_hint(const ff::ff_t z, const ff::ff_t r) requires(check_α(alpha))
 // 1 -bit hint ( read h ) is used to recover higher order bits of r + z s.t.
 // hint bit was computed using make_hint routine ( defined above ).
 //
-// See definition of this routine in figure 3 of Dilithium specification, as
-// submitted to NIST final round call
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See definition of this routine in figure 3 of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
 inline static ff::ff_t
 use_hint(const ff::ff_t h, const ff::ff_t r) requires(check_α(alpha))

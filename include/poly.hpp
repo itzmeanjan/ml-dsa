@@ -75,7 +75,7 @@ poly_lowbits(const ff::ff_t* const __restrict src,
 // Computes infinity norm of a degree-255 polynomial
 //
 // See point `Sizes of elements` in section 2.1 of Dilithium specification
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 inline static ff::ff_t
 poly_infinity_norm(const ff::ff_t* const __restrict poly)
 {
