@@ -6,7 +6,7 @@
 namespace test_dilithium {
 
 // Test functional correctness of Dilithium signature scheme by generating
-// random key pair, signing random message bytes and finally attempting to
+// random key pair, signing random message ( of mlen -bytes ) and finally attempting to
 // verify using respective public key.
 //
 // In case when signature is not mutated ( the good case ), it should be able to
@@ -23,10 +23,9 @@ template<const size_t k,
          const uint32_t β,
          const size_t ω>
 static void
-test_signing()
+test_signing(const size_t mlen)
 {
   constexpr size_t slen = 32;
-  constexpr size_t mlen = 33;
   constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();
   constexpr size_t sklen = dilithium_utils::seckey_length<k, l, η, d>();
   constexpr size_t siglen = dilithium_utils::signature_length<k, l, γ1, ω>();
