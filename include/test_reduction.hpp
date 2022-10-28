@@ -31,7 +31,7 @@ test_power2round()
 // z both, but they can still recover high order bits of r + z
 //
 // Read section 2.4 of Dilithium specification
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha, const uint32_t z, const size_t rounds = 65536ul>
 static void
 test_decompose()

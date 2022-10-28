@@ -6,8 +6,8 @@
 namespace test_dilithium {
 
 // Test functional correctness of Dilithium signature scheme by generating
-// random key pair, signing random message ( of mlen -bytes ) and finally attempting to
-// verify using respective public key.
+// random key pair, signing random message ( of mlen -bytes ) and finally
+// attempting to verify using respective public key.
 //
 // In case when signature is not mutated ( the good case ), it should be able to
 // verify successfully, while in the case when random bit flip is introduced

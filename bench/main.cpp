@@ -26,9 +26,9 @@ BENCHMARK(bench_dilithium::use_hint<523776>);
 BENCHMARK(bench_dilithium::expand_a<4, 4>);
 BENCHMARK(bench_dilithium::expand_a<6, 5>);
 BENCHMARK(bench_dilithium::expand_a<8, 7>);
-BENCHMARK(bench_dilithium::uniform_sampling_eta<2, 4>);
-BENCHMARK(bench_dilithium::uniform_sampling_eta<2, 8>);
-BENCHMARK(bench_dilithium::uniform_sampling_eta<4, 6>);
+BENCHMARK(bench_dilithium::expand_s<2, 4>);
+BENCHMARK(bench_dilithium::expand_s<2, 8>);
+BENCHMARK(bench_dilithium::expand_s<4, 6>);
 BENCHMARK(bench_dilithium::expand_mask<1u << 17, 4>);
 BENCHMARK(bench_dilithium::expand_mask<1u << 19, 5>);
 BENCHMARK(bench_dilithium::expand_mask<1u << 19, 7>);
@@ -61,15 +61,17 @@ BENCHMARK(bench_dilithium::encode_hint_bits<8, 75>);
 BENCHMARK(bench_dilithium::decode_hint_bits<8, 75>);
 
 // register for benchmarking Dilithium Key Generation, Signing & Verification
-BENCHMARK(bench_dilithium::keygen<4, 4, 13, 2>); // NIST security level 2
-BENCHMARK(bench_dilithium::sign<4, 4, 13, 2, 1u << 17, 95232, 39, 78, 80>);
-BENCHMARK(bench_dilithium::verify<4, 4, 13, 2, 1u << 17, 95232, 39, 78, 80>);
-BENCHMARK(bench_dilithium::keygen<6, 5, 13, 4>); // NIST security level 3
-BENCHMARK(bench_dilithium::sign<6, 5, 13, 4, 1u << 19, 261888, 49, 196, 55>);
-BENCHMARK(bench_dilithium::verify<6, 5, 13, 4, 1u << 19, 261888, 49, 196, 55>);
-BENCHMARK(bench_dilithium::keygen<8, 7, 13, 2>); // NIST security level 5
-BENCHMARK(bench_dilithium::sign<8, 7, 13, 2, 1u << 19, 261888, 60, 120, 75>);
-BENCHMARK(bench_dilithium::verify<8, 7, 13, 2, 1u << 19, 261888, 60, 120, 75>);
+using namespace bench_dilithium;
+
+BENCHMARK(keygen<4, 4, 13, 2>)->Arg(32);
+BENCHMARK(sign<4, 4, 13, 2, 1u << 17, 95232, 39, 78, 80>)->Arg(32);
+BENCHMARK(verify<4, 4, 13, 2, 1u << 17, 95232, 39, 78, 80>)->Arg(32);
+BENCHMARK(keygen<6, 5, 13, 4>)->Arg(32);
+BENCHMARK(sign<6, 5, 13, 4, 1u << 19, 261888, 49, 196, 55>)->Arg(32);
+BENCHMARK(verify<6, 5, 13, 4, 1u << 19, 261888, 49, 196, 55>)->Arg(32);
+BENCHMARK(keygen<8, 7, 13, 2>)->Arg(32);
+BENCHMARK(sign<8, 7, 13, 2, 1u << 19, 261888, 60, 120, 75>)->Arg(32);
+BENCHMARK(verify<8, 7, 13, 2, 1u << 19, 261888, 60, 120, 75>)->Arg(32);
 
 // benchmark runner main routine
 BENCHMARK_MAIN();
