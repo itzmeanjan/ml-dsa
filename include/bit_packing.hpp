@@ -18,9 +18,8 @@ check_sbw(const size_t sbw)
 // of them ) coefficient ∈ [0, 2^sbw), this routine serializes the polynomial to
 // a byte array of length 32 * sbw -bytes
 //
-// See section 5.2 ( which describes bit packing ) of Dilithium specification,
-// as submitted to NIST final round call
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See section 5.2 ( which describes bit packing ) of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t sbw>
 static void
 encode(const ff::ff_t* const __restrict poly,
@@ -46,6 +45,10 @@ encode(const ff::ff_t* const __restrict poly,
 // Given a byte array of length 32 * sbw -bytes, this routine attempts to
 // extract out 256 coefficients of degree-255 polynomial s.t. significant
 // portion of each coefficient ∈ [0, 2^sbw)
+//
+// This is just the opposite of above `encode` routine. You may want to see
+// Dilithium specification's section 5.2
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t sbw>
 static void
 decode(const uint8_t* const __restrict arr,

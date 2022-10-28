@@ -20,9 +20,8 @@ check_d(const size_t d)
 //
 // so that public key can be compressed.
 //
-// See definition of this routine in figure 3 of Dilithium specification, as
-// submitted to NIST final round call
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See definition of this routine in figure 3 of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 //
 // This implementation collects some ideas from
 // https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23

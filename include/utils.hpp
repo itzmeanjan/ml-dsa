@@ -44,7 +44,7 @@ inline static constexpr size_t
 seckey_length() requires(check_d(d))
 {
   constexpr size_t eta_bw = std::bit_width(2 * η);
-  constexpr size_t sklen = 32 + 32 + 48 + 32 * (eta_bw * (k + l) + k * d);
+  constexpr size_t sklen = 32 + 32 + 32 + 32 * (eta_bw * (k + l) + k * d);
   return sklen;
 }
 
