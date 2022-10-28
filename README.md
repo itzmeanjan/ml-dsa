@@ -1,6 +1,10 @@
 # dilithium
 CRYSTALS-Dilithium: Post-Quantum Digital Signature Algorithm
 
+## Motivation
+
+
+
 ## Prerequisites
 
 - A C++ compiler with C++20 standard library such as `g++`/ `clang++`
@@ -77,7 +81,7 @@ make benchmark
 ### On Benchmarked on Intel(R) Core(TM) i5-8279U CPU @ 2.40GHz **[ compiled with Clang ]**
 
 ```bash
-2022-10-28T15:04:18+04:00
+2022-10-28T16:02:03+04:00
 Running ./bench/a.out
 Run on (8 X 2400 MHz CPU s)
 CPU Caches:
@@ -85,67 +89,67 @@ CPU Caches:
   L1 Instruction 32 KiB
   L2 Unified 256 KiB (x4)
   L3 Unified 6144 KiB
-Load Average: 1.73, 2.19, 2.15
+Load Average: 1.99, 1.83, 1.89
 ------------------------------------------------------------------------------------------------
 Benchmark                                                      Time             CPU   Iterations
 ------------------------------------------------------------------------------------------------
-bench_dilithium::ff_add                                     3.79 ns         3.79 ns    182527907
-bench_dilithium::ff_sub                                     3.73 ns         3.72 ns    185763115
-bench_dilithium::ff_neg                                     1.24 ns         1.24 ns    558636926
-bench_dilithium::ff_mul                                     5.94 ns         5.93 ns    114309976
-bench_dilithium::ff_inv                                      103 ns          103 ns      7490316
-bench_dilithium::ff_div                                      121 ns          121 ns      7342221
-bench_dilithium::ff_exp                                      331 ns          331 ns      2116069
-bench_dilithium::ntt                                        4688 ns         4684 ns       148122
-bench_dilithium::intt                                       4369 ns         4366 ns       158209
-bench_dilithium::power2round                                2.34 ns         2.34 ns    296699431
-bench_dilithium::decompose<190464>                          8.31 ns         8.30 ns     83003296
-bench_dilithium::make_hint<190464>                          13.6 ns         13.6 ns     51100112
-bench_dilithium::use_hint<190464>                           7.94 ns         7.93 ns     85610156
-bench_dilithium::decompose<523776>                          8.73 ns         8.73 ns     76990761
-bench_dilithium::make_hint<523776>                          14.6 ns         14.6 ns     47704071
-bench_dilithium::use_hint<523776>                           8.40 ns         8.39 ns     82591972
-bench_dilithium::expand_a<4, 4>                            52880 ns        52842 ns        13021
-bench_dilithium::expand_a<6, 5>                            97096 ns        97068 ns         7056
-bench_dilithium::expand_a<8, 7>                           184330 ns       184241 ns         3749
-bench_dilithium::expand_s<2, 4>                             7001 ns         6996 ns        92368
-bench_dilithium::expand_s<2, 8>                            14842 ns        14833 ns        48996
-bench_dilithium::expand_s<4, 6>                            16602 ns        16589 ns        42446
-bench_dilithium::expand_mask<1u << 17, 4>                  30408 ns        30387 ns        22987
-bench_dilithium::expand_mask<1u << 19, 5>                  41710 ns        41662 ns        16932
-bench_dilithium::expand_mask<1u << 19, 7>                  58067 ns        58014 ns        11630
-bench_dilithium::sample_in_ball<39>                          622 ns          621 ns      1104153
-bench_dilithium::sample_in_ball<49>                          658 ns          657 ns       998901
-bench_dilithium::sample_in_ball<60>                          813 ns          813 ns       879264
-bench_dilithium::encode<3>                                   961 ns          961 ns       716817
-bench_dilithium::decode<3>                                  1018 ns         1017 ns       678006
-bench_dilithium::encode<4>                                   833 ns          832 ns       824781
-bench_dilithium::decode<4>                                  1025 ns         1024 ns       671927
-bench_dilithium::encode<6>                                  1698 ns         1698 ns       407500
-bench_dilithium::decode<6>                                  1828 ns         1828 ns       377470
-bench_dilithium::encode<10>                                 2889 ns         2888 ns       240638
-bench_dilithium::decode<10>                                 3117 ns         3116 ns       223223
-bench_dilithium::encode<13>                                 4322 ns         4318 ns       162480
-bench_dilithium::decode<13>                                 4657 ns         4655 ns       150425
-bench_dilithium::encode<18>                                 5008 ns         5006 ns       135946
-bench_dilithium::decode<18>                                 5767 ns         5764 ns       118674
-bench_dilithium::encode<20>                                 5540 ns         5534 ns       125029
-bench_dilithium::decode<20>                                 6433 ns         6430 ns       105815
-bench_dilithium::encode_hint_bits<4, 80>                    1608 ns         1606 ns       451566
-bench_dilithium::decode_hint_bits<4, 80>                     106 ns          106 ns      6642312
-bench_dilithium::encode_hint_bits<6, 55>                    2604 ns         2602 ns       269188
-bench_dilithium::decode_hint_bits<6, 55>                     107 ns          107 ns      6377261
-bench_dilithium::encode_hint_bits<8, 75>                    3460 ns         3458 ns       201914
-bench_dilithium::decode_hint_bits<8, 75>                     138 ns          138 ns      4886255
-keygen<4, 4, 13, 2>/32                                    154891 ns       154764 ns         4419 items_per_second=6.46143k/s
-sign<4, 4, 13, 2, 1u << 17, 95232, 39, 78, 80>/32        1566040 ns      1565175 ns         2046 items_per_second=638.906/s
-verify<4, 4, 13, 2, 1u << 17, 95232, 39, 78, 80>/32       185756 ns       185661 ns         3759 items_per_second=5.38615k/s
-keygen<6, 5, 13, 4>/32                                    251367 ns       251253 ns         2774 items_per_second=3.98005k/s
-sign<6, 5, 13, 4, 1u << 19, 261888, 49, 196, 55>/32       732057 ns       731683 ns          957 items_per_second=1.36671k/s
-verify<6, 5, 13, 4, 1u << 19, 261888, 49, 196, 55>/32     279313 ns       279047 ns         2501 items_per_second=3.58363k/s
-keygen<8, 7, 13, 2>/32                                    393138 ns       392421 ns         1791 items_per_second=2.54828k/s
-sign<8, 7, 13, 2, 1u << 19, 261888, 60, 120, 75>/32      1064477 ns      1063465 ns          957 items_per_second=940.322/s
-verify<8, 7, 13, 2, 1u << 19, 261888, 60, 120, 75>/32     434996 ns       434849 ns         1610 items_per_second=2.29965k/s
+bench_dilithium::ff_add                                     3.78 ns         3.77 ns    187104741
+bench_dilithium::ff_sub                                     3.72 ns         3.72 ns    187291972
+bench_dilithium::ff_neg                                     1.34 ns         1.33 ns    554635565
+bench_dilithium::ff_mul                                     6.12 ns         6.10 ns     90852456
+bench_dilithium::ff_inv                                      115 ns          114 ns      7266942
+bench_dilithium::ff_div                                      107 ns          106 ns      5066736
+bench_dilithium::ff_exp                                      359 ns          352 ns      2180753
+bench_dilithium::ntt                                        4956 ns         4910 ns       138608
+bench_dilithium::intt                                       4580 ns         4545 ns       154970
+bench_dilithium::power2round                                2.44 ns         2.43 ns    279408771
+bench_dilithium::decompose<190464>                          8.67 ns         8.63 ns     81950900
+bench_dilithium::make_hint<190464>                          14.2 ns         14.1 ns     47804738
+bench_dilithium::use_hint<190464>                           8.07 ns         8.06 ns     82381048
+bench_dilithium::decompose<523776>                          8.82 ns         8.81 ns     78788015
+bench_dilithium::make_hint<523776>                          14.6 ns         14.6 ns     47386627
+bench_dilithium::use_hint<523776>                           8.40 ns         8.40 ns     82389774
+bench_dilithium::expand_a<4, 4>                            53043 ns        52994 ns        13008
+bench_dilithium::expand_a<6, 5>                            97913 ns        97816 ns         7114
+bench_dilithium::expand_a<8, 7>                           186213 ns       185641 ns         3714
+bench_dilithium::expand_s<2, 4>                             6910 ns         6905 ns        92842
+bench_dilithium::expand_s<2, 8>                            15339 ns        15323 ns        49008
+bench_dilithium::expand_s<4, 6>                            16730 ns        16718 ns        41643
+bench_dilithium::expand_mask<1u << 17, 4>                  30340 ns        30324 ns        22842
+bench_dilithium::expand_mask<1u << 19, 5>                  41164 ns        41138 ns        16949
+bench_dilithium::expand_mask<1u << 19, 7>                  57781 ns        57744 ns        11784
+bench_dilithium::sample_in_ball<39>                          611 ns          611 ns      1107823
+bench_dilithium::sample_in_ball<49>                          668 ns          664 ns      1012482
+bench_dilithium::sample_in_ball<60>                          767 ns          766 ns       846238
+bench_dilithium::encode<3>                                   965 ns          964 ns       721560
+bench_dilithium::decode<3>                                  1019 ns         1019 ns       672922
+bench_dilithium::encode<4>                                   843 ns          842 ns       819499
+bench_dilithium::decode<4>                                  1031 ns         1030 ns       674328
+bench_dilithium::encode<6>                                  1714 ns         1711 ns       409333
+bench_dilithium::decode<6>                                  1832 ns         1831 ns       379451
+bench_dilithium::encode<10>                                 2904 ns         2902 ns       239837
+bench_dilithium::decode<10>                                 3130 ns         3127 ns       224900
+bench_dilithium::encode<13>                                 4306 ns         4303 ns       162517
+bench_dilithium::decode<13>                                 4653 ns         4651 ns       150523
+bench_dilithium::encode<18>                                 4994 ns         4991 ns       137373
+bench_dilithium::decode<18>                                 5817 ns         5813 ns       118850
+bench_dilithium::encode<20>                                 5530 ns         5525 ns       123767
+bench_dilithium::decode<20>                                 6456 ns         6452 ns       107137
+bench_dilithium::encode_hint_bits<4, 80>                    1572 ns         1571 ns       432764
+bench_dilithium::decode_hint_bits<4, 80>                     102 ns          102 ns      6652664
+bench_dilithium::encode_hint_bits<6, 55>                    2659 ns         2658 ns       266222
+bench_dilithium::decode_hint_bits<6, 55>                     108 ns          108 ns      6501045
+bench_dilithium::encode_hint_bits<8, 75>                    3557 ns         3554 ns       201718
+bench_dilithium::decode_hint_bits<8, 75>                     143 ns          142 ns      4849661
+keygen<4, 4, 13, 2>/32                                    156827 ns       156752 ns         4479 items_per_second=6.3795k/s
+sign<4, 4, 13, 2, 1u << 17, 95232, 39, 78, 80>/32         514968 ns       514732 ns         2054 items_per_second=1.94276k/s
+verify<4, 4, 13, 2, 1u << 17, 95232, 39, 78, 80>/32       184928 ns       184796 ns         3759 items_per_second=5.41138k/s
+keygen<6, 5, 13, 4>/32                                    252423 ns       252278 ns         2777 items_per_second=3.96388k/s
+sign<6, 5, 13, 4, 1u << 19, 261888, 49, 196, 55>/32       733957 ns       733467 ns         1422 items_per_second=1.36339k/s
+verify<6, 5, 13, 4, 1u << 19, 261888, 49, 196, 55>/32     280147 ns       279838 ns         2491 items_per_second=3.57349k/s
+keygen<8, 7, 13, 2>/32                                    388033 ns       387809 ns         1805 items_per_second=2.57859k/s
+sign<8, 7, 13, 2, 1u << 19, 261888, 60, 120, 75>/32      1064153 ns      1063215 ns          959 items_per_second=940.544/s
+verify<8, 7, 13, 2, 1u << 19, 261888, 60, 120, 75>/32     436424 ns       436093 ns         1604 items_per_second=2.29309k/s
 ```
 
 ## Usage
