@@ -71,9 +71,9 @@ decode(const uint8_t* const __restrict arr,
 }
 
 // Given a vector of hint bits ( of dimension k x 1 ), this routine encodes hint
-// bits into (ω + k) -bytes, following the description in section 5.4 of
-// Dilithium specification
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// bits into (ω + k) -bytes, following the description in section 5.4 ( see
+// point `Signature` on page 21 ) of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t ω>
 static void
 encode_hint_bits(const ff::ff_t* const __restrict h,
@@ -107,7 +107,8 @@ encode_hint_bits(const ff::ff_t* const __restrict h,
 // many hint bits are set.
 //
 // Returns boolean result denoting status of decoding of byte serialized hint
-// bits. Say return value is true, it denotes that decoding has failed.
+// bits. For example, say return value is true, it denotes that decoding has
+// failed.
 template<const size_t k, const size_t ω>
 static bool
 decode_hint_bits(const uint8_t* const __restrict arr,

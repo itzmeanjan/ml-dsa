@@ -23,8 +23,8 @@ random_data(T* const data, const size_t len) requires(std::is_unsigned_v<T>)
 // Compile-time compute how many bytes to reserve for storing serialized
 // Dilithium public key, for given parameter set
 //
-// See table 2 of Dilithium specification
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See table 2 and section 5.4 of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t d>
 inline static constexpr size_t
 pubkey_length() requires(check_d(d))
@@ -37,8 +37,8 @@ pubkey_length() requires(check_d(d))
 // Compile-time compute how many bytes to reserve for storing serialized
 // Dilithium secret key, for given parameter set
 //
-// See table 2 of Dilithium specification
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See table 2 and section 5.4 of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t l, const uint32_t η, const size_t d>
 inline static constexpr size_t
 seckey_length() requires(check_d(d))
@@ -51,14 +51,14 @@ seckey_length() requires(check_d(d))
 // Compile-time compute how many bytes to reserve for storing serialized
 // Dilithium signature, for specified parameter set
 //
-// See table 2 of Dilithium specification
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// See table 2 and section 5.4 of Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t l, const uint32_t γ1, const size_t ω>
 inline static constexpr size_t
 signature_length()
 {
   constexpr size_t gamma1_bw = std::bit_width(γ1);
-  constexpr size_t siglen = 32 * l * gamma1_bw + ω + k + 32;
+  constexpr size_t siglen = 32 + (32 * l * gamma1_bw) + (ω + k);
   return siglen;
 }
 

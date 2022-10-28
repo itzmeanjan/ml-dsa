@@ -99,7 +99,7 @@ expand_s(const uint8_t* const __restrict rho_prime,
 
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    const uint16_t nonce_ = static_cast<uint16_t>(nonce + i);
+    const uint16_t nonce_ = nonce + static_cast<uint16_t>(i);
 
     msg[64] = static_cast<uint8_t>(nonce_ >> 0);
     msg[65] = static_cast<uint8_t>(nonce_ >> 8);
@@ -151,9 +151,13 @@ check_γ1(const uint32_t γ1)
   return (γ1 == (1u << 17)) || (γ1 == (1u << 19));
 }
 
-// Given a 48-bytes seed and 2 -bytes nonce, this routine does uniform sampling
+// Given a 64 -bytes seed and 2 -bytes nonce, this routine does uniform sampling
 // from output of SHAKE256 XOF, computing a l x 1 vector of degree-255
 // polynomials s.t. each coefficient ∈ [-(γ1-1), γ1]
+//
+// See `Sampling the vectors y` point in section 5.3 of Dilithium
+// specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t γ1, const size_t l>
 static void
 expand_mask(const uint8_t* const __restrict seed,
@@ -162,17 +166,17 @@ expand_mask(const uint8_t* const __restrict seed,
 {
   constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);
 
-  uint8_t msg[50]{};
+  uint8_t msg[66]{};
   uint8_t buf[gbw * 32]{};
 
-  std::memcpy(msg, seed, 48);
+  std::memcpy(msg, seed, 64);
 
   for (size_t i = 0; i < l; i++) {
     const size_t off = i * ntt::N;
-    const uint16_t nonce_ = static_cast<uint16_t>(nonce + i);
+    const uint16_t nonce_ = nonce + static_cast<uint16_t>(i);
 
-    msg[48] = static_cast<uint8_t>(nonce_ >> 0);
-    msg[49] = static_cast<uint8_t>(nonce_ >> 8);
+    msg[64] = static_cast<uint8_t>(nonce_ >> 0);
+    msg[65] = static_cast<uint8_t>(nonce_ >> 8);
 
     shake256::shake256 hasher{};
     hasher.hash(msg, sizeof(msg));
@@ -195,8 +199,8 @@ check_τ(const uint32_t τ)
 // -many coefficients set to +/- 1, while remaining (256 - τ) -many set to 0.
 //
 // See hashing to a ball algorithm described in figure 2 and section 5.3 of
-// Dilithium specification, as submitted to NIST final round call
-// https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Dilithium-Round3.zip
+// Dilithium specification
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t τ>
 static void
 sample_in_ball(const uint8_t* const __restrict seed,
