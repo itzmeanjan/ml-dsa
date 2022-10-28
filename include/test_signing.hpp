@@ -21,16 +21,17 @@ template<const size_t k,
          const uint32_t γ2,
          const uint32_t τ,
          const uint32_t β,
-         const size_t ω,
-         const size_t mlen>
+         const size_t ω>
 static void
 test_signing()
 {
+  constexpr size_t slen = 32;
+  constexpr size_t mlen = 33;
   constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();
   constexpr size_t sklen = dilithium_utils::seckey_length<k, l, η, d>();
   constexpr size_t siglen = dilithium_utils::signature_length<k, l, γ1, ω>();
 
-  uint8_t* seed = static_cast<uint8_t*>(std::malloc(32));
+  uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pkey0 = static_cast<uint8_t*>(std::malloc(pklen));
   uint8_t* pkey1 = static_cast<uint8_t*>(std::malloc(pklen));
   uint8_t* skey = static_cast<uint8_t*>(std::malloc(sklen));
@@ -39,13 +40,13 @@ test_signing()
   uint8_t* msg0 = static_cast<uint8_t*>(std::malloc(mlen));
   uint8_t* msg1 = static_cast<uint8_t*>(std::malloc(mlen));
 
-  dilithium_utils::random_data<uint8_t>(seed, 32);
+  dilithium_utils::random_data<uint8_t>(seed, slen);
   dilithium_utils::random_data<uint8_t>(msg0, mlen);
 
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
   dilithium::keygen<k, l, d, η>(seed, pkey0, skey);
-  dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, mlen>(skey, msg0, sig0);
+  dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω>(skey, msg0, mlen, sig0);
 
   std::memcpy(sig1, sig0, siglen);
   std::memcpy(pkey1, pkey0, pklen);
@@ -55,10 +56,10 @@ test_signing()
   dilithium_utils::random_bit_flip(pkey1, pklen);
   dilithium_utils::random_bit_flip(msg1, mlen);
 
-  flg0 = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω, mlen>(pkey0, msg0, sig0);
-  flg1 = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω, mlen>(pkey0, msg0, sig1);
-  flg2 = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω, mlen>(pkey1, msg0, sig0);
-  flg3 = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω, mlen>(pkey0, msg1, sig0);
+  flg0 = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey0, msg0, mlen, sig0);
+  flg1 = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey0, msg0, mlen, sig1);
+  flg2 = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey1, msg0, mlen, sig0);
+  flg3 = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey0, msg1, mlen, sig0);
 
   std::free(pkey0);
   std::free(pkey1);

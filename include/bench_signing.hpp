@@ -37,7 +37,7 @@ sign(benchmark::State& state)
   dilithium::keygen<k, l, d, η>(seed, pkey, skey);
 
   for (auto _ : state) {
-    dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, mlen>(skey, msg, sig);
+    dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω>(skey, msg, mlen, sig);
 
     benchmark::DoNotOptimize(skey);
     benchmark::DoNotOptimize(msg);
@@ -47,7 +47,7 @@ sign(benchmark::State& state)
 
   state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
 
-  bool flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω, mlen>(pkey, msg, sig);
+  bool flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey, msg, mlen, sig);
 
   std::free(seed);
   std::free(pkey);

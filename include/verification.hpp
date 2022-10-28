@@ -6,9 +6,9 @@
 // Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium {
 
-// Given a Dilithium public key, message ( of statically known byte length ) and
-// signature, this routine verifies the correctness of signature, returning
-// boolean result, denoting status of signature verification.
+// Given a Dilithium public key, message and signature, this routine verifies
+// the correctness of signature, returning boolean result, denoting status of
+// signature verification.
 //
 // Verification algorithm is described in figure 4 of Dilithium specification,
 // as submitted to NIST final round call
@@ -20,12 +20,12 @@ template<const size_t k,
          const uint32_t γ2,
          const uint32_t τ,
          const uint32_t β,
-         const size_t ω,
-         const size_t mlen>
+         const size_t ω>
 static bool
 verify(
   const uint8_t* const __restrict pubkey,
   const uint8_t* const __restrict msg,
+  const size_t mlen,
   const uint8_t* const __restrict sig) requires(dilithium_utils::check_d(d) &&
                                                 dilithium_utils::check_γ1(γ1) &&
                                                 dilithium_utils::check_τ(τ))
@@ -47,17 +47,17 @@ verify(
   dilithium_utils::expand_a<k, l>(pubkey + puboff0, A);
   dilithium_utils::polyvec_decode<k, t1_bw>(pubkey + puboff1, t1);
 
-  uint8_t crh_in[48 + mlen]{};
+  uint8_t crh_in[48]{};
   uint8_t mu[48]{};
 
   shake256::shake256 hasher0{};
   hasher0.hash(pubkey, pklen);
   hasher0.read(crh_in, 48);
 
-  std::memcpy(crh_in + 48, msg, mlen);
-
-  shake256::shake256 hasher1{};
-  hasher1.hash(crh_in, sizeof(crh_in));
+  shake256::shake256<true> hasher1{};
+  hasher1.absorb(crh_in, sizeof(crh_in));
+  hasher1.absorb(msg, mlen);
+  hasher1.finalize();
   hasher1.read(mu, sizeof(mu));
 
   ff::ff_t c[ntt::N]{};

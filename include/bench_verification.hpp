@@ -35,11 +35,11 @@ verify(benchmark::State& state)
   dilithium_utils::random_data<uint8_t>(msg, mlen);
 
   dilithium::keygen<k, l, d, η>(seed, pkey, skey);
-  dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, mlen>(skey, msg, sig);
+  dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω>(skey, msg, mlen, sig);
 
   for (auto _ : state) {
     bool flg = false;
-    flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω, mlen>(pkey, msg, sig);
+    flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey, msg, mlen, sig);
     assert(flg);
 
     benchmark::DoNotOptimize(flg);

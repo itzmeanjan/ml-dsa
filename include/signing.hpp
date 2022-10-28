@@ -5,9 +5,9 @@
 // Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium {
 
-// Given a Dilithium secret key and message ( of statically known length = mlen
-// ), this routine uses Dilithium signature generation algorithm for computing
-// deterministic signature over input messsage, using provided parameters.
+// Given a Dilithium secret key and message, this routine uses Dilithium
+// signature generation algorithm for computing deterministic signature over
+// input messsage, using provided parameters.
 //
 // Signing algorithm is described in figure 4 of Dilithium specification, as
 // submitted to NIST final round call
@@ -29,11 +29,11 @@ template<const size_t k,
          const uint32_t γ2,
          const uint32_t τ,
          const uint32_t β,
-         const size_t ω,
-         const size_t mlen>
+         const size_t ω>
 static void
 sign(const uint8_t* const __restrict seckey,
      const uint8_t* const __restrict msg,
+     const size_t mlen,
      uint8_t* const __restrict sig) requires(dilithium_utils::check_η(η) &&
                                              dilithium_utils::check_d(d) &&
                                              dilithium_utils::check_γ1(γ1) &&
@@ -60,24 +60,22 @@ sign(const uint8_t* const __restrict seckey,
 
   dilithium_utils::expand_a<k, l>(rho, A);
 
-  uint8_t crh_in0[48 + mlen]{};
-  uint8_t crh_in1[32 + 48]{};
   uint8_t mu[48]{};
 
-  std::memcpy(crh_in0 + 0, tr, 48);
-  std::memcpy(crh_in0 + 48, msg, mlen);
-
-  shake256::shake256 crh0{};
-  crh0.hash(crh_in0, sizeof(crh_in0));
+  shake256::shake256<true> crh0{};
+  crh0.absorb(tr, 48);
+  crh0.absorb(msg, mlen);
+  crh0.finalize();
   crh0.read(mu, sizeof(mu));
 
+  uint8_t crh_in[32 + 48]{};
   uint8_t rho_prime[48]{};
 
-  std::memcpy(crh_in1 + 0, key, 32);
-  std::memcpy(crh_in1 + 32, mu, sizeof(mu));
+  std::memcpy(crh_in + 0, key, 32);
+  std::memcpy(crh_in + 32, mu, sizeof(mu));
 
   shake256::shake256 crh1{};
-  crh1.hash(crh_in1, sizeof(crh_in1));
+  crh1.hash(crh_in, sizeof(crh_in));
   crh1.read(rho_prime, sizeof(rho_prime));
 
   ff::ff_t s1[l * ntt::N]{};
