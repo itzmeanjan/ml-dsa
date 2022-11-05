@@ -6,8 +6,19 @@
 namespace dilithium {
 
 // Given a Dilithium secret key and message, this routine uses Dilithium
-// signing algorithm for computing deterministic signature for input messsage,
-// using provided parameters.
+// signing algorithm for computing deterministic ( default choice ) or
+// randomized signature for input messsage, using provided parameters.
+//
+// If you're interested in generating randomized signature, you should pass
+// truth value to last template parameter ( find `randomized` ). By default,
+// this implementation generates deterministic signature i.e. for same message
+// M, it'll generate same signature everytime. Note, that when randomized
+// signing is enabled ( at compile-time ), randomness of 64 -bytes is sampled
+// from system randomness generator, which should ideally be a h/w secure
+// element, though that might not be the case on all platforms. Which is why I
+// suggest you read
+// https://en.cppreference.com/w/cpp/numeric/random/random_device, because
+// that's what we use for seeding the random byte generator.
 //
 // Signing algorithm is described in figure 4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
@@ -28,7 +39,8 @@ template<const size_t k,
          const uint32_t γ2,
          const uint32_t τ,
          const uint32_t β,
-         const size_t ω>
+         const size_t ω,
+         const bool randomized = false>
 static void
 sign(const uint8_t* const __restrict seckey,
      const uint8_t* const __restrict msg,
@@ -66,15 +78,20 @@ sign(const uint8_t* const __restrict seckey,
   hasher0.finalize();
   hasher0.read(mu, sizeof(mu));
 
-  uint8_t crh_in[32 + 64]{};
   uint8_t rho_prime[64]{};
 
-  std::memcpy(crh_in + 0, key, 32);
-  std::memcpy(crh_in + 32, mu, sizeof(mu));
+  if constexpr (randomized) {
+    dilithium_utils::random_data<uint8_t>(rho_prime, sizeof(rho_prime));
+  } else {
+    uint8_t crh_in[32 + 64]{};
 
-  shake256::shake256 hasher1{};
-  hasher1.hash(crh_in, sizeof(crh_in));
-  hasher1.read(rho_prime, sizeof(rho_prime));
+    std::memcpy(crh_in + 0, key, 32);
+    std::memcpy(crh_in + 32, mu, sizeof(mu));
+
+    shake256::shake256 hasher1{};
+    hasher1.hash(crh_in, sizeof(crh_in));
+    hasher1.read(rho_prime, sizeof(rho_prime));
+  }
 
   ff::ff_t s1[l * ntt::N]{};
   ff::ff_t s2[k * ntt::N]{};
