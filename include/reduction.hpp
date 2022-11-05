@@ -27,7 +27,8 @@ check_d(const size_t d)
 // https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23
 template<const size_t d>
 inline static std::pair<ff::ff_t, ff::ff_t>
-power2round(const ff::ff_t r) requires(check_d(d))
+power2round(const ff::ff_t r)
+  requires(check_d(d))
 {
   constexpr uint32_t max = 1u << (d - 1);
 
@@ -61,7 +62,8 @@ check_α(const uint32_t alpha)
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
 inline static std::pair<ff::ff_t, ff::ff_t>
-decompose(const ff::ff_t r) requires(check_α(alpha))
+decompose(const ff::ff_t r)
+  requires(check_α(alpha))
 {
   constexpr uint32_t t0 = alpha >> 1;
   constexpr uint32_t t1 = ff::Q - 1u;
@@ -89,7 +91,8 @@ decompose(const ff::ff_t r) requires(check_α(alpha))
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
 inline static ff::ff_t
-highbits(const ff::ff_t r) requires(check_α(alpha))
+highbits(const ff::ff_t r)
+  requires(check_α(alpha))
 {
   const auto s = decompose<alpha>(r);
   return s.first;
@@ -102,7 +105,8 @@ highbits(const ff::ff_t r) requires(check_α(alpha))
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
 inline static ff::ff_t
-lowbits(const ff::ff_t r) requires(check_α(alpha))
+lowbits(const ff::ff_t r)
+  requires(check_α(alpha))
 {
   const auto s = decompose<alpha>(r);
   return s.second;
@@ -118,7 +122,8 @@ lowbits(const ff::ff_t r) requires(check_α(alpha))
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
 inline static ff::ff_t
-make_hint(const ff::ff_t z, const ff::ff_t r) requires(check_α(alpha))
+make_hint(const ff::ff_t z, const ff::ff_t r)
+  requires(check_α(alpha))
 {
   const ff::ff_t r1 = highbits<alpha>(r);
   const ff::ff_t v1 = highbits<alpha>(r + z);
@@ -133,7 +138,8 @@ make_hint(const ff::ff_t z, const ff::ff_t r) requires(check_α(alpha))
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
 inline static ff::ff_t
-use_hint(const ff::ff_t h, const ff::ff_t r) requires(check_α(alpha))
+use_hint(const ff::ff_t h, const ff::ff_t r)
+  requires(check_α(alpha))
 {
   constexpr uint32_t m = (ff::Q - 1) / alpha;
   constexpr ff::ff_t t0{ alpha >> 1 };

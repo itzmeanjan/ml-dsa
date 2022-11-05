@@ -4,7 +4,12 @@ OPTFLAGS = -O3 -march=native
 IFLAGS = -I ./include
 DEPFLAGS = -I ./sha3/include
 
-all: testing
+all: testing test_kat
+
+wrapper/libdilithium.so: wrapper/dilithium.cpp include/*.hpp sha3/include/*.hpp
+	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(IFLAGS) $(DEPFLAGS) -fPIC --shared $< -o $@
+
+lib: wrapper/libdilithium.so
 
 test/a.out: test/main.cpp include/*.hpp
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(IFLAGS) $(DEPFLAGS) $< -o $@
@@ -12,11 +17,14 @@ test/a.out: test/main.cpp include/*.hpp
 testing: test/a.out
 	./$<
 
+test_kat:
+	bash test_kat.sh
+
 clean:
 	find . -name '*.out' -o -name '*.o' -o -name '*.so' -o -name '*.gch' | xargs rm -rf
 
 format:
-	find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i --style=Mozilla
+	find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i --style=Mozilla && python3 -m black wrapper/python/*.py
 
 bench/a.out: bench/main.cpp include/*.hpp
 	# make sure you've google-benchmark globally installed;

@@ -22,13 +22,12 @@ template<const size_t k,
          const uint32_t β,
          const size_t ω>
 static bool
-verify(
-  const uint8_t* const __restrict pubkey,
-  const uint8_t* const __restrict msg,
-  const size_t mlen,
-  const uint8_t* const __restrict sig) requires(dilithium_utils::check_d(d) &&
-                                                dilithium_utils::check_γ1(γ1) &&
-                                                dilithium_utils::check_τ(τ))
+verify(const uint8_t* const __restrict pubkey,
+       const uint8_t* const __restrict msg,
+       const size_t mlen,
+       const uint8_t* const __restrict sig)
+  requires(dilithium_utils::check_d(d) && dilithium_utils::check_γ1(γ1) &&
+           dilithium_utils::check_τ(τ))
 {
   constexpr size_t t1_bw = std::bit_width(ff::Q) - d;
   constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();

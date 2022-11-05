@@ -11,7 +11,8 @@ namespace test_dilithium {
 // - decoding of polynomial from byte array
 template<const size_t sbw>
 static void
-test_encode_decode() requires(dilithium_utils::check_sbw(sbw))
+test_encode_decode()
+  requires(dilithium_utils::check_sbw(sbw))
 {
   constexpr size_t alen = sbw * 32;
   constexpr size_t plen = sizeof(ff::ff_t) * ntt::N;

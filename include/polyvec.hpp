@@ -33,7 +33,8 @@ template<const size_t k, const size_t d>
 inline static void
 polyvec_power2round(const ff::ff_t* const __restrict poly,
                     ff::ff_t* const __restrict poly_hi,
-                    ff::ff_t* const __restrict poly_lo) requires(check_d(d))
+                    ff::ff_t* const __restrict poly_lo)
+  requires(check_d(d))
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -59,8 +60,8 @@ template<const size_t a_rows,
 static void
 matrix_multiply(const ff::ff_t* const __restrict a,
                 const ff::ff_t* const __restrict b,
-                ff::ff_t* const __restrict c) requires(check_matrix_dim(a_cols,
-                                                                        b_rows))
+                ff::ff_t* const __restrict c)
+  requires(check_matrix_dim(a_cols, b_rows))
 {
   ff::ff_t tmp[ntt::N]{};
 

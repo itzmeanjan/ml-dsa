@@ -47,6 +47,10 @@ main()
   // Key generation -> signing -> verification
   dilithium::keygen<k, l, d, η>(seed, pubkey, seckey);
   dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω>(seckey, msg, mlen, sig);
+
+  // Default option is deterministic signing, for randomized signing, use
+  // dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, true>(seckey, msg, mlen, sig);
+
   flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pubkey, msg, mlen, sig);
 
   {

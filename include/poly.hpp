@@ -12,7 +12,8 @@ template<const size_t d>
 inline static void
 poly_power2round(const ff::ff_t* const __restrict poly,
                  ff::ff_t* const __restrict poly_hi,
-                 ff::ff_t* const __restrict poly_lo) requires(check_d(d))
+                 ff::ff_t* const __restrict poly_lo)
+  requires(check_d(d))
 {
   for (size_t i = 0; i < ntt::N; i++) {
     const auto ext = power2round<d>(poly[i]);
