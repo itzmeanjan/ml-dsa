@@ -1,5 +1,15 @@
 #!/usr/bin/python3
 
+"""
+  Before using `dilithium` library module, make sure you've run
+  `make lib` and generated shared library object, which is loaded
+  here; then function calls are forwarded to respective C++ implementation.
+
+  Author: Anjan Roy <hello@itzmeanjan.in>
+
+  Project: https://github.com/itzmeanjan/dilithium.git
+"""
+
 from ctypes import c_size_t, CDLL, c_char_p, create_string_buffer, c_bool
 from posixpath import exists, abspath
 from typing import Tuple
