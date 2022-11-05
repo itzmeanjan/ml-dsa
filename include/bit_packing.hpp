@@ -22,8 +22,8 @@ check_sbw(const size_t sbw)
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t sbw>
 static void
-encode(const ff::ff_t* const __restrict poly,
-       uint8_t* const __restrict arr) requires(check_sbw(sbw))
+encode(const ff::ff_t* const __restrict poly, uint8_t* const __restrict arr)
+  requires(check_sbw(sbw))
 {
   constexpr size_t blen = ntt::N * sbw;
   constexpr size_t len = blen >> 3;
@@ -51,8 +51,8 @@ encode(const ff::ff_t* const __restrict poly,
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t sbw>
 static void
-decode(const uint8_t* const __restrict arr,
-       ff::ff_t* const __restrict poly) requires(check_sbw(sbw))
+decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
+  requires(check_sbw(sbw))
 {
   constexpr size_t blen = ntt::N * sbw;
 

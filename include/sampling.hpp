@@ -87,8 +87,8 @@ check_nonce(const size_t nonce)
 template<const uint32_t η, const size_t k, const uint16_t nonce>
 static void
 expand_s(const uint8_t* const __restrict rho_prime,
-         ff::ff_t* const __restrict vec) requires(check_η(η) &&
-                                                  check_nonce(nonce))
+         ff::ff_t* const __restrict vec)
+  requires(check_η(η) && check_nonce(nonce))
 {
   constexpr ff::ff_t eta_{ η };
 
@@ -162,7 +162,8 @@ template<const uint32_t γ1, const size_t l>
 static void
 expand_mask(const uint8_t* const __restrict seed,
             const uint16_t nonce,
-            ff::ff_t* const __restrict vec) requires(check_γ1(γ1))
+            ff::ff_t* const __restrict vec)
+  requires(check_γ1(γ1))
 {
   constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);
 
@@ -204,7 +205,8 @@ check_τ(const uint32_t τ)
 template<const uint32_t τ>
 static void
 sample_in_ball(const uint8_t* const __restrict seed,
-               ff::ff_t* const __restrict poly) requires(check_τ(τ))
+               ff::ff_t* const __restrict poly)
+  requires(check_τ(τ))
 {
   uint8_t tau_bits[8]{};
   uint8_t buf = 0;
