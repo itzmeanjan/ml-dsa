@@ -6,6 +6,11 @@ DEPFLAGS = -I ./sha3/include
 
 all: testing
 
+wrapper/libdilithium.so: wrapper/dilithium.cpp include/*.hpp sha3/include/*.hpp
+	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(IFLAGS) $(DEPFLAGS) -fPIC --shared $< -o $@
+
+lib: wrapper/libdilithium.so
+
 test/a.out: test/main.cpp include/*.hpp
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(IFLAGS) $(DEPFLAGS) $< -o $@
 
