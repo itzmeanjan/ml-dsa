@@ -1,6 +1,7 @@
 #pragma once
 #include "polyvec.hpp"
 #include "sampling.hpp"
+#include "utils.hpp"
 
 // Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium {
