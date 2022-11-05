@@ -13,11 +13,7 @@ Dilithium DSA has three main algorithms
 
 **KeyGen** takes a 32 -bytes seed, which is used for deterministically computing both public key and secret key.
 
-**Sign** takes secret key and N (>0) -bytes message as input, which is used for deterministically signing message, producing signature bytes.
-
-> **Note**
-
-> This implementation of Dilithium doesn't **yet** support randomized signing.
+**Sign** takes secret key and N (>0) -bytes message as input, which is used for deterministically/ randomly signing message, producing signature bytes.
 
 **Verify** takes public key, N (>0) -bytes message and signature, returning boolean value, denoting status of successful signature verification operation.
 
@@ -193,7 +189,7 @@ git submodule update --init
 popd
 ```
 
-- Write program which makes use of Dilithium {keygen, signing, verification} API, while importing `include/dilithium.hpp`.
+- Write program which makes use of Dilithium {keygen, signing, verification} API ( all of these routines live under `dilithium::` namespace ), while importing `include/dilithium.hpp`.
 - Finally compile your program, while letting your compiler know where it can find Dilithium and Sha3 headers.
 
 These are the namespaces of interest
