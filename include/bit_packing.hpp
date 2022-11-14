@@ -92,7 +92,28 @@ decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
 
   std::memset(poly, 0, ntt::N * sizeof(ff::ff_t));
 
-  if constexpr (sbw == 4) {
+  if constexpr (sbw == 3) {
+    constexpr size_t itr_cnt = ntt::N >> 3;
+    constexpr uint8_t mask3 = 0b111;
+    constexpr uint8_t mask2 = 0b11;
+    constexpr uint8_t mask1 = 0b1;
+
+    for (size_t i = 0; i < itr_cnt; i++) {
+      const size_t poff = i << 3;
+      const size_t boff = i * 3;
+
+      poly[poff + 0].v = static_cast<uint32_t>((arr[boff + 0] >> 0) & mask3);
+      poly[poff + 1].v = static_cast<uint32_t>((arr[boff + 0] >> 3) & mask3);
+      poly[poff + 2].v = static_cast<uint32_t>((arr[boff + 1] & mask1) << 2) |
+                         static_cast<uint32_t>(arr[boff + 0] >> 6);
+      poly[poff + 3].v = static_cast<uint32_t>((arr[boff + 1] >> 1) & mask3);
+      poly[poff + 4].v = static_cast<uint32_t>((arr[boff + 1] >> 4) & mask3);
+      poly[poff + 5].v = static_cast<uint32_t>((arr[boff + 2] & mask2) << 1) |
+                         static_cast<uint32_t>(arr[boff + 1] >> 7);
+      poly[poff + 6].v = static_cast<uint32_t>((arr[boff + 2] >> 2) & mask3);
+      poly[poff + 7].v = static_cast<uint32_t>(arr[boff + 2] >> 5);
+    }
+  } else if constexpr (sbw == 4) {
     constexpr size_t itr_cnt = ntt::N >> 1;
     constexpr uint8_t mask = 0b1111;
 
