@@ -30,15 +30,28 @@ encode(const ff::ff_t* const __restrict poly, uint8_t* const __restrict arr)
 
   std::memset(arr, 0, len);
 
-  for (size_t i = 0; i < blen; i++) {
-    const size_t pidx = i / sbw;
-    const size_t poff = i % sbw;
+  if constexpr (sbw == 4) {
+    constexpr size_t itr_cnt = ntt::N >> 1;
+    constexpr uint32_t mask = 0b1111u;
 
-    const size_t aidx = i >> 3;
-    const size_t aoff = i & 7ul;
+    for (size_t i = 0; i < itr_cnt; i++) {
+      const size_t off = i << 1;
+      const uint8_t byte = (static_cast<uint8_t>(poly[off + 1].v & mask) << 4) |
+                           (static_cast<uint8_t>(poly[off + 0].v & mask) << 0);
 
-    const uint8_t bit = static_cast<uint8_t>((poly[pidx].v >> poff) & 0b1);
-    arr[aidx] = arr[aidx] ^ (bit << aoff);
+      arr[i] = byte;
+    }
+  } else {
+    for (size_t i = 0; i < blen; i++) {
+      const size_t pidx = i / sbw;
+      const size_t poff = i % sbw;
+
+      const size_t aidx = i >> 3;
+      const size_t aoff = i & 7ul;
+
+      const uint8_t bit = static_cast<uint8_t>((poly[pidx].v >> poff) & 0b1);
+      arr[aidx] = arr[aidx] ^ (bit << aoff);
+    }
   }
 }
 
