@@ -62,6 +62,23 @@ encode(const ff::ff_t* const __restrict poly, uint8_t* const __restrict arr)
 
       arr[i] = byte;
     }
+  } else if constexpr (sbw == 6) {
+    constexpr size_t itr_cnt = ntt::N >> 2;
+    constexpr uint32_t mask6 = 0b111111u;
+    constexpr uint32_t mask4 = 0b1111u;
+    constexpr uint32_t mask2 = 0b11u;
+
+    for (size_t i = 0; i < itr_cnt; i++) {
+      const size_t poff = i << 2;
+      const size_t boff = i * 3;
+
+      arr[boff + 0] = (static_cast<uint8_t>(poly[poff + 1].v & mask2) << 6) |
+                      (static_cast<uint8_t>(poly[poff + 0].v & mask6) << 0);
+      arr[boff + 1] = (static_cast<uint8_t>(poly[poff + 2].v & mask4) << 4) |
+                      static_cast<uint8_t>((poly[poff + 1].v >> 2) & mask4);
+      arr[boff + 2] = (static_cast<uint8_t>(poly[poff + 3].v & mask6) << 2) |
+                      static_cast<uint8_t>((poly[poff + 2].v >> 4) & mask2);
+    }
   } else {
     for (size_t i = 0; i < blen; i++) {
       const size_t pidx = i / sbw;
