@@ -1,4 +1,4 @@
-#include "test_dilithium.hpp"
+#include "test/test_dilithium.hpp"
 #include <iostream>
 
 int
