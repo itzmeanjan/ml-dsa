@@ -12,6 +12,16 @@ namespace ff {
 // Dilithium Prime Field Modulus
 constexpr uint32_t Q = (1u << 23) - (1u << 13) + 1u;
 
+// Precomputed Barrett Reduction Constant
+//
+// Note,
+//
+// k = ceil(log2(Q)) = 23
+// r = floor((1 << 2k) / Q) = 8396807
+//
+// See https://www.nayuki.io/page/barrett-reduction-algorithm for more.
+constexpr uint32_t R = 8396807;
+
 // Extended GCD algorithm for computing multiplicative inverse of prime ( = Q )
 // field element
 //
@@ -88,17 +98,68 @@ struct ff_t
   }
 
   // Multiplication over prime field Z_q | q = 2^23 - 2^13 + 1
+  //
+  // Note, after multiplying two 23 -bit numbers, resulting into a 46 -bit
+  // number, it is reduced to Z_q using Barrett reduction algorithm, which
+  // avoids division by any value which is not a power of 2.
+  //
+  // See https://www.nayuki.io/page/barrett-reduction-algorithm for Barrett
+  // reduction algorithm
   constexpr ff_t operator*(const ff_t& rhs) const
   {
     const uint64_t t0 = static_cast<uint64_t>(this->v);
     const uint64_t t1 = static_cast<uint64_t>(rhs.v);
     const uint64_t t2 = t0 * t1;
 
-    const uint64_t t3 = t2 / Q;
-    const uint64_t t4 = t3 * Q;
-    const uint32_t t5 = static_cast<uint32_t>(t2 - t4);
+    // operand 0
+    const uint64_t t2_hi = t2 >> 32;
+    const uint64_t t2_lo = t2 & 0xfffffffful;
 
-    return ff_t{ t5 };
+    // operand 1
+    constexpr uint64_t r_hi = 0ul;
+    constexpr uint64_t r_lo = static_cast<uint64_t>(R);
+
+    const uint64_t hi = t2_hi * r_hi;                 // high bits
+    const uint64_t mid = t2_hi * r_lo + t2_lo * r_hi; // mid bits
+    const uint64_t lo = t2_lo * r_lo;                 // low bits
+
+    const uint64_t mid_hi = mid >> 32;          // high 32 -bits of mid
+    const uint64_t mid_lo = mid & 0xfffffffful; // low 32 -bits of mid
+
+    const uint64_t t3 = lo >> 32;
+    const uint64_t t4 = t3 + mid_lo;
+    const uint64_t carry = t4 >> 32;
+
+    const uint64_t res_hi = hi + mid_hi + carry;
+    const uint64_t res_lo = lo + (mid_lo << 32);
+
+    // It must be the case that,
+    //
+    // if   t3 = t2 * R
+    // then ((res_hi << 64) | res_lo) == t3
+    //
+    // Though result is 128 -bit, with two limbs ( such as res_hi and res_lo ),
+    // representing lower & higher 64 -bits, only lower (23 + 23 + 24) -bits are
+    // of significance.
+    //
+    // t0 -> 23 -bit number
+    // t1 -> 23 -bit number
+    // t2 -> (23 + 23) -bit number      | t2 = t0 * t1
+    // R -> 24 -bit number
+    // t3 -> (23 + 23 + 24) -bit number | t3 = t2 * R
+    //
+    // Now we can drop lower 46 -bits of 128 -bit result ( remember, which has
+    // only 70 significant bits ) & keep 24 -bits of interest, in res, see
+    // below.
+
+    const uint64_t res = ((res_hi & 0x3ful) << 18) | (res_lo >> 46);
+    const uint64_t t5 = res * static_cast<uint64_t>(Q);
+    const uint32_t t6 = static_cast<uint32_t>(t2 - t5);
+
+    const bool flg = t6 >= Q;
+    const uint32_t t7 = t6 - flg * Q;
+
+    return ff_t{ t7 };
   }
 
   // Multiplicative inverse over prime field Z_q | q = 2^23 - 2^13 + 1
