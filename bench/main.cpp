@@ -1,4 +1,4 @@
-#include "bench_dilithium.hpp"
+#include "bench/bench_dilithium.hpp"
 
 // register for benchmarking prime field arithmetic
 BENCHMARK(bench_dilithium::ff_add);

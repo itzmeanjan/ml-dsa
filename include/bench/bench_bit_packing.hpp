@@ -1,6 +1,6 @@
 #pragma once
 #include "bit_packing.hpp"
-#include "test_bit_packing.hpp"
+#include "test/test_bit_packing.hpp"
 #include <benchmark/benchmark.h>
 #include <cassert>
 
