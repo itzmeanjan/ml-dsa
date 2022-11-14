@@ -289,6 +289,29 @@ decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
       poly[poff + 7] = (static_cast<uint32_t>(arr[boff + 12]) << 5) |
                        static_cast<uint32_t>(arr[boff + 11] >> 3);
     }
+  } else if constexpr (sbw == 18) {
+    constexpr size_t itr_cnt = ntt::N >> 2;
+    constexpr uint8_t mask6 = 0b111111;
+    constexpr uint8_t mask4 = 0b1111;
+    constexpr uint8_t mask2 = 0b11;
+
+    for (size_t i = 0; i < itr_cnt; i++) {
+      const size_t poff = i << 2;
+      const size_t boff = i * 9;
+
+      poly[poff + 0].v = (static_cast<uint32_t>(arr[boff + 2] & mask2) << 16) |
+                         (static_cast<uint32_t>(arr[boff + 1]) << 8) |
+                         static_cast<uint32_t>(arr[boff + 0]);
+      poly[poff + 1].v = (static_cast<uint32_t>(arr[boff + 4] & mask4) << 14) |
+                         (static_cast<uint32_t>(arr[boff + 3]) << 6) |
+                         static_cast<uint32_t>(arr[boff + 2] >> 2);
+      poly[poff + 2].v = (static_cast<uint32_t>(arr[boff + 6] & mask6) << 12) |
+                         (static_cast<uint32_t>(arr[boff + 5]) << 4) |
+                         static_cast<uint32_t>(arr[boff + 4] >> 4);
+      poly[poff + 3].v = (static_cast<uint32_t>(arr[boff + 8]) << 10) |
+                         (static_cast<uint32_t>(arr[boff + 7]) << 2) |
+                         static_cast<uint32_t>(arr[boff + 6] >> 6);
+    }
   } else {
     for (size_t i = 0; i < blen; i++) {
       const size_t aidx = i >> 3;
