@@ -71,15 +71,28 @@ decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
 
   std::memset(poly, 0, ntt::N * sizeof(ff::ff_t));
 
-  for (size_t i = 0; i < blen; i++) {
-    const size_t aidx = i >> 3;
-    const size_t aoff = i & 7ul;
+  if constexpr (sbw == 4) {
+    constexpr size_t itr_cnt = ntt::N >> 1;
+    constexpr uint8_t mask = 0b1111;
 
-    const size_t pidx = i / sbw;
-    const size_t poff = i % sbw;
+    for (size_t i = 0; i < itr_cnt; i++) {
+      const size_t off = i << 1;
+      const uint8_t byte = arr[i];
 
-    const uint8_t bit = (arr[aidx] >> aoff) & 0b1;
-    poly[pidx].v = poly[pidx].v ^ static_cast<uint32_t>(bit) << poff;
+      poly[off + 0].v = static_cast<uint32_t>((byte >> 0) & mask);
+      poly[off + 1].v = static_cast<uint32_t>((byte >> 4) & mask);
+    }
+  } else {
+    for (size_t i = 0; i < blen; i++) {
+      const size_t aidx = i >> 3;
+      const size_t aoff = i & 7ul;
+
+      const size_t pidx = i / sbw;
+      const size_t poff = i % sbw;
+
+      const uint8_t bit = (arr[aidx] >> aoff) & 0b1;
+      poly[pidx].v = poly[pidx].v ^ static_cast<uint32_t>(bit) << poff;
+    }
   }
 }
 
