@@ -156,6 +156,21 @@ encode(const ff::ff_t* const __restrict poly, uint8_t* const __restrict arr)
       arr[boff + 7] = static_cast<uint8_t>(poly[poff + 3].v >> 2);
       arr[boff + 8] = static_cast<uint8_t>(poly[poff + 3].v >> 10);
     }
+  } else if constexpr (sbw == 20) {
+    constexpr size_t itr_cnt = ntt::N >> 1;
+    constexpr uint32_t mask4 = 0b1111u;
+
+    for (size_t i = 0; i < itr_cnt; i++) {
+      const size_t poff = i << 1;
+      const size_t boff = i * 5;
+
+      arr[boff + 0] = static_cast<uint8_t>(poly[poff + 0].v);
+      arr[boff + 1] = static_cast<uint8_t>(poly[poff + 0].v >> 8);
+      arr[boff + 2] = static_cast<uint8_t>((poly[poff + 1].v & mask4) << 4) |
+                      static_cast<uint8_t>((poly[poff + 0].v >> 16) & mask4);
+      arr[boff + 3] = static_cast<uint8_t>(poly[poff + 1].v >> 4);
+      arr[boff + 4] = static_cast<uint8_t>(poly[poff + 1].v >> 12);
+    }
   } else {
     for (size_t i = 0; i < blen; i++) {
       const size_t pidx = i / sbw;
@@ -311,6 +326,21 @@ decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
       poly[poff + 3].v = (static_cast<uint32_t>(arr[boff + 8]) << 10) |
                          (static_cast<uint32_t>(arr[boff + 7]) << 2) |
                          static_cast<uint32_t>(arr[boff + 6] >> 6);
+    }
+  } else if constexpr (sbw == 20) {
+    constexpr size_t itr_cnt = ntt::N >> 1;
+    constexpr uint8_t mask4 = 0b1111;
+
+    for (size_t i = 0; i < itr_cnt; i++) {
+      const size_t poff = i << 1;
+      const size_t boff = i * 5;
+
+      poly[poff + 0].v = (static_cast<uint32_t>(arr[boff + 2] & mask4) << 16) |
+                         (static_cast<uint32_t>(arr[boff + 1]) << 8) |
+                         static_cast<uint32_t>(arr[boff + 0]);
+      poly[poff + 1].v = (static_cast<uint32_t>(arr[boff + 4]) << 12) |
+                         (static_cast<uint32_t>(arr[boff + 3]) << 4) |
+                         static_cast<uint32_t>(arr[boff + 2] >> 4);
     }
   } else {
     for (size_t i = 0; i < blen; i++) {
