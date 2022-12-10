@@ -1,7 +1,8 @@
 #pragma once
+#include "bench_common.hpp"
 #include "dilithium.hpp"
 #include "utils.hpp"
-#include <benchmark/benchmark.h>
+#include "x86_64_cpu_cycles.hpp"
 
 // Benchmark Dilithium PQC suite implementation on CPU, using google-benchmark
 namespace bench_dilithium {
@@ -31,13 +32,40 @@ sign(benchmark::State& state)
   uint8_t* sig = static_cast<uint8_t*>(std::malloc(siglen));
   uint8_t* msg = static_cast<uint8_t*>(std::malloc(mlen));
 
-  dilithium_utils::random_data<uint8_t>(seed, slen);
-  dilithium_utils::random_data<uint8_t>(msg, mlen);
+#if defined __x86_64__
+  uint64_t total_cycles = 0ul;
+#endif
 
-  dilithium::keygen<k, l, d, η>(seed, pkey, skey);
+  std::vector<uint64_t> durations;
 
   for (auto _ : state) {
+    // use random seed for key generation
+    dilithium_utils::random_data<uint8_t>(seed, slen);
+    // use random message ( to be signed )
+    dilithium_utils::random_data<uint8_t>(msg, mlen);
+    // generate keypair ( from random sampled seed )
+    dilithium::keygen<k, l, d, η>(seed, pkey, skey);
+
+    const auto t0 = std::chrono::high_resolution_clock::now();
+
+#if defined __x86_64__
+    const uint64_t start = cpu_cycles();
+#endif
+
     dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω>(skey, msg, mlen, sig);
+
+#if defined __x86_64__
+    const uint64_t end = cpu_cycles();
+    total_cycles += (end - start);
+#endif
+
+    const auto t1 = std::chrono::high_resolution_clock::now();
+
+    const auto sdur = std::chrono::duration_cast<seconds_t>(t1 - t0);
+    const auto nsdur = std::chrono::duration_cast<nano_t>(t1 - t0);
+
+    state.SetIterationTime(sdur.count());
+    durations.push_back(nsdur.count());
 
     benchmark::DoNotOptimize(skey);
     benchmark::DoNotOptimize(msg);
@@ -46,6 +74,25 @@ sign(benchmark::State& state)
   }
 
   state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
+
+  const auto min_idx = std::min_element(durations.begin(), durations.end());
+  const auto min = durations.at(std::distance(durations.begin(), min_idx));
+  state.counters["min_exec_time (ns)"] = static_cast<double>(min);
+
+  const auto max_idx = std::max_element(durations.begin(), durations.end());
+  const auto max = durations.at(std::distance(durations.begin(), max_idx));
+  state.counters["max_exec_time (ns)"] = static_cast<double>(max);
+
+  const auto lenby2 = durations.size() / 2;
+  const auto mid_idx = durations.begin() + lenby2;
+  std::nth_element(durations.begin(), mid_idx, durations.end());
+  const auto mid = durations[lenby2];
+  state.counters["median_exec_time (ns)"] = static_cast<double>(mid);
+
+#if defined __x86_64__
+  total_cycles /= static_cast<uint64_t>(state.iterations());
+  state.counters["average_cpu_cycles"] = static_cast<double>(total_cycles);
+#endif
 
   bool flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey, msg, mlen, sig);
 
