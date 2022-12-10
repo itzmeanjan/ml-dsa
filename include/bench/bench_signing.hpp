@@ -1,6 +1,7 @@
 #pragma once
 #include "dilithium.hpp"
 #include "utils.hpp"
+#include "x86_64_cpu_cycles.hpp"
 #include <benchmark/benchmark.h>
 
 // Benchmark Dilithium PQC suite implementation on CPU, using google-benchmark
@@ -36,8 +37,21 @@ sign(benchmark::State& state)
 
   dilithium::keygen<k, l, d, η>(seed, pkey, skey);
 
+#if defined __x86_64__
+  uint64_t total_cycles = 0ul;
+#endif
+
   for (auto _ : state) {
+#if defined __x86_64__
+    const uint64_t start = cpu_cycles();
+#endif
+
     dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω>(skey, msg, mlen, sig);
+
+#if defined __x86_64__
+    const uint64_t end = cpu_cycles();
+    total_cycles += (end - start);
+#endif
 
     benchmark::DoNotOptimize(skey);
     benchmark::DoNotOptimize(msg);
@@ -46,6 +60,11 @@ sign(benchmark::State& state)
   }
 
   state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
+
+#if defined __x86_64__
+  total_cycles /= static_cast<uint64_t>(state.iterations());
+  state.counters["average_cpu_cycles"] = static_cast<double>(total_cycles);
+#endif
 
   bool flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey, msg, mlen, sig);
 

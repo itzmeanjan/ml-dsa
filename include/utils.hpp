@@ -70,7 +70,7 @@ signature_length()
 //
 // Collects inspiration from
 // https://github.com/itzmeanjan/gift-cofb/blob/0bd9baa/wrapper/python/test_gift_cofb.py#L79-L101
-static void
+inline void
 random_bit_flip(uint8_t* const arr, const size_t alen)
 {
   std::random_device rd;
