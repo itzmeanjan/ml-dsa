@@ -32,11 +32,6 @@ sign(benchmark::State& state)
   uint8_t* sig = static_cast<uint8_t*>(std::malloc(siglen));
   uint8_t* msg = static_cast<uint8_t*>(std::malloc(mlen));
 
-  dilithium_utils::random_data<uint8_t>(seed, slen);
-  dilithium_utils::random_data<uint8_t>(msg, mlen);
-
-  dilithium::keygen<k, l, d, η>(seed, pkey, skey);
-
 #if defined __x86_64__
   uint64_t total_cycles = 0ul;
 #endif
@@ -44,6 +39,13 @@ sign(benchmark::State& state)
   std::vector<uint64_t> durations;
 
   for (auto _ : state) {
+    // use random seed for key generation
+    dilithium_utils::random_data<uint8_t>(seed, slen);
+    // use random message ( to be signed )
+    dilithium_utils::random_data<uint8_t>(msg, mlen);
+    // generate keypair ( from random sampled seed )
+    dilithium::keygen<k, l, d, η>(seed, pkey, skey);
+
     const auto t0 = std::chrono::high_resolution_clock::now();
 
 #if defined __x86_64__

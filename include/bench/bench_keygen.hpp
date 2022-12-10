@@ -20,8 +20,6 @@ keygen(benchmark::State& state)
   uint8_t* pubkey = static_cast<uint8_t*>(std::malloc(pklen));
   uint8_t* seckey = static_cast<uint8_t*>(std::malloc(sklen));
 
-  dilithium_utils::random_data<uint8_t>(seed, slen);
-
 #if defined __x86_64__
   uint64_t total_cycles = 0ul;
 #endif
@@ -29,6 +27,9 @@ keygen(benchmark::State& state)
   std::vector<uint64_t> durations;
 
   for (auto _ : state) {
+    // use random seed for key generation
+    dilithium_utils::random_data<uint8_t>(seed, slen);
+
     const auto t0 = std::chrono::high_resolution_clock::now();
 
 #if defined __x86_64__
