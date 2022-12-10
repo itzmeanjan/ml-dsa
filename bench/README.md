@@ -18,6 +18,10 @@ make benchmark
 
 > On x86_64 architecture average CPU cycle spent in keygen/ sign/ verify routine is measured using compiler built-in `__rdtsc`. I've tested it with both Clang and GCC.
 
+> **Note** Following screen capture annotates and shows how to interpret Dilithium benchmark results.
+
+![dilithium_benchmark_explanation](./dilithium_bench_explanation.png)
+
 ### On Intel(R) Core(TM) i5-8279U CPU @ 2.40GHz **[ compiled with Clang ]**
 
 ```bash
