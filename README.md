@@ -3,7 +3,7 @@ CRYSTALS-Dilithium: Post-Quantum Digital Signature Algorithm
 
 ## Motivation
 
-Dilithium is one of those post-quantum digital signature algorithms ( DSA ), which is selected by NIST for standardization purpose. Dilithium's security is based on hardness of finding short vectors in lattice i.e. it's lattice based Post Quantum Cryptographic (PQC) construction.
+Dilithium is one of those post-quantum digital signature algorithms ( DSA ), which are selected by NIST for standardization purpose. Dilithium's security is based on hardness of finding short vectors in lattice i.e. it's lattice based Post Quantum Cryptographic (PQC) construction.
 
 Dilithium DSA has three main algorithms
 
@@ -71,7 +71,11 @@ git submodule update --init
 
 ## Testing
 
-For testing functional correctness of Dilithium Digital Signature Algorithm, along with its components, issue
+For testing functional correctness ( & conformance with standard ) of Dilithium Digital Signature Algorithm, along with its components, issue
+
+> **Note**
+
+> Known Answer Tests are generated using https://gist.github.com/itzmeanjan/d14afc3866b82119221682f0f3c9822d
 
 ```bash
 make
