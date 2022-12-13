@@ -2,7 +2,6 @@
 #include "bench_common.hpp"
 #include "dilithium.hpp"
 #include "utils.hpp"
-#include "x86_64_cpu_cycles.hpp"
 
 // Benchmark Dilithium PQC suite implementation on CPU, using google-benchmark
 namespace bench_dilithium {
@@ -32,10 +31,6 @@ verify(benchmark::State& state)
   uint8_t* sig = static_cast<uint8_t*>(std::malloc(siglen));
   uint8_t* msg = static_cast<uint8_t*>(std::malloc(mlen));
 
-#if defined __x86_64__
-  uint64_t total_cycles = 0ul;
-#endif
-
   std::vector<uint64_t> durations;
 
   for (auto _ : state) {
@@ -49,20 +44,8 @@ verify(benchmark::State& state)
     dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω>(skey, msg, mlen, sig);
 
     const auto t0 = std::chrono::high_resolution_clock::now();
-
     bool flg = false;
-
-#if defined __x86_64__
-    const uint64_t start = cpu_cycles();
-#endif
-
     flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey, msg, mlen, sig);
-
-#if defined __x86_64__
-    const uint64_t end = cpu_cycles();
-    total_cycles += (end - start);
-#endif
-
     const auto t1 = std::chrono::high_resolution_clock::now();
 
     const auto sdur = std::chrono::duration_cast<seconds_t>(t1 - t0);
@@ -95,11 +78,6 @@ verify(benchmark::State& state)
   std::nth_element(durations.begin(), mid_idx, durations.end());
   const auto mid = durations[lenby2];
   state.counters["median_exec_time (ns)"] = static_cast<double>(mid);
-
-#if defined __x86_64__
-  total_cycles /= static_cast<uint64_t>(state.iterations());
-  state.counters["average_cpu_cycles"] = static_cast<double>(total_cycles);
-#endif
 
   std::free(seed);
   std::free(pkey);
