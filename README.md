@@ -1,3 +1,5 @@
+> **Warning** **This implementation is not yet audited. If you consider using it in production, be careful !**
+
 # dilithium
 CRYSTALS-Dilithium: Post-Quantum Digital Signature Algorithm
 
