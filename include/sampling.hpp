@@ -1,5 +1,5 @@
 #pragma once
-#include "ff.hpp"
+#include "field.hpp"
 #include "ntt.hpp"
 #include "poly.hpp"
 #include "shake128.hpp"
@@ -18,8 +18,8 @@ namespace dilithium_utils {
 // See `Expanding the Matrix A` point in section 5.3 of Dilithium specification,
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t l>
-static void
-expand_a(const uint8_t* const __restrict rho, ff::ff_t* const __restrict mat)
+static inline void
+expand_a(const uint8_t* const __restrict rho, field::zq_t* const __restrict mat)
 {
   uint8_t msg[34]{};
   uint8_t buf[3]{};
@@ -46,9 +46,9 @@ expand_a(const uint8_t* const __restrict rho, ff::ff_t* const __restrict mat)
         const uint32_t t2 = static_cast<uint32_t>(buf[0]);
 
         const uint32_t t3 = (t0 << 16) ^ (t1 << 8) ^ (t2 << 0);
-        const bool flg = t3 < ff::Q;
+        const bool flg = t3 < field::Q;
 
-        mat[off + n] = ff::ff_t{ static_cast<uint32_t>(t3 * flg) };
+        mat[off + n] = field::zq_t{ static_cast<uint32_t>(t3 * flg) };
         n = n + flg * 1;
       }
     }
@@ -57,7 +57,7 @@ expand_a(const uint8_t* const __restrict rho, ff::ff_t* const __restrict mat)
 
 // Compile-time check to ensure that η ∈ {2, 4}, so that sampled secret key
 // range stays short i.e. [-η, η]
-inline static constexpr bool
+constexpr bool
 check_η(const uint32_t η)
 {
   return (η == 2u) || (η == 4u);
@@ -65,7 +65,7 @@ check_η(const uint32_t η)
 
 // Compile-time check to ensure that starting nonce belongs to allowed set of
 // values when uniform sampling polynomial coefficients in [-η, η]
-inline static constexpr bool
+constexpr bool
 check_nonce(const size_t nonce)
 {
   return (nonce == 0) || (nonce == 4) || (nonce == 5) || (nonce == 7);
@@ -85,12 +85,12 @@ check_nonce(const size_t nonce)
 // specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t η, const size_t k, const uint16_t nonce>
-static void
+static inline void
 expand_s(const uint8_t* const __restrict rho_prime,
-         ff::ff_t* const __restrict vec)
+         field::zq_t* const __restrict vec)
   requires(check_η(η) && check_nonce(nonce))
 {
-  constexpr ff::ff_t eta_{ η };
+  constexpr field::zq_t eta_{ η };
 
   uint8_t msg[66]{};
   uint8_t buf = 0;
@@ -118,24 +118,24 @@ expand_s(const uint8_t* const __restrict rho_prime,
         const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
         const bool flg0 = t0 < 15;
 
-        vec[off + n] = eta_ - ff::ff_t{ t2 };
+        vec[off + n] = eta_ - field::zq_t{ t2 };
         n += flg0 * 1;
 
         const uint32_t t3 = static_cast<uint32_t>(t1 % 5);
         const bool flg1 = (t1 < 15) & (n < ntt::N);
-        const ff::ff_t br[]{ vec[off], eta_ - ff::ff_t{ t3 } };
+        const field::zq_t br[]{ vec[off], eta_ - field::zq_t{ t3 } };
 
         vec[off + flg1 * n] = br[flg1];
         n += flg1 * 1;
       } else {
         const bool flg0 = t0 < 9;
 
-        vec[off + n] = eta_ - ff::ff_t{ static_cast<uint32_t>(t0) };
+        vec[off + n] = eta_ - field::zq_t{ static_cast<uint32_t>(t0) };
         n += flg0 * 1;
 
         const bool flg1 = (t1 < 9) & (n < ntt::N);
-        const ff::ff_t t2 = eta_ - ff::ff_t{ static_cast<uint32_t>(t1) };
-        const ff::ff_t br[]{ vec[off], t2 };
+        const field::zq_t t2 = eta_ - field::zq_t{ static_cast<uint32_t>(t1) };
+        const field::zq_t br[]{ vec[off], t2 };
 
         vec[off + flg1 * n] = br[flg1];
         n += flg1 * 1;
@@ -145,7 +145,7 @@ expand_s(const uint8_t* const __restrict rho_prime,
 }
 
 // Compile-time check to ensure that γ1 has recommended value
-static inline constexpr bool
+constexpr bool
 check_γ1(const uint32_t γ1)
 {
   return (γ1 == (1u << 17)) || (γ1 == (1u << 19));
@@ -159,10 +159,10 @@ check_γ1(const uint32_t γ1)
 // specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t γ1, const size_t l>
-static void
+static inline void
 expand_mask(const uint8_t* const __restrict seed,
             const uint16_t nonce,
-            ff::ff_t* const __restrict vec)
+            field::zq_t* const __restrict vec)
   requires(check_γ1(γ1))
 {
   constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);
@@ -190,7 +190,7 @@ expand_mask(const uint8_t* const __restrict seed,
 
 // Compile-time check to ensure that τ is set to parameter recommended in
 // Dilithium specification
-static inline constexpr bool
+constexpr bool
 check_τ(const uint32_t τ)
 {
   return (τ == 39) || (τ == 49) || (τ == 60);
@@ -203,9 +203,9 @@ check_τ(const uint32_t τ)
 // Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t τ>
-static void
+static inline void
 sample_in_ball(const uint8_t* const __restrict seed,
-               ff::ff_t* const __restrict poly)
+               field::zq_t* const __restrict poly)
   requires(check_τ(τ))
 {
   uint8_t tau_bits[8]{};
@@ -231,8 +231,9 @@ sample_in_ball(const uint8_t* const __restrict seed,
 
     const bool flg = buf <= static_cast<uint8_t>(i);
 
-    const ff::ff_t br0[]{ poly[i], poly[buf] };
-    const ff::ff_t br1[]{ poly[buf], ff::ff_t{ 1u } - ff::ff_t{ 2u * s_ } };
+    const field::zq_t br0[]{ poly[i], poly[buf] };
+    const field::zq_t br1[]{ poly[buf],
+                             field::zq_t{ 1u } - field::zq_t{ 2u * s_ } };
 
     poly[i] = br0[flg];
     poly[buf] = br1[flg];

@@ -88,7 +88,7 @@ extern "C"
     constexpr uint32_t η = 2;
     constexpr size_t d = 13;
     constexpr uint32_t γ1 = 1u << 17;
-    constexpr uint32_t γ2 = (ff::Q - 1) / 88;
+    constexpr uint32_t γ2 = (field::Q - 1) / 88;
     constexpr uint32_t τ = 39;
     constexpr uint32_t β = τ * η;
     constexpr size_t ω = 80;
@@ -106,7 +106,7 @@ extern "C"
     constexpr uint32_t η = 2;
     constexpr size_t d = 13;
     constexpr uint32_t γ1 = 1u << 17;
-    constexpr uint32_t γ2 = (ff::Q - 1) / 88;
+    constexpr uint32_t γ2 = (field::Q - 1) / 88;
     constexpr uint32_t τ = 39;
     constexpr uint32_t β = τ * η;
     constexpr size_t ω = 80;
@@ -131,7 +131,7 @@ extern "C"
     constexpr uint32_t η = 4;
     constexpr size_t d = 13;
     constexpr uint32_t γ1 = 1u << 19;
-    constexpr uint32_t γ2 = (ff::Q - 1) / 32;
+    constexpr uint32_t γ2 = (field::Q - 1) / 32;
     constexpr uint32_t τ = 49;
     constexpr uint32_t β = τ * η;
     constexpr size_t ω = 55;
@@ -149,7 +149,7 @@ extern "C"
     constexpr uint32_t η = 4;
     constexpr size_t d = 13;
     constexpr uint32_t γ1 = 1u << 19;
-    constexpr uint32_t γ2 = (ff::Q - 1) / 32;
+    constexpr uint32_t γ2 = (field::Q - 1) / 32;
     constexpr uint32_t τ = 49;
     constexpr uint32_t β = τ * η;
     constexpr size_t ω = 55;
@@ -174,7 +174,7 @@ extern "C"
     constexpr uint32_t η = 2;
     constexpr size_t d = 13;
     constexpr uint32_t γ1 = 1u << 19;
-    constexpr uint32_t γ2 = (ff::Q - 1) / 32;
+    constexpr uint32_t γ2 = (field::Q - 1) / 32;
     constexpr uint32_t τ = 60;
     constexpr uint32_t β = τ * η;
     constexpr size_t ω = 75;
@@ -192,7 +192,7 @@ extern "C"
     constexpr uint32_t η = 2;
     constexpr size_t d = 13;
     constexpr uint32_t γ1 = 1u << 19;
-    constexpr uint32_t γ2 = (ff::Q - 1) / 32;
+    constexpr uint32_t γ2 = (field::Q - 1) / 32;
     constexpr uint32_t τ = 60;
     constexpr uint32_t β = τ * η;
     constexpr size_t ω = 75;

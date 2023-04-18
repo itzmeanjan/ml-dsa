@@ -1,5 +1,6 @@
 #pragma once
 #include "polyvec.hpp"
+#include "prng.hpp"
 #include "sampling.hpp"
 #include "utils.hpp"
 
@@ -67,7 +68,7 @@ sign(const uint8_t* const __restrict seckey,
   const uint8_t* const key = seckey + secoff1;
   const uint8_t* const tr = seckey + secoff2;
 
-  ff::ff_t A[k * l * ntt::N]{};
+  field::zq_t A[k * l * ntt::N]{};
 
   dilithium_utils::expand_a<k, l>(rho, A);
 
@@ -82,7 +83,8 @@ sign(const uint8_t* const __restrict seckey,
   uint8_t rho_prime[64]{};
 
   if constexpr (randomized) {
-    dilithium_utils::random_data<uint8_t>(rho_prime, sizeof(rho_prime));
+    prng::prng_t prng;
+    prng.read(rho_prime, sizeof(rho_prime));
   } else {
     uint8_t crh_in[32 + 64]{};
 
@@ -94,9 +96,9 @@ sign(const uint8_t* const __restrict seckey,
     hasher1.read(rho_prime, sizeof(rho_prime));
   }
 
-  ff::ff_t s1[l * ntt::N]{};
-  ff::ff_t s2[k * ntt::N]{};
-  ff::ff_t t0[k * ntt::N]{};
+  field::zq_t s1[l * ntt::N]{};
+  field::zq_t s2[k * ntt::N]{};
+  field::zq_t t0[k * ntt::N]{};
 
   dilithium_utils::polyvec_decode<l, eta_bw>(seckey + secoff3, s1);
   dilithium_utils::polyvec_decode<k, eta_bw>(seckey + secoff4, s2);
@@ -113,14 +115,14 @@ sign(const uint8_t* const __restrict seckey,
   bool has_signed = false;
   uint16_t kappa = 0;
 
-  ff::ff_t z[l * ntt::N]{};
-  ff::ff_t h[k * ntt::N]{};
+  field::zq_t z[l * ntt::N]{};
+  field::zq_t h[k * ntt::N]{};
   uint8_t hash_out[32]{};
 
   while (!has_signed) {
-    ff::ff_t y[l * ntt::N]{};
-    ff::ff_t y_prime[l * ntt::N]{};
-    ff::ff_t w[k * ntt::N]{};
+    field::zq_t y[l * ntt::N]{};
+    field::zq_t y_prime[l * ntt::N]{};
+    field::zq_t w[k * ntt::N]{};
 
     dilithium_utils::expand_mask<γ1, l>(rho_prime, kappa, y);
 
@@ -131,12 +133,12 @@ sign(const uint8_t* const __restrict seckey,
     dilithium_utils::polyvec_intt<k>(w);
 
     constexpr uint32_t α = γ2 << 1;
-    constexpr uint32_t m = (ff::Q - 1u) / α;
+    constexpr uint32_t m = (field::Q - 1u) / α;
     constexpr size_t w1bw = std::bit_width(m - 1u);
 
-    ff::ff_t w1[k * ntt::N]{};
+    field::zq_t w1[k * ntt::N]{};
     uint8_t hash_in[64 + (k * w1bw * 32)]{};
-    ff::ff_t c[ntt::N]{};
+    field::zq_t c[ntt::N]{};
 
     dilithium_utils::polyvec_highbits<k, α>(w, w1);
 
@@ -154,8 +156,8 @@ sign(const uint8_t* const __restrict seckey,
     dilithium_utils::polyvec_intt<l>(z);
     dilithium_utils::polyvec_add_to<l>(y, z);
 
-    ff::ff_t r0[k * ntt::N]{};
-    ff::ff_t r1[k * ntt::N]{};
+    field::zq_t r0[k * ntt::N]{};
+    field::zq_t r1[k * ntt::N]{};
 
     dilithium_utils::polyvec_mul_poly<k>(c, s2, r1);
     dilithium_utils::polyvec_intt<k>(r1);
@@ -163,11 +165,11 @@ sign(const uint8_t* const __restrict seckey,
     dilithium_utils::polyvec_add_to<k>(w, r1);
     dilithium_utils::polyvec_lowbits<k, α>(r1, r0);
 
-    const ff::ff_t z_norm = dilithium_utils::polyvec_infinity_norm<l>(z);
-    const ff::ff_t r0_norm = dilithium_utils::polyvec_infinity_norm<k>(r0);
+    const field::zq_t z_norm = dilithium_utils::polyvec_infinity_norm<l>(z);
+    const field::zq_t r0_norm = dilithium_utils::polyvec_infinity_norm<k>(r0);
 
-    constexpr ff::ff_t bound0{ γ1 - β };
-    constexpr ff::ff_t bound1{ γ2 - β };
+    constexpr field::zq_t bound0{ γ1 - β };
+    constexpr field::zq_t bound1{ γ2 - β };
 
     const bool flg0 = z_norm >= bound0;
     const bool flg1 = r0_norm >= bound1;
@@ -175,8 +177,8 @@ sign(const uint8_t* const __restrict seckey,
 
     has_signed = !flg2;
 
-    ff::ff_t h0[k * ntt::N]{};
-    ff::ff_t h1[k * ntt::N]{};
+    field::zq_t h0[k * ntt::N]{};
+    field::zq_t h1[k * ntt::N]{};
 
     dilithium_utils::polyvec_mul_poly<k>(c, t0, h0);
     dilithium_utils::polyvec_intt<k>(h0);
@@ -185,10 +187,10 @@ sign(const uint8_t* const __restrict seckey,
     dilithium_utils::polyvec_add_to<k>(h1, r1);
     dilithium_utils::polyvec_make_hint<k, α>(h0, r1, h);
 
-    const ff::ff_t ct0_norm = dilithium_utils::polyvec_infinity_norm<k>(h1);
+    const field::zq_t ct0_norm = dilithium_utils::polyvec_infinity_norm<k>(h1);
     const size_t count_1 = dilithium_utils::polyvec_count_1s<k>(h);
 
-    constexpr ff::ff_t bound2{ γ2 };
+    constexpr field::zq_t bound2{ γ2 };
 
     const bool flg3 = ct0_norm >= bound2;
     const bool flg4 = count_1 > ω;

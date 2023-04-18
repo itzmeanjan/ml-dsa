@@ -37,33 +37,33 @@ keygen(
   const uint8_t* rho_prime = rho + 32;
   const uint8_t* key = rho_prime + 64;
 
-  ff::ff_t A[k * l * ntt::N]{};
+  field::zq_t A[k * l * ntt::N]{};
 
   dilithium_utils::expand_a<k, l>(rho, A);
 
-  ff::ff_t s1[l * ntt::N]{};
-  ff::ff_t s2[k * ntt::N]{};
+  field::zq_t s1[l * ntt::N]{};
+  field::zq_t s2[k * ntt::N]{};
 
   dilithium_utils::expand_s<η, l, 0>(rho_prime, s1);
   dilithium_utils::expand_s<η, k, l>(rho_prime, s2);
 
-  ff::ff_t s1_prime[l * ntt::N]{};
+  field::zq_t s1_prime[l * ntt::N]{};
 
   std::memcpy(s1_prime, s1, sizeof(s1));
   dilithium_utils::polyvec_ntt<l>(s1_prime);
 
-  ff::ff_t t[k * ntt::N]{};
+  field::zq_t t[k * ntt::N]{};
 
   dilithium_utils::matrix_multiply<k, l, l, 1>(A, s1_prime, t);
   dilithium_utils::polyvec_intt<k>(t);
   dilithium_utils::polyvec_add_to<k>(s2, t);
 
-  ff::ff_t t1[k * ntt::N]{};
-  ff::ff_t t0[k * ntt::N]{};
+  field::zq_t t1[k * ntt::N]{};
+  field::zq_t t0[k * ntt::N]{};
 
   dilithium_utils::polyvec_power2round<k, d>(t, t1, t0);
 
-  constexpr size_t t1_bw = std::bit_width(ff::Q) - d;
+  constexpr size_t t1_bw = std::bit_width(field::Q) - d;
   uint8_t crh_in[32 + k * 32 * t1_bw]{};
   uint8_t tr[32]{};
 

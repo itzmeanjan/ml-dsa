@@ -1,6 +1,7 @@
 #pragma once
 #include "bench_common.hpp"
 #include "keygen.hpp"
+#include "prng.hpp"
 #include "utils.hpp"
 
 // Benchmark Dilithium PQC suite implementation on CPU, using google-benchmark
@@ -19,11 +20,13 @@ keygen(benchmark::State& state)
   uint8_t* pubkey = static_cast<uint8_t*>(std::malloc(pklen));
   uint8_t* seckey = static_cast<uint8_t*>(std::malloc(sklen));
 
+  prng::prng_t prng;
+
   std::vector<uint64_t> durations;
 
   for (auto _ : state) {
     // use random seed for key generation
-    dilithium_utils::random_data<uint8_t>(seed, slen);
+    prng.read(seed, slen);
 
     const auto t0 = std::chrono::high_resolution_clock::now();
     dilithium::keygen<k, l, d, η>(seed, pubkey, seckey);

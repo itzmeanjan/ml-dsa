@@ -29,7 +29,7 @@ verify(const uint8_t* const __restrict pubkey,
   requires(dilithium_utils::check_d(d) && dilithium_utils::check_γ1(γ1) &&
            dilithium_utils::check_τ(τ))
 {
-  constexpr size_t t1_bw = std::bit_width(ff::Q) - d;
+  constexpr size_t t1_bw = std::bit_width(field::Q) - d;
   constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();
 
   constexpr size_t puboff0 = 0;
@@ -40,8 +40,8 @@ verify(const uint8_t* const __restrict pubkey,
   constexpr size_t sigoff1 = sigoff0 + 32;
   constexpr size_t sigoff2 = sigoff1 + (32 * l * gamma1_bw);
 
-  ff::ff_t A[k * l * ntt::N]{};
-  ff::ff_t t1[k * ntt::N]{};
+  field::zq_t A[k * l * ntt::N]{};
+  field::zq_t t1[k * ntt::N]{};
 
   dilithium_utils::expand_a<k, l>(pubkey + puboff0, A);
   dilithium_utils::polyvec_decode<k, t1_bw>(pubkey + puboff1, t1);
@@ -59,23 +59,23 @@ verify(const uint8_t* const __restrict pubkey,
   hasher1.finalize();
   hasher1.read(mu, sizeof(mu));
 
-  ff::ff_t c[ntt::N]{};
+  field::zq_t c[ntt::N]{};
 
   dilithium_utils::sample_in_ball<τ>(sig + sigoff0, c);
   ntt::ntt(c);
 
-  ff::ff_t z[l * ntt::N]{};
-  ff::ff_t h[k * ntt::N]{};
+  field::zq_t z[l * ntt::N]{};
+  field::zq_t h[k * ntt::N]{};
 
   dilithium_utils::polyvec_decode<l, gamma1_bw>(sig + sigoff1, z);
   dilithium_utils::polyvec_sub_from_x<l, γ1>(z);
   const bool failed = dilithium_utils::decode_hint_bits<k, ω>(sig + sigoff2, h);
 
-  ff::ff_t w0[k * ntt::N]{};
-  ff::ff_t w1[k * ntt::N]{};
-  ff::ff_t w2[k * ntt::N]{};
+  field::zq_t w0[k * ntt::N]{};
+  field::zq_t w1[k * ntt::N]{};
+  field::zq_t w2[k * ntt::N]{};
 
-  const ff::ff_t z_norm = dilithium_utils::polyvec_infinity_norm<l>(z);
+  const field::zq_t z_norm = dilithium_utils::polyvec_infinity_norm<l>(z);
   const size_t count_1 = dilithium_utils::polyvec_count_1s<k>(h);
 
   dilithium_utils::polyvec_ntt<l>(z);
@@ -90,7 +90,7 @@ verify(const uint8_t* const __restrict pubkey,
   dilithium_utils::polyvec_intt<k>(w2);
 
   constexpr uint32_t α = γ2 << 1;
-  constexpr uint32_t m = (ff::Q - 1u) / α;
+  constexpr uint32_t m = (field::Q - 1u) / α;
   constexpr size_t w1bw = std::bit_width(m - 1u);
 
   dilithium_utils::polyvec_use_hint<k, α>(h, w2, w1);
@@ -105,7 +105,7 @@ verify(const uint8_t* const __restrict pubkey,
   hasher2.hash(hash_in, sizeof(hash_in));
   hasher2.read(hash_out, sizeof(hash_out));
 
-  constexpr ff::ff_t bound0{ γ1 - β };
+  constexpr field::zq_t bound0{ γ1 - β };
 
   const bool flg0 = z_norm < bound0;
   bool flg1 = false;

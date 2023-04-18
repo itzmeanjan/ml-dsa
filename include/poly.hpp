@@ -9,10 +9,10 @@ namespace dilithium_utils {
 // Given a degree-255 polynomial over Z_q | q = 2^23 - 2^13 + 1, this routine
 // attempts to extract out high and low order bits from each of 256 coefficients
 template<const size_t d>
-inline static void
-poly_power2round(const ff::ff_t* const __restrict poly,
-                 ff::ff_t* const __restrict poly_hi,
-                 ff::ff_t* const __restrict poly_lo)
+static inline void
+poly_power2round(const field::zq_t* const __restrict poly,
+                 field::zq_t* const __restrict poly_hi,
+                 field::zq_t* const __restrict poly_lo)
   requires(check_d(d))
 {
   for (size_t i = 0; i < ntt::N; i++) {
@@ -25,10 +25,10 @@ poly_power2round(const ff::ff_t* const __restrict poly,
 
 // Given two degree-255 polynomials in NTT representation, this routine performs
 // element-wise multiplication over Z_q | q = 2^23 - 2^13 + 1
-inline static void
-polymul(const ff::ff_t* const __restrict polya,
-        const ff::ff_t* const __restrict polyb,
-        ff::ff_t* const __restrict polyc)
+inline void
+polymul(const field::zq_t* const __restrict polya,
+        const field::zq_t* const __restrict polyb,
+        field::zq_t* const __restrict polyc)
 {
   for (size_t i = 0; i < ntt::N; i++) {
     polyc[i] = polya[i] * polyb[i];
@@ -39,10 +39,10 @@ polymul(const ff::ff_t* const __restrict polya,
 // this routine subtracts each coefficient from x, so that they stay in [0, 2x]
 // range
 template<const uint32_t x>
-inline static void
-poly_sub_from_x(ff::ff_t* const poly)
+static inline void
+poly_sub_from_x(field::zq_t* const poly)
 {
-  constexpr ff::ff_t x_cap{ x };
+  constexpr field::zq_t x_cap{ x };
 
   for (size_t i = 0; i < ntt::N; i++) {
     poly[i] = x_cap - poly[i];
@@ -52,9 +52,9 @@ poly_sub_from_x(ff::ff_t* const poly)
 // Given a degree-255 polynomial, this routine extracts out high order bits (
 // using decompose routine ), while not mutating source polynomial
 template<const uint32_t alpha>
-inline static void
-poly_highbits(const ff::ff_t* const __restrict polya,
-              ff::ff_t* const __restrict polyb)
+static inline void
+poly_highbits(const field::zq_t* const __restrict polya,
+              field::zq_t* const __restrict polyb)
 {
   for (size_t i = 0; i < ntt::N; i++) {
     polyb[i] = highbits<alpha>(polya[i]);
@@ -64,9 +64,9 @@ poly_highbits(const ff::ff_t* const __restrict polya,
 // Given a degree-255 polynomial, this routine extracts out low order bits (
 // using decompose routine ), while not mutating source polynomial
 template<const uint32_t alpha>
-inline static void
-poly_lowbits(const ff::ff_t* const __restrict src,
-             ff::ff_t* const __restrict dst)
+static inline void
+poly_lowbits(const field::zq_t* const __restrict src,
+             field::zq_t* const __restrict dst)
 {
   for (size_t i = 0; i < ntt::N; i++) {
     dst[i] = lowbits<alpha>(src[i]);
@@ -77,15 +77,15 @@ poly_lowbits(const ff::ff_t* const __restrict src,
 //
 // See point `Sizes of elements` in section 2.1 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-inline static ff::ff_t
-poly_infinity_norm(const ff::ff_t* const __restrict poly)
+inline field::zq_t
+poly_infinity_norm(const field::zq_t* const __restrict poly)
 {
-  constexpr ff::ff_t qby2{ ff::Q >> 1 };
-  ff::ff_t res{ 0u };
+  constexpr field::zq_t qby2{ field::Q >> 1 };
+  field::zq_t res{ 0u };
 
   for (size_t i = 0; i < ntt::N; i++) {
     const bool flg = poly[i] > qby2;
-    const ff::ff_t br[]{ poly[i], -poly[i] };
+    const field::zq_t br[]{ poly[i], -poly[i] };
 
     res = std::max(res, br[flg]);
   }
@@ -96,10 +96,10 @@ poly_infinity_norm(const ff::ff_t* const __restrict poly)
 // Given two degree-255 polynomials, this routine computes hint bit for each
 // coefficient, using `make_hint` routine.
 template<const uint32_t alpha>
-inline static void
-poly_make_hint(const ff::ff_t* const __restrict polya,
-               const ff::ff_t* const __restrict polyb,
-               ff::ff_t* const __restrict polyc)
+static inline void
+poly_make_hint(const field::zq_t* const __restrict polya,
+               const field::zq_t* const __restrict polyb,
+               field::zq_t* const __restrict polyc)
 {
   for (size_t i = 0; i < ntt::N; i++) {
     polyc[i] = make_hint<alpha>(polya[i], polyb[i]);
@@ -111,10 +111,10 @@ poly_make_hint(const ff::ff_t* const __restrict polya,
 // order bits of r + z s.t. hint bit was computed using `make_hint` routine and
 // z is another degree-255 polynomial with small coefficients.
 template<const uint32_t alpha>
-inline static void
-poly_use_hint(const ff::ff_t* const __restrict polyh,
-              const ff::ff_t* const __restrict polyr,
-              ff::ff_t* const __restrict polyrz)
+static inline void
+poly_use_hint(const field::zq_t* const __restrict polyh,
+              const field::zq_t* const __restrict polyr,
+              field::zq_t* const __restrict polyrz)
 {
   for (size_t i = 0; i < ntt::N; i++) {
     polyrz[i] = use_hint<alpha>(polyh[i], polyr[i]);
@@ -123,10 +123,10 @@ poly_use_hint(const ff::ff_t* const __restrict polyh,
 
 // Given a degree-255 polynomial, this routine counts number of coefficients
 // having value 1.
-inline static size_t
-count_1s(const ff::ff_t* const __restrict poly)
+inline size_t
+count_1s(const field::zq_t* const __restrict poly)
 {
-  constexpr ff::ff_t one{ 1u };
+  constexpr field::zq_t one{ 1u };
   size_t cnt = 0;
 
   for (size_t i = 0; i < ntt::N; i++) {
@@ -139,8 +139,8 @@ count_1s(const ff::ff_t* const __restrict poly)
 // Given a degree-255 polynomial, this routine shifts each coefficient
 // leftwards, by d bits
 template<const size_t d>
-inline static void
-poly_shl(ff::ff_t* const __restrict poly)
+static inline void
+poly_shl(field::zq_t* const __restrict poly)
 {
   for (size_t i = 0; i < ntt::N; i++) {
     poly[i] = poly[i] << d;

@@ -1,5 +1,6 @@
 #pragma once
 #include "dilithium.hpp"
+#include "prng.hpp"
 #include <cassert>
 
 // Test functional correctness of Dilithium PQC suite implementation
@@ -39,8 +40,10 @@ test_signing(const size_t mlen)
   uint8_t* msg0 = static_cast<uint8_t*>(std::malloc(mlen));
   uint8_t* msg1 = static_cast<uint8_t*>(std::malloc(mlen));
 
-  dilithium_utils::random_data<uint8_t>(seed, slen);
-  dilithium_utils::random_data<uint8_t>(msg0, mlen);
+  prng::prng_t prng;
+
+  prng.read(seed, slen);
+  prng.read(msg0, mlen);
 
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 

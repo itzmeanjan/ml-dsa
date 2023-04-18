@@ -1,5 +1,5 @@
 #pragma once
-#include "ff.hpp"
+#include "field.hpp"
 
 // (inverse) Number Theoretic Transform for degree-255 polynomial, over
 // Dilithium Prime Field Z_q | q = 2^23 - 2^13 + 1
@@ -11,14 +11,14 @@ constexpr size_t N = 1 << LOG2N;
 // First primitive 512 -th root of unity modulo q | q = 2^23 - 2^13 + 1
 //
 // Meaning, 1753 ** 512 == 1 mod q
-constexpr ff::ff_t ζ{ 1753 };
+constexpr field::zq_t ζ{ 1753 };
 
 // Multiplicative inverse of N over Z_q | q = 2^23 - 2^13 + 1, N = 256
-constexpr auto INV_N = ff::ff_t{ N }.inv();
+constexpr auto INV_N = field::zq_t{ N }.inv();
 
 // Precomputed constants ( powers of ζ ), used when computing (i)NTT over
 // degree-255 polynomial
-constexpr ff::ff_t ζ_EXP[]{
+constexpr field::zq_t ζ_EXP[]{
   1,       4808194, 3765607, 3761513, 5178923, 5496691, 5234739, 5178987,
   7778734, 3542485, 2682288, 2129892, 3764867, 7375178, 557458,  7159240,
   5010068, 4317364, 2663378, 6705802, 4855975, 7946292, 676590,  7044481,
@@ -83,8 +83,8 @@ bit_rev(const size_t v)
 //
 // Implementation inspired from
 // https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L95-L129
-static void
-ntt(ff::ff_t* const __restrict poly)
+inline void
+ntt(field::zq_t* const poly)
 {
   for (int64_t l = LOG2N - 1; l >= 0; l--) {
     const size_t len = 1ul << l;
@@ -93,12 +93,12 @@ ntt(ff::ff_t* const __restrict poly)
 
     for (size_t start = 0; start < N; start += lenx2) {
       const size_t k_now = k_beg + (start >> (l + 1));
-      // Looking up precomputed constant, though it can be computed using
+      // Looking up precomputed constant, it can be computed using
       //
       // ζ ^ bit_rev<LOG2N>(k_now)
       //
       // That's how above table is generated !
-      const ff::ff_t ζ_exp = ζ_EXP[k_now];
+      const field::zq_t ζ_exp = ζ_EXP[k_now];
 
       for (size_t i = start; i < start + len; i++) {
         auto tmp = ζ_exp * poly[i + len];
@@ -119,8 +119,8 @@ ntt(ff::ff_t* const __restrict poly)
 //
 // Implementation inspired from
 // https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L131-L172
-static void
-intt(ff::ff_t* const __restrict poly)
+inline void
+intt(field::zq_t* const poly)
 {
   for (size_t l = 0; l < LOG2N; l++) {
     const size_t len = 1ul << l;
@@ -129,10 +129,10 @@ intt(ff::ff_t* const __restrict poly)
 
     for (size_t start = 0; start < N; start += lenx2) {
       const size_t k_now = k_beg - (start >> (l + 1));
-      // Looking up precomputed constant, though it can be computed using
+      // Looking up precomputed constant, it can be computed using
       //
       // -(ζ ^ bit_rev<LOG2N>(k_now))
-      const ff::ff_t neg_ζ_exp = -ζ_EXP[k_now];
+      const field::zq_t neg_ζ_exp = -ζ_EXP[k_now];
 
       for (size_t i = start; i < start + len; i++) {
         const auto tmp = poly[i];

@@ -1,4 +1,5 @@
 #pragma once
+#include "prng.hpp"
 #include "sampling.hpp"
 #include "utils.hpp"
 #include <cassert>
@@ -12,18 +13,20 @@ static void
 test_sample_in_ball()
 {
   uint8_t seed[32]{};
-  ff::ff_t poly[ntt::N]{};
+  field::zq_t poly[ntt::N]{};
 
-  dilithium_utils::random_data<uint8_t>(seed, sizeof(seed));
+  prng::prng_t prng;
+
+  prng.read(seed, sizeof(seed));
   dilithium_utils::sample_in_ball<τ>(seed, poly);
 
-  ff::ff_t sqrd_norm{ 0u };
+  field::zq_t sqrd_norm{ 0u };
 
   for (size_t i = 0; i < ntt::N; i++) {
     sqrd_norm = sqrd_norm + (poly[i] * poly[i]);
   }
 
-  assert(sqrd_norm == ff::ff_t{ τ });
+  assert(sqrd_norm == field::zq_t{ τ });
 }
 
 }

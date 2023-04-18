@@ -1,5 +1,6 @@
 #pragma once
 #include "bit_packing.hpp"
+#include "prng.hpp"
 #include <cassert>
 
 // Test functional correctness of Dilithium PQC suite implementation
@@ -10,19 +11,21 @@ namespace test_dilithium {
 // - polynomial to byte array encoding
 // - decoding of polynomial from byte array
 template<const size_t sbw>
-static void
+void
 test_encode_decode()
   requires(dilithium_utils::check_sbw(sbw))
 {
   constexpr size_t alen = sbw * 32;
-  constexpr size_t plen = sizeof(ff::ff_t) * ntt::N;
+  constexpr size_t plen = sizeof(field::zq_t) * ntt::N;
 
-  ff::ff_t* polya = static_cast<ff::ff_t*>(std::malloc(plen));
-  ff::ff_t* polyb = static_cast<ff::ff_t*>(std::malloc(plen));
+  field::zq_t* polya = static_cast<field::zq_t*>(std::malloc(plen));
+  field::zq_t* polyb = static_cast<field::zq_t*>(std::malloc(plen));
   uint8_t* arr = static_cast<uint8_t*>(std::malloc(alen));
 
+  prng::prng_t prng;
+
   for (size_t i = 0; i < ntt::N; i++) {
-    polya[i] = ff::ff_t::random();
+    polya[i] = field::zq_t::random(prng);
   }
 
   dilithium_utils::encode<sbw>(polya, arr);
@@ -45,10 +48,10 @@ test_encode_decode()
 // Generates random hint bit polynomial vector of dimension k x 1, with <= ω
 // coefficients set to 1.
 template<const size_t k, const size_t ω>
-inline static void
-generate_random_hint_bits(ff::ff_t* const __restrict poly)
+void
+generate_random_hint_bits(field::zq_t* const __restrict poly)
 {
-  std::memset(poly, 0, sizeof(ff::ff_t) * k * ntt::N);
+  std::memset(poly, 0, sizeof(field::zq_t) * k * ntt::N);
 
   constexpr size_t frm = 0;
   constexpr size_t to = k * ntt::N - 1;
@@ -59,22 +62,22 @@ generate_random_hint_bits(ff::ff_t* const __restrict poly)
 
   for (size_t i = 0; i < ω; i++) {
     const size_t idx = dis(gen);
-    poly[idx] = ff::ff_t{ 1u };
+    poly[idx] = field::zq_t{ 1u };
   }
 }
 
 // Test functional correctness of encoding and decoding of hint bit polynomial
 // vector.
 template<const size_t k, const size_t ω>
-static void
+void
 test_encode_decode_hint_bits()
 {
-  constexpr size_t hlen = sizeof(ff::ff_t) * k * ntt::N;
+  constexpr size_t hlen = sizeof(field::zq_t) * k * ntt::N;
   constexpr size_t alen = ω + k;
 
-  ff::ff_t* h0 = static_cast<ff::ff_t*>(std::malloc(hlen));
-  ff::ff_t* h1 = static_cast<ff::ff_t*>(std::malloc(hlen));
-  ff::ff_t* h2 = static_cast<ff::ff_t*>(std::malloc(hlen));
+  field::zq_t* h0 = static_cast<field::zq_t*>(std::malloc(hlen));
+  field::zq_t* h1 = static_cast<field::zq_t*>(std::malloc(hlen));
+  field::zq_t* h2 = static_cast<field::zq_t*>(std::malloc(hlen));
   uint8_t* arr0 = static_cast<uint8_t*>(std::malloc(alen));
   uint8_t* arr1 = static_cast<uint8_t*>(std::malloc(alen));
 
