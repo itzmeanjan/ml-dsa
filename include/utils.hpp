@@ -6,21 +6,6 @@
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium_utils {
 
-// Generates N -many random values of type T | N >= 0
-template<typename T>
-static inline void
-random_data(T* const data, const size_t len)
-  requires(std::is_unsigned_v<T>)
-{
-  std::random_device rd;
-  std::mt19937_64 gen(rd());
-  std::uniform_int_distribution<T> dis;
-
-  for (size_t i = 0; i < len; i++) {
-    data[i] = dis(gen);
-  }
-}
-
 // Compile-time compute how many bytes to reserve for storing serialized
 // Dilithium public key, for given parameter set
 //
@@ -31,7 +16,7 @@ inline static constexpr size_t
 pubkey_length()
   requires(check_d(d))
 {
-  constexpr size_t t1_bw = std::bit_width(ff::Q) - d;
+  constexpr size_t t1_bw = std::bit_width(field::Q) - d;
   constexpr size_t pklen = 32 + k * 32 * t1_bw;
   return pklen;
 }
@@ -93,7 +78,7 @@ random_bit_flip(uint8_t* const arr, const size_t alen)
 
 // Given a bytearray of length N, this function converts it to human readable
 // hex string of length N << 1 | N >= 0
-static inline const std::string
+inline const std::string
 to_hex(const uint8_t* const bytes, const size_t len)
 {
   std::stringstream ss;
