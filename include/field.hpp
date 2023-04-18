@@ -1,13 +1,13 @@
 #pragma once
+#include "prng.hpp"
 #include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <ostream>
-#include <random>
 
 // Prime field arithmetic over Z_q, for Dilithium PQC s.t. Q = 2^23 - 2^13 + 1
-namespace ff {
+namespace field {
 
 // Dilithium Prime Field Modulus
 constexpr uint32_t Q = (1u << 23) - (1u << 13) + 1u;
@@ -60,41 +60,41 @@ xgcd(const uint32_t x, const uint32_t y)
 
 // Dilithium Prime Field element e ∈ [0, Q), with arithmetic operations defined
 // & implemented over it.
-struct ff_t
+struct zq_t
 {
   uint32_t v = 0u;
 
   // Construct field element, holding canonical value _v % Q
-  inline constexpr ff_t(const uint32_t _v = 0u) { v = _v % Q; }
+  inline constexpr zq_t(const uint32_t _v = 0u) { v = _v % Q; }
 
   // Construct field element, holding canonical value 0
-  static inline ff_t zero() { return ff_t{ 0u }; }
+  static inline zq_t zero() { return zq_t{ 0u }; }
 
   // Construct field element, holding canonical value 1
-  static inline ff_t one() { return ff_t{ 1u }; }
+  static inline zq_t one() { return zq_t{ 1u }; }
 
   // Addition over prime field Z_q | q = 2^23 - 2^13 + 1
-  constexpr ff_t operator+(const ff_t& rhs) const
+  constexpr zq_t operator+(const zq_t& rhs) const
   {
     const uint32_t t0 = this->v + rhs.v;
     const bool flg = t0 >= Q;
     const uint32_t t1 = t0 - flg * Q;
 
-    return ff_t{ t1 };
+    return zq_t{ t1 };
   }
 
   // Subtraction over prime field Z_q | q = 2^23 - 2^13 + 1
-  constexpr ff_t operator-(const ff_t& rhs) const
+  constexpr zq_t operator-(const zq_t& rhs) const
   {
-    const ff_t t0 = -rhs;
+    const zq_t t0 = -rhs;
     return *this + t0;
   }
 
   // Negation over prime field Z_q | q = 2^23 - 2^13 + 1
-  constexpr ff_t operator-() const
+  constexpr zq_t operator-() const
   {
     const uint32_t tmp = Q - this->v;
-    return ff_t{ tmp };
+    return zq_t{ tmp };
   }
 
   // Multiplication over prime field Z_q | q = 2^23 - 2^13 + 1
@@ -105,7 +105,7 @@ struct ff_t
   //
   // See https://www.nayuki.io/page/barrett-reduction-algorithm for Barrett
   // reduction algorithm
-  constexpr ff_t operator*(const ff_t& rhs) const
+  constexpr zq_t operator*(const zq_t& rhs) const
   {
     const uint64_t t0 = static_cast<uint64_t>(this->v);
     const uint64_t t1 = static_cast<uint64_t>(rhs.v);
@@ -159,7 +159,7 @@ struct ff_t
     const bool flg = t6 >= Q;
     const uint32_t t7 = t6 - flg * Q;
 
-    return ff_t{ t7 };
+    return zq_t{ t7 };
   }
 
   // Multiplicative inverse over prime field Z_q | q = 2^23 - 2^13 + 1
@@ -173,7 +173,7 @@ struct ff_t
   //
   // Taken from
   // https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ff.hpp#L190-L216
-  constexpr ff_t inv() const
+  constexpr zq_t inv() const
   {
     const bool flg0 = this->v == 0;
     const uint32_t t0 = this->v + flg0 * 1;
@@ -187,11 +187,11 @@ struct ff_t
     const uint32_t t2 = t1 - flg2 * Q;
     const uint32_t t3 = t2 - flg0 * 1;
 
-    return ff_t{ t3 };
+    return zq_t{ t3 };
   }
 
   // Division over prime field Z_q | q = 2^23 - 2^13 + 1
-  constexpr ff_t operator/(const ff_t& rhs) const
+  constexpr zq_t operator/(const zq_t& rhs) const
   {
     return (*this) * rhs.inv();
   }
@@ -201,12 +201,12 @@ struct ff_t
   //
   // Taken from
   // https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ff.hpp#L224-L246
-  constexpr ff_t operator^(const size_t n) const
+  constexpr zq_t operator^(const size_t n) const
   {
-    ff_t base = *this;
+    zq_t base = *this;
 
-    const ff_t br[]{ ff_t{ 1u }, base };
-    ff_t res = br[n & 0b1ul];
+    const zq_t br[]{ zq_t{ 1u }, base };
+    zq_t res = br[n & 0b1ul];
 
     const size_t zeros = std::countl_zero(n);
     const size_t till = 64ul - zeros;
@@ -214,7 +214,7 @@ struct ff_t
     for (size_t i = 1; i < till; i++) {
       base = base * base;
 
-      const ff_t br[]{ ff_t{ 1u }, base };
+      const zq_t br[]{ zq_t{ 1u }, base };
       res = res * br[(n >> i) & 0b1ul];
     }
 
@@ -222,51 +222,49 @@ struct ff_t
   }
 
   // Equality check between two field elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  constexpr bool operator==(const ff_t& rhs) const
+  constexpr bool operator==(const zq_t& rhs) const
   {
     return !static_cast<bool>(this->v ^ rhs.v);
   }
 
   // Non-equality check between two field elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  constexpr bool operator!=(const ff_t& rhs) const
+  constexpr bool operator!=(const zq_t& rhs) const
   {
     return static_cast<bool>(this->v ^ rhs.v);
   }
 
   // Greater than operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  constexpr bool operator>(const ff_t& rhs) const { return this->v > rhs.v; }
+  constexpr bool operator>(const zq_t& rhs) const { return this->v > rhs.v; }
 
   // Greater than equal operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  constexpr bool operator>=(const ff_t& rhs) const { return this->v >= rhs.v; }
+  constexpr bool operator>=(const zq_t& rhs) const { return this->v >= rhs.v; }
 
   // Lesser than operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  constexpr bool operator<(const ff_t& rhs) const { return this->v < rhs.v; }
+  constexpr bool operator<(const zq_t& rhs) const { return this->v < rhs.v; }
 
   // Lesser than equal operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  constexpr bool operator<=(const ff_t& rhs) const { return this->v <= rhs.v; }
+  constexpr bool operator<=(const zq_t& rhs) const { return this->v <= rhs.v; }
 
   // Shifts operand ∈ Z_q, leftwards by l bit positions | q = 2^23 - 2^13 + 1
-  constexpr ff_t operator<<(const size_t l) const
+  constexpr zq_t operator<<(const size_t l) const
   {
-    return ff_t{ this->v << l };
+    return zq_t{ this->v << l };
   }
 
   // Generate a random field element ∈ Z_q | q = 2^23 - 2^13 + 1
-  static ff_t random()
+  static inline zq_t random(prng::prng_t& prng)
   {
-    std::random_device rd;
-    std::mt19937_64 gen(rd());
-    std::uniform_int_distribution<uint32_t> dis{ 0, Q - 1ul };
-
-    return ff_t{ dis(gen) };
+    uint32_t res = 0;
+    prng.read(reinterpret_cast<uint8_t*>(&res), sizeof(res));
+    return zq_t(res);
   }
 
   // Writes element of Z_q to output stream | q = 2^23 - 2^13 + 1
-  friend std::ostream& operator<<(std::ostream& os, const ff_t& elm);
+  friend std::ostream& operator<<(std::ostream& os, const zq_t& elm);
 };
 
-std::ostream&
-operator<<(std::ostream& os, const ff_t& elm)
+inline std::ostream&
+operator<<(std::ostream& os, const zq_t& elm)
 {
   return os << "Z_q(" << elm.v << ", " << Q << ")";
 }
