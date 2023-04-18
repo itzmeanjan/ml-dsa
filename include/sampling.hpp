@@ -22,8 +22,6 @@ static inline void
 expand_a(const uint8_t* const __restrict rho, field::zq_t* const __restrict mat)
 {
   uint8_t msg[34]{};
-  uint8_t buf[3]{};
-
   std::memcpy(msg, rho, 32);
 
   for (size_t i = 0; i < k; i++) {
@@ -37,19 +35,23 @@ expand_a(const uint8_t* const __restrict rho, field::zq_t* const __restrict mat)
       shake128::shake128 hasher{};
       hasher.hash(msg, sizeof(msg));
 
+      uint8_t buf[shake128::rate / 8];
       size_t n = 0;
+
       while (n < ntt::N) {
         hasher.read(buf, sizeof(buf));
 
-        const uint32_t t0 = static_cast<uint32_t>(buf[2] & 0b01111111);
-        const uint32_t t1 = static_cast<uint32_t>(buf[1]);
-        const uint32_t t2 = static_cast<uint32_t>(buf[0]);
+        for (size_t boff = 0; (boff < sizeof(buf)) && (n < ntt::N); boff += 3) {
+          const uint32_t t0 = static_cast<uint32_t>(buf[boff + 2] & 0b01111111);
+          const uint32_t t1 = static_cast<uint32_t>(buf[boff + 1]);
+          const uint32_t t2 = static_cast<uint32_t>(buf[boff + 0]);
 
-        const uint32_t t3 = (t0 << 16) ^ (t1 << 8) ^ (t2 << 0);
-        const bool flg = t3 < field::Q;
-
-        mat[off + n] = field::zq_t{ static_cast<uint32_t>(t3 * flg) };
-        n = n + flg * 1;
+          const uint32_t t3 = (t0 << 16) ^ (t1 << 8) ^ (t2 << 0);
+          if (t3 < field::Q) {
+            mat[off + n] = field::zq_t(t3);
+            n++;
+          }
+        }
       }
     }
   }
@@ -93,8 +95,6 @@ expand_s(const uint8_t* const __restrict rho_prime,
   constexpr field::zq_t eta_{ η };
 
   uint8_t msg[66]{};
-  uint8_t buf = 0;
-
   std::memcpy(msg, rho_prime, 64);
 
   for (size_t i = 0; i < k; i++) {
@@ -107,38 +107,42 @@ expand_s(const uint8_t* const __restrict rho_prime,
     shake256::shake256 hasher{};
     hasher.hash(msg, sizeof(msg));
 
+    uint8_t buf[shake256::rate / 8];
     size_t n = 0;
+
     while (n < ntt::N) {
-      hasher.read(&buf, 1);
+      hasher.read(buf, sizeof(buf));
 
-      const uint8_t t0 = buf & 0x0f;
-      const uint8_t t1 = buf >> 4;
+      for (size_t boff = 0; (boff < sizeof(buf)) && (n < ntt::N); boff++) {
+        const uint8_t t0 = buf[boff] & 0x0f;
+        const uint8_t t1 = buf[boff] >> 4;
 
-      if constexpr (η == 2u) {
-        const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
-        const bool flg0 = t0 < 15;
+        if constexpr (η == 2u) {
+          const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
+          const bool flg0 = t0 < 15;
 
-        vec[off + n] = eta_ - field::zq_t{ t2 };
-        n += flg0 * 1;
+          vec[off + n] = eta_ - field::zq_t{ t2 };
+          n += flg0 * 1;
 
-        const uint32_t t3 = static_cast<uint32_t>(t1 % 5);
-        const bool flg1 = (t1 < 15) & (n < ntt::N);
-        const field::zq_t br[]{ vec[off], eta_ - field::zq_t{ t3 } };
+          const uint32_t t3 = static_cast<uint32_t>(t1 % 5);
+          const bool flg1 = (t1 < 15) & (n < ntt::N);
+          const field::zq_t br[]{ vec[off], eta_ - field::zq_t{ t3 } };
 
-        vec[off + flg1 * n] = br[flg1];
-        n += flg1 * 1;
-      } else {
-        const bool flg0 = t0 < 9;
+          vec[off + flg1 * n] = br[flg1];
+          n += flg1 * 1;
+        } else {
+          const bool flg0 = t0 < 9;
 
-        vec[off + n] = eta_ - field::zq_t{ static_cast<uint32_t>(t0) };
-        n += flg0 * 1;
+          vec[off + n] = eta_ - field::zq_t{ static_cast<uint32_t>(t0) };
+          n += flg0 * 1;
 
-        const bool flg1 = (t1 < 9) & (n < ntt::N);
-        const field::zq_t t2 = eta_ - field::zq_t{ static_cast<uint32_t>(t1) };
-        const field::zq_t br[]{ vec[off], t2 };
+          const bool flg1 = (t1 < 9) & (n < ntt::N);
+          const auto t2 = eta_ - field::zq_t{ static_cast<uint32_t>(t1) };
+          const field::zq_t br[]{ vec[off], t2 };
 
-        vec[off + flg1 * n] = br[flg1];
-        n += flg1 * 1;
+          vec[off + flg1 * n] = br[flg1];
+          n += flg1 * 1;
+        }
       }
     }
   }
@@ -208,10 +212,10 @@ sample_in_ball(const uint8_t* const __restrict seed,
                field::zq_t* const __restrict poly)
   requires(check_τ(τ))
 {
-  uint8_t tau_bits[8]{};
-  uint8_t buf = 0;
+  uint8_t tau_bits[8];
+  uint8_t buf[shake256::rate / 8];
 
-  shake256::shake256 hasher{};
+  shake256::shake256 hasher;
   hasher.hash(seed, 32);
   hasher.read(tau_bits, sizeof(tau_bits));
 
@@ -219,26 +223,29 @@ sample_in_ball(const uint8_t* const __restrict seed,
   size_t i = frm;
 
   while (i < ntt::N) {
-    const size_t tau_bit = i - frm;
+    hasher.read(buf, sizeof(buf));
 
-    const size_t tau_byte_off = tau_bit >> 3;
-    const size_t tau_bit_off = tau_bit & 7ul;
+    for (size_t off = 0; (off < sizeof(buf)) && (i < ntt::N); off++) {
+      const size_t tau_bit = i - frm;
 
-    const uint8_t s = (tau_bits[tau_byte_off] >> tau_bit_off) & 0b1;
-    const bool s_ = static_cast<bool>(s);
+      const size_t tau_byte_off = tau_bit >> 3;
+      const size_t tau_bit_off = tau_bit & 7ul;
 
-    hasher.read(&buf, 1);
+      const uint8_t s = (tau_bits[tau_byte_off] >> tau_bit_off) & 0b1;
+      const bool s_ = static_cast<bool>(s);
 
-    const bool flg = buf <= static_cast<uint8_t>(i);
+      const auto tmp = buf[off];
+      const bool flg = tmp <= static_cast<uint8_t>(i);
 
-    const field::zq_t br0[]{ poly[i], poly[buf] };
-    const field::zq_t br1[]{ poly[buf],
-                             field::zq_t{ 1u } - field::zq_t{ 2u * s_ } };
+      const field::zq_t br0[]{ poly[i], poly[tmp] };
+      const field::zq_t br1[]{ poly[tmp],
+                               field::zq_t{ 1u } - field::zq_t{ 2u * s_ } };
 
-    poly[i] = br0[flg];
-    poly[buf] = br1[flg];
+      poly[i] = br0[flg];
+      poly[tmp] = br1[flg];
 
-    i += 1ul * flg;
+      i += 1ul * flg;
+    }
   };
 }
 
