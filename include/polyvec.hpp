@@ -141,7 +141,7 @@ polyvec_encode(const field::zq_t* const __restrict src,
     const size_t off0 = i * ntt::N;
     const size_t off1 = i * sbw * 32;
 
-    encode<sbw>(src + off0, dst + off1);
+    bit_packing::encode<sbw>(src + off0, dst + off1);
   }
 }
 
@@ -157,7 +157,7 @@ polyvec_decode(const uint8_t* const __restrict src,
     const size_t off0 = i * sbw * 32;
     const size_t off1 = i * ntt::N;
 
-    decode<sbw>(src + off0, dst + off1);
+    bit_packing::decode<sbw>(src + off0, dst + off1);
   }
 }
 

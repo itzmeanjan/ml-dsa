@@ -208,7 +208,7 @@ sign(const uint8_t* const __restrict seckey,
   std::memcpy(sig + sigoff0, hash_out, sizeof(hash_out));
   dilithium_utils::polyvec_sub_from_x<l, γ1>(z);
   dilithium_utils::polyvec_encode<l, gamma1_bw>(z, sig + sigoff1);
-  dilithium_utils::encode_hint_bits<k, ω>(h, sig + sigoff2);
+  bit_packing::encode_hint_bits<k, ω>(h, sig + sigoff2);
 }
 
 }

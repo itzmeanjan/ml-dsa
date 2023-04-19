@@ -28,8 +28,8 @@ test_encode_decode()
     polya[i] = field::zq_t::random(prng);
   }
 
-  dilithium_utils::encode<sbw>(polya, arr);
-  dilithium_utils::decode<sbw>(arr, polyb);
+  bit_packing::encode<sbw>(polya, arr);
+  bit_packing::decode<sbw>(arr, polyb);
 
   constexpr size_t mask = (1u << sbw) - 1u;
   bool flg = false;
@@ -83,12 +83,12 @@ test_encode_decode_hint_bits()
 
   generate_random_hint_bits<k, ω>(h0);
 
-  dilithium_utils::encode_hint_bits<k, ω>(h0, arr0);
+  bit_packing::encode_hint_bits<k, ω>(h0, arr0);
   std::memcpy(arr1, arr0, alen);
   arr1[alen - 1] = ~arr1[alen - 1];
 
-  const bool failed0 = dilithium_utils::decode_hint_bits<k, ω>(arr0, h1);
-  const bool failed1 = dilithium_utils::decode_hint_bits<k, ω>(arr1, h2);
+  const bool failed0 = bit_packing::decode_hint_bits<k, ω>(arr0, h1);
+  const bool failed1 = bit_packing::decode_hint_bits<k, ω>(arr1, h2);
 
   bool flg = true;
 

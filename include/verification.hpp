@@ -69,7 +69,7 @@ verify(const uint8_t* const __restrict pubkey,
 
   dilithium_utils::polyvec_decode<l, gamma1_bw>(sig + sigoff1, z);
   dilithium_utils::polyvec_sub_from_x<l, γ1>(z);
-  const bool failed = dilithium_utils::decode_hint_bits<k, ω>(sig + sigoff2, h);
+  const bool failed = bit_packing::decode_hint_bits<k, ω>(sig + sigoff2, h);
 
   field::zq_t w0[k * ntt::N]{};
   field::zq_t w1[k * ntt::N]{};

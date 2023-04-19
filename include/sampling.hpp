@@ -1,4 +1,5 @@
 #pragma once
+#include "bit_packing.hpp"
 #include "field.hpp"
 #include "ntt.hpp"
 #include "params.hpp"
@@ -165,7 +166,7 @@ expand_mask(const uint8_t* const __restrict seed,
     hasher.hash(msg, sizeof(msg));
     hasher.read(buf, sizeof(buf));
 
-    decode<gbw>(buf, vec + off);
+    bit_packing::decode<gbw>(buf, vec + off);
     poly_sub_from_x<γ1>(vec + off);
   }
 }

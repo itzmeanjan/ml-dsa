@@ -4,7 +4,7 @@
 #include <cstring>
 
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
-namespace dilithium_utils {
+namespace bit_packing {
 
 // Given a degree-255 polynomial, where significant portion of each ( total 256
 // of them ) coefficient ∈ [0, 2^sbw), this routine serializes the polynomial to
