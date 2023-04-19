@@ -1,4 +1,4 @@
-#include "dilithium.hpp"
+#include "dilithium5.hpp"
 #include "prng.hpp"
 #include <cassert>
 #include <iostream>
@@ -9,28 +9,12 @@
 int
 main()
 {
-  // Dilithium5 Parameters
-  //
-  // See table 2 of Dilithium specification
-  // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-  // for all parameters
-  constexpr size_t k = 8;
-  constexpr size_t l = 7;
-  constexpr uint32_t η = 2;
-  constexpr size_t d = 13;
-  constexpr uint32_t γ1 = 1u << 19;
-  constexpr uint32_t γ2 = (field::Q - 1) / 32;
-  constexpr uint32_t τ = 60;
-  constexpr uint32_t β = τ * η;
-  constexpr size_t ω = 75;
-
   constexpr size_t slen = 32; // seed length
   constexpr size_t mlen = 32; // message length ( can be anything >= 1 )
 
-  // compile-time compute public key, secret key and signature byte length
-  constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();
-  constexpr size_t sklen = dilithium_utils::seckey_length<k, l, η, d>();
-  constexpr size_t siglen = dilithium_utils::sig_length<k, l, γ1, ω>();
+  constexpr size_t pklen = dilithium5::PubKeyLength;
+  constexpr size_t sklen = dilithium5::SecKeyLength;
+  constexpr size_t siglen = dilithium5::SigLength;
 
   // allocate memory resources
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
@@ -48,13 +32,13 @@ main()
   bool flg = false;
 
   // Key generation -> signing -> verification
-  dilithium::keygen<k, l, d, η>(seed, pubkey, seckey);
-  dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω>(seckey, msg, mlen, sig);
+  dilithium5::keygen(seed, pubkey, seckey);
+  dilithium5::sign(seckey, msg, mlen, sig);
 
   // Default option is deterministic signing, for randomized signing, use
-  // dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, true>(seckey, msg, mlen, sig);
+  // dilithium5::sign<true>(seckey, msg, mlen, sig);
 
-  flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pubkey, msg, mlen, sig);
+  flg = dilithium5::verify(pubkey, msg, mlen, sig);
 
   {
     using namespace dilithium_utils;
