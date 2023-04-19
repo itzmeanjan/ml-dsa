@@ -41,10 +41,11 @@ main()
   {
     using namespace test_dilithium;
 
-    // NIST security level 2, 3, 5 ( in order )
-    test_signing<4, 4, 13, 2, 1u << 17, (field::Q - 1) / 88, 39, 78, 80>(33);
-    test_signing<6, 5, 13, 4, 1u << 19, (field::Q - 1) / 32, 49, 196, 55>(37);
-    test_signing<8, 7, 13, 2, 1u << 19, (field::Q - 1) / 32, 60, 120, 75>(43);
+    for (size_t mlen = 1; mlen < 33; mlen++) {
+      test_dilithium2_signing(mlen);
+      test_dilithium3_signing(mlen);
+      test_dilithium5_signing(mlen);
+    }
 
     std::cout << "[test] Dilithium KeyGen -> Signing -> Verification\n";
   }
