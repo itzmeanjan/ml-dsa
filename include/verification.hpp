@@ -1,4 +1,5 @@
 #pragma once
+#include "params.hpp"
 #include "polyvec.hpp"
 #include "sampling.hpp"
 #include "utils.hpp"
@@ -26,8 +27,7 @@ verify(const uint8_t* const __restrict pubkey,
        const uint8_t* const __restrict msg,
        const size_t mlen,
        const uint8_t* const __restrict sig)
-  requires(dilithium_params::check_d(d) && dilithium_params::check_γ1(γ1) &&
-           dilithium_params::check_τ(τ))
+  requires(dilithium_params::check_verify_params(k, l, d, γ1, γ2, τ, β, ω))
 {
   constexpr size_t t1_bw = std::bit_width(field::Q) - d;
   constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();

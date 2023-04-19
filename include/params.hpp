@@ -71,4 +71,67 @@ check_matrix_dim(const size_t a_cols, const size_t b_rows)
   return !static_cast<bool>(a_cols ^ b_rows);
 }
 
+// Compile-time executable constraints for ensuring that Dilithium key
+// generation algorithm is only invoked with arguments suggested in table 2 of
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf.
+constexpr bool
+check_keygen_params(const size_t k,
+                    const size_t l,
+                    const size_t d,
+                    const uint32_t η)
+{
+  return ((k == 4) && (l == 4) && (d == 13) && (η == 2)) ||
+         ((k == 6) && (l == 5) && (d == 13) && (η == 4)) ||
+         ((k == 8) && (l == 7) && (d == 13) && (η == 2));
+}
+
+// Compile-time executable constraints for ensuring that Dilithium signing
+// algorithm is only invoked with arguments suggested in table 2 of
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf.
+constexpr bool
+check_signing_params(const size_t k,
+                     const size_t l,
+                     const size_t d,
+                     const uint32_t η,
+                     const uint32_t γ1,
+                     const uint32_t γ2,
+                     const uint32_t τ,
+                     const uint32_t β,
+                     const size_t ω)
+{
+  return ((k == 4) && (l == 4) && (d == 13) && (η == 2) && (γ1 == (1u << 17)) &&
+          (γ2 == ((field::Q - 1) / 88)) && (τ == 39) && (β == τ * η) &&
+          (ω == 80)) ||
+         ((k == 6) && (l == 5) && (d == 13) && (η == 4) && (γ1 == (1u << 19)) &&
+          (γ2 == ((field::Q - 1) / 32)) && (τ == 49) && (β == τ * η) &&
+          (ω == 55)) ||
+         ((k == 8) && (l == 7) && (d == 13) && (η == 2) && (γ1 == (1u << 19)) &&
+          (γ2 == ((field::Q - 1) / 32)) && (τ == 60) && (β == τ * η) &&
+          (ω == 75));
+}
+
+// Compile-time executable constraints for ensuring that Dilithium verification
+// algorithm is only invoked with arguments suggested in table 2 of
+// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf.
+constexpr bool
+check_verify_params(const size_t k,
+                    const size_t l,
+                    const size_t d,
+                    const uint32_t γ1,
+                    const uint32_t γ2,
+                    const uint32_t τ,
+                    const uint32_t β,
+                    const size_t ω)
+{
+  return ((k == 4) && (l == 4) && (d == 13) && (γ1 == (1u << 17)) &&
+          (γ2 == ((field::Q - 1) / 88)) && (τ == 39) && (β == τ * 2) &&
+          (ω == 80)) ||
+         ((k == 6) && (l == 5) && (d == 13) && (γ1 == (1u << 19)) &&
+          (γ2 == ((field::Q - 1) / 32)) && (τ == 49) && (β == τ * 4) &&
+          (ω == 55)) ||
+         ((k == 8) && (l == 7) && (d == 13) && (γ1 == (1u << 19)) &&
+          (γ2 == ((field::Q - 1) / 32)) && (τ == 60) && (β == τ * 2) &&
+          (ω == 75));
+}
+
 }

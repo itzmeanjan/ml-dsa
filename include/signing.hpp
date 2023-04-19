@@ -1,4 +1,5 @@
 #pragma once
+#include "params.hpp"
 #include "polyvec.hpp"
 #include "prng.hpp"
 #include "sampling.hpp"
@@ -48,8 +49,7 @@ sign(const uint8_t* const __restrict seckey,
      const uint8_t* const __restrict msg,
      const size_t mlen,
      uint8_t* const __restrict sig)
-  requires(dilithium_params::check_η(η) && dilithium_params::check_d(d) &&
-           dilithium_params::check_γ1(γ1) && dilithium_params::check_τ(τ))
+  requires(dilithium_params::check_signing_params(k, l, d, η, γ1, γ2, τ, β, ω))
 {
   constexpr uint32_t t0_rng = 1u << (d - 1);
 
