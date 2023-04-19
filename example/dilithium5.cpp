@@ -1,4 +1,5 @@
 #include "dilithium.hpp"
+#include "prng.hpp"
 #include <cassert>
 #include <iostream>
 
@@ -18,7 +19,7 @@ main()
   constexpr uint32_t η = 2;
   constexpr size_t d = 13;
   constexpr uint32_t γ1 = 1u << 19;
-  constexpr uint32_t γ2 = (ff::Q - 1) / 32;
+  constexpr uint32_t γ2 = (field::Q - 1) / 32;
   constexpr uint32_t τ = 60;
   constexpr uint32_t β = τ * η;
   constexpr size_t ω = 75;
@@ -39,8 +40,10 @@ main()
   uint8_t* sig = static_cast<uint8_t*>(std::malloc(siglen));
 
   // generate random 32 -bytes seed & N -bytes message ( to be signed )
-  dilithium_utils::random_data<uint8_t>(seed, slen);
-  dilithium_utils::random_data<uint8_t>(msg, mlen);
+  prng::prng_t prng;
+
+  prng.read(seed, slen);
+  prng.read(msg, mlen);
 
   bool flg = false;
 
