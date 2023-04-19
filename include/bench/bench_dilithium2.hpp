@@ -2,7 +2,8 @@
 #include "bench_common.hpp"
 #include "dilithium2.hpp"
 
-// Benchmark Dilithium PQC suite implementation on CPU, using google-benchmark
+// Benchmark Dilithium PQC DSA suite implementation targeting CPU, using
+// google-benchmark
 namespace bench_dilithium {
 
 // Benchmark Dilithium2 key generation algorithm's performance

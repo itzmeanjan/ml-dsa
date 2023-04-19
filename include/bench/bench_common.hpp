@@ -4,7 +4,8 @@
 #include <chrono>
 #include <vector>
 
-// Benchmark Dilithium PQC suite implementation on CPU, using google-benchmark
+// Benchmark Dilithium PQC DSA suite implementation targeting CPU, using
+// google-benchmark
 namespace bench_dilithium {
 
 // Alias for casting duration to second level granularity, used for manual

@@ -1,5 +1,5 @@
 #pragma once
 
-#include "bench_keygen.hpp"
-#include "bench_signing.hpp"
-#include "bench_verification.hpp"
+#include "bench_dilithium2.hpp"
+#include "bench_dilithium3.hpp"
+#include "bench_dilithium5.hpp"
