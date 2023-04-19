@@ -167,7 +167,7 @@ expand_mask(const uint8_t* const __restrict seed,
     hasher.read(buf, sizeof(buf));
 
     bit_packing::decode<gbw>(buf, vec + off);
-    poly_sub_from_x<γ1>(vec + off);
+    poly::sub_from_x<γ1>(vec + off);
   }
 }
 

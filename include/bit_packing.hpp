@@ -3,7 +3,8 @@
 #include "params.hpp"
 #include <cstring>
 
-// Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
+// Bit packing/ unpacking related utility functions for Dilithium Post-Quantum
+// Digital Signature Algorithm
 namespace bit_packing {
 
 // Given a degree-255 polynomial, where significant portion of each ( total 256

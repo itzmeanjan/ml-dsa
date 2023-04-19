@@ -39,7 +39,7 @@ polyvec_power2round(const field::zq_t* const __restrict poly,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly_power2round<d>(poly + off, poly_hi + off, poly_lo + off);
+    poly::power2round<d>(poly + off, poly_hi + off, poly_lo + off);
   }
 }
 
@@ -74,7 +74,7 @@ matrix_multiply(const field::zq_t* const __restrict a,
         const size_t aoff = (i * a_cols + k) * ntt::N;
         const size_t boff = (k * b_cols + j) * ntt::N;
 
-        polymul(a + aoff, b + boff, tmp);
+        poly::mul(a + aoff, b + boff, tmp);
 
         for (size_t l = 0; l < ntt::N; l++) {
           c[coff + l] = c[coff + l] + tmp[l];
@@ -125,7 +125,7 @@ polyvec_sub_from_x(field::zq_t* const vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly_sub_from_x<x>(vec + off);
+    poly::sub_from_x<x>(vec + off);
   }
 }
 
@@ -170,7 +170,7 @@ polyvec_highbits(const field::zq_t* const __restrict src,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly_highbits<alpha>(src + off, dst + off);
+    poly::highbits<alpha>(src + off, dst + off);
   }
 }
 
@@ -183,7 +183,7 @@ polyvec_lowbits(const field::zq_t* const __restrict src,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly_lowbits<alpha>(src + off, dst + off);
+    poly::lowbits<alpha>(src + off, dst + off);
   }
 }
 
@@ -199,7 +199,7 @@ polyvec_mul_poly(const field::zq_t* const __restrict poly,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    polymul(poly, src_vec + off, dst_vec + off);
+    poly::mul(poly, src_vec + off, dst_vec + off);
   }
 }
 
@@ -216,7 +216,7 @@ polyvec_infinity_norm(const field::zq_t* const __restrict vec)
 
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    res = std::max(res, poly_infinity_norm(vec + off));
+    res = std::max(res, poly::infinity_norm(vec + off));
   }
 
   return res;
@@ -232,7 +232,7 @@ polyvec_make_hint(const field::zq_t* const __restrict polya,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly_make_hint<alpha>(polya + off, polyb + off, polyc + off);
+    poly::make_hint<alpha>(polya + off, polyb + off, polyc + off);
   }
 }
 
@@ -247,7 +247,7 @@ polyvec_use_hint(const field::zq_t* const __restrict polyh,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly_use_hint<alpha>(polyh + off, polyr + off, polyrz + off);
+    poly::use_hint<alpha>(polyh + off, polyr + off, polyrz + off);
   }
 }
 
@@ -261,7 +261,7 @@ polyvec_count_1s(const field::zq_t* const __restrict vec)
 
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    cnt += count_1s(vec + off);
+    cnt += poly::count_1s(vec + off);
   }
 
   return cnt;
@@ -275,7 +275,7 @@ polyvec_shl(field::zq_t* const __restrict vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly_shl<d>(vec + off);
+    poly::shl<d>(vec + off);
   }
 }
 
