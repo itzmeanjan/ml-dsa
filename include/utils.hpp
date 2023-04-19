@@ -44,7 +44,7 @@ seckey_length()
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t l, const uint32_t γ1, const size_t ω>
 inline static constexpr size_t
-signature_length()
+sig_length()
 {
   constexpr size_t gamma1_bw = std::bit_width(γ1);
   constexpr size_t siglen = 32 + (32 * l * gamma1_bw) + (ω + k);

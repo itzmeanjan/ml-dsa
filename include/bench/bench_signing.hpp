@@ -24,7 +24,7 @@ sign(benchmark::State& state)
   constexpr size_t slen = 32;
   constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();
   constexpr size_t sklen = dilithium_utils::seckey_length<k, l, η, d>();
-  constexpr size_t siglen = dilithium_utils::signature_length<k, l, γ1, ω>();
+  constexpr size_t siglen = dilithium_utils::sig_length<k, l, γ1, ω>();
 
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pkey = static_cast<uint8_t*>(std::malloc(pklen));
