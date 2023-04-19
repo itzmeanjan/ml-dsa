@@ -6,6 +6,32 @@
 // Test functional correctness of Dilithium PQC suite implementation
 namespace test_dilithium {
 
+// Given a byte array, this routine randomly selects a bit and flips it. This
+// routine is used for generating faulty data during testing.
+//
+// Collects inspiration from
+// https://github.com/itzmeanjan/gift-cofb/blob/0bd9baa/wrapper/python/test_gift_cofb.py#L79-L101
+inline void
+random_bit_flip(uint8_t* const arr, const size_t alen)
+{
+  std::random_device rd;
+  std::mt19937_64 gen(rd());
+  std::uniform_int_distribution<size_t> dis{ 0, alen - 1 };
+
+  const size_t idx = dis(gen);
+  const size_t bidx = dis(gen) & 7ul;
+
+  const uint8_t mask0 = 0xff << (bidx + 1);
+  const uint8_t mask1 = 0xff >> (8 - bidx);
+  const uint8_t mask2 = 1 << bidx;
+
+  const uint8_t msb = arr[idx] & mask0;
+  const uint8_t lsb = arr[idx] & mask1;
+  const uint8_t bit = (arr[idx] & mask2) >> bidx;
+
+  arr[idx] = msb | ((1 - bit) << bidx) | lsb;
+}
+
 // Test functional correctness of Dilithium signature scheme by generating
 // random key pair, signing random message ( of mlen -bytes ) and finally
 // attempting to verify using respective public key.
@@ -54,9 +80,9 @@ test_signing(const size_t mlen)
   std::memcpy(pkey1, pkey0, pklen);
   std::memcpy(msg1, msg0, mlen);
 
-  dilithium_utils::random_bit_flip(sig1, siglen);
-  dilithium_utils::random_bit_flip(pkey1, pklen);
-  dilithium_utils::random_bit_flip(msg1, mlen);
+  random_bit_flip(sig1, siglen);
+  random_bit_flip(pkey1, pklen);
+  random_bit_flip(msg1, mlen);
 
   flg0 = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey0, msg0, mlen, sig0);
   flg1 = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pkey0, msg0, mlen, sig1);

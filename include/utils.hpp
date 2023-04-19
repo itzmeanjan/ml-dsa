@@ -51,32 +51,6 @@ signature_length()
   return siglen;
 }
 
-// Given a byte array, this routine randomly selects a bit and flips it. This
-// routine is used for generating faulty data during testing.
-//
-// Collects inspiration from
-// https://github.com/itzmeanjan/gift-cofb/blob/0bd9baa/wrapper/python/test_gift_cofb.py#L79-L101
-inline void
-random_bit_flip(uint8_t* const arr, const size_t alen)
-{
-  std::random_device rd;
-  std::mt19937_64 gen(rd());
-  std::uniform_int_distribution<size_t> dis{ 0, alen - 1 };
-
-  const size_t idx = dis(gen);
-  const size_t bidx = dis(gen) & 7ul;
-
-  const uint8_t mask0 = 0xff << (bidx + 1);
-  const uint8_t mask1 = 0xff >> (8 - bidx);
-  const uint8_t mask2 = 1 << bidx;
-
-  const uint8_t msb = arr[idx] & mask0;
-  const uint8_t lsb = arr[idx] & mask1;
-  const uint8_t bit = (arr[idx] & mask2) >> bidx;
-
-  arr[idx] = msb | ((1 - bit) << bidx) | lsb;
-}
-
 // Given a bytearray of length N, this function converts it to human readable
 // hex string of length N << 1 | N >= 0
 inline const std::string
