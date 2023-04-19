@@ -3,13 +3,13 @@
 #include "params.hpp"
 #include "poly.hpp"
 
-// Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
-namespace dilithium_utils {
+// Utility functions applied on vector of degree-255 polynomials
+namespace polyvec {
 
 // Applies NTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
 template<const size_t k>
 static inline void
-polyvec_ntt(field::zq_t* const __restrict vec)
+ntt(field::zq_t* const __restrict vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -20,7 +20,7 @@ polyvec_ntt(field::zq_t* const __restrict vec)
 // Applies iNTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
 template<const size_t k>
 static inline void
-polyvec_intt(field::zq_t* const __restrict vec)
+intt(field::zq_t* const __restrict vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -32,23 +32,15 @@ polyvec_intt(field::zq_t* const __restrict vec)
 // extracting out high and low order bits
 template<const size_t k, const size_t d>
 static inline void
-polyvec_power2round(const field::zq_t* const __restrict poly,
-                    field::zq_t* const __restrict poly_hi,
-                    field::zq_t* const __restrict poly_lo)
+power2round(const field::zq_t* const __restrict poly,
+            field::zq_t* const __restrict poly_hi,
+            field::zq_t* const __restrict poly_lo)
   requires(dilithium_params::check_d(d))
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
     poly::power2round<d>(poly + off, poly_hi + off, poly_lo + off);
   }
-}
-
-// Compile-time check to ensure that operand matrices are having compatible
-// dimension for matrix multiplication
-constexpr bool
-check_matrix_dim(const size_t a_cols, const size_t b_rows)
-{
-  return !static_cast<bool>(a_cols ^ b_rows);
 }
 
 // Given two matrices ( in NTT domain ) of compatible dimension, where each
@@ -62,7 +54,7 @@ static void
 matrix_multiply(const field::zq_t* const __restrict a,
                 const field::zq_t* const __restrict b,
                 field::zq_t* const __restrict c)
-  requires(check_matrix_dim(a_cols, b_rows))
+  requires(dilithium_params::check_matrix_dim(a_cols, b_rows))
 {
   field::zq_t tmp[ntt::N]{};
 
@@ -89,8 +81,8 @@ matrix_multiply(const field::zq_t* const __restrict a,
 // destination vector is mutated.
 template<const size_t k>
 static inline void
-polyvec_add_to(const field::zq_t* const __restrict src,
-               field::zq_t* const __restrict dst)
+add_to(const field::zq_t* const __restrict src,
+       field::zq_t* const __restrict dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -105,7 +97,7 @@ polyvec_add_to(const field::zq_t* const __restrict src,
 // routine negates each coefficient.
 template<const size_t k>
 static inline void
-polyvec_neg(field::zq_t* const __restrict vec)
+neg(field::zq_t* const vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -121,7 +113,7 @@ polyvec_neg(field::zq_t* const __restrict vec)
 // coefficients now stay in [0, 2x].
 template<const size_t k, const uint32_t x>
 static inline void
-polyvec_sub_from_x(field::zq_t* const vec)
+sub_from_x(field::zq_t* const vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -134,8 +126,7 @@ polyvec_sub_from_x(field::zq_t* const vec)
 // (k x 32 x sbw) -bytes destination array
 template<const size_t k, const size_t sbw>
 static inline void
-polyvec_encode(const field::zq_t* const __restrict src,
-               uint8_t* const __restrict dst)
+encode(const field::zq_t* const __restrict src, uint8_t* const __restrict dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off0 = i * ntt::N;
@@ -150,8 +141,7 @@ polyvec_encode(const field::zq_t* const __restrict src,
 // k x 1
 template<const size_t k, const size_t sbw>
 static inline void
-polyvec_decode(const uint8_t* const __restrict src,
-               field::zq_t* const __restrict dst)
+decode(const uint8_t* const __restrict src, field::zq_t* const __restrict dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off0 = i * sbw * 32;
@@ -165,8 +155,8 @@ polyvec_decode(const uint8_t* const __restrict src,
 // extracts out high order bits from each coefficient
 template<const size_t k, const uint32_t alpha>
 static inline void
-polyvec_highbits(const field::zq_t* const __restrict src,
-                 field::zq_t* const __restrict dst)
+highbits(const field::zq_t* const __restrict src,
+         field::zq_t* const __restrict dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -178,8 +168,8 @@ polyvec_highbits(const field::zq_t* const __restrict src,
 // extracts out low order bits from each coefficient, while not mutating operand
 template<const size_t k, const uint32_t alpha>
 static inline void
-polyvec_lowbits(const field::zq_t* const __restrict src,
-                field::zq_t* const __restrict dst)
+lowbits(const field::zq_t* const __restrict src,
+        field::zq_t* const __restrict dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -193,9 +183,9 @@ polyvec_lowbits(const field::zq_t* const __restrict src,
 // representation, while not mutating operand polynomials.
 template<const size_t k>
 static inline void
-polyvec_mul_poly(const field::zq_t* const __restrict poly,
-                 const field::zq_t* const __restrict src_vec,
-                 field::zq_t* const __restrict dst_vec)
+mul_by_poly(const field::zq_t* const __restrict poly,
+            const field::zq_t* const __restrict src_vec,
+            field::zq_t* const __restrict dst_vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -210,7 +200,7 @@ polyvec_mul_poly(const field::zq_t* const __restrict poly,
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k>
 static inline field::zq_t
-polyvec_infinity_norm(const field::zq_t* const __restrict vec)
+infinity_norm(const field::zq_t* const __restrict vec)
 {
   field::zq_t res{ 0u };
 
@@ -226,9 +216,9 @@ polyvec_infinity_norm(const field::zq_t* const __restrict vec)
 // routine computes hint bit for each coefficient, using `make_hint` routine.
 template<const size_t k, const uint32_t alpha>
 static inline void
-polyvec_make_hint(const field::zq_t* const __restrict polya,
-                  const field::zq_t* const __restrict polyb,
-                  field::zq_t* const __restrict polyc)
+make_hint(const field::zq_t* const __restrict polya,
+          const field::zq_t* const __restrict polyb,
+          field::zq_t* const __restrict polyc)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -241,9 +231,9 @@ polyvec_make_hint(const field::zq_t* const __restrict polya,
 // provided.
 template<const size_t k, const uint32_t alpha>
 static inline void
-polyvec_use_hint(const field::zq_t* const __restrict polyh,
-                 const field::zq_t* const __restrict polyr,
-                 field::zq_t* const __restrict polyrz)
+use_hint(const field::zq_t* const __restrict polyh,
+         const field::zq_t* const __restrict polyr,
+         field::zq_t* const __restrict polyrz)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -255,7 +245,7 @@ polyvec_use_hint(const field::zq_t* const __restrict polyh,
 // counts number of coefficients having value 1.
 template<const size_t k>
 static inline size_t
-polyvec_count_1s(const field::zq_t* const __restrict vec)
+count_1s(const field::zq_t* const __restrict vec)
 {
   size_t cnt = 0;
 
@@ -271,7 +261,7 @@ polyvec_count_1s(const field::zq_t* const __restrict vec)
 // shifts each coefficient leftwards by d bits
 template<const size_t k, const size_t d>
 static inline void
-polyvec_shl(field::zq_t* const __restrict vec)
+shl(field::zq_t* const __restrict vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;

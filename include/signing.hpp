@@ -100,17 +100,17 @@ sign(const uint8_t* const __restrict seckey,
   field::zq_t s2[k * ntt::N]{};
   field::zq_t t0[k * ntt::N]{};
 
-  dilithium_utils::polyvec_decode<l, eta_bw>(seckey + secoff3, s1);
-  dilithium_utils::polyvec_decode<k, eta_bw>(seckey + secoff4, s2);
-  dilithium_utils::polyvec_decode<k, d>(seckey + secoff5, t0);
+  polyvec::decode<l, eta_bw>(seckey + secoff3, s1);
+  polyvec::decode<k, eta_bw>(seckey + secoff4, s2);
+  polyvec::decode<k, d>(seckey + secoff5, t0);
 
-  dilithium_utils::polyvec_sub_from_x<l, η>(s1);
-  dilithium_utils::polyvec_sub_from_x<k, η>(s2);
-  dilithium_utils::polyvec_sub_from_x<k, t0_rng>(t0);
+  polyvec::sub_from_x<l, η>(s1);
+  polyvec::sub_from_x<k, η>(s2);
+  polyvec::sub_from_x<k, t0_rng>(t0);
 
-  dilithium_utils::polyvec_ntt<l>(s1);
-  dilithium_utils::polyvec_ntt<k>(s2);
-  dilithium_utils::polyvec_ntt<k>(t0);
+  polyvec::ntt<l>(s1);
+  polyvec::ntt<k>(s2);
+  polyvec::ntt<k>(t0);
 
   bool has_signed = false;
   uint16_t kappa = 0;
@@ -128,9 +128,9 @@ sign(const uint8_t* const __restrict seckey,
 
     std::memcpy(y_prime, y, sizeof(y));
 
-    dilithium_utils::polyvec_ntt<l>(y_prime);
-    dilithium_utils::matrix_multiply<k, l, l, 1>(A, y_prime, w);
-    dilithium_utils::polyvec_intt<k>(w);
+    polyvec::ntt<l>(y_prime);
+    polyvec::matrix_multiply<k, l, l, 1>(A, y_prime, w);
+    polyvec::intt<k>(w);
 
     constexpr uint32_t α = γ2 << 1;
     constexpr uint32_t m = (field::Q - 1u) / α;
@@ -140,10 +140,10 @@ sign(const uint8_t* const __restrict seckey,
     uint8_t hash_in[64 + (k * w1bw * 32)]{};
     field::zq_t c[ntt::N]{};
 
-    dilithium_utils::polyvec_highbits<k, α>(w, w1);
+    polyvec::highbits<k, α>(w, w1);
 
     std::memcpy(hash_in, mu, 64);
-    dilithium_utils::polyvec_encode<k, w1bw>(w1, hash_in + 64);
+    polyvec::encode<k, w1bw>(w1, hash_in + 64);
 
     shake256::shake256 hasher2{};
     hasher2.hash(hash_in, sizeof(hash_in));
@@ -152,21 +152,21 @@ sign(const uint8_t* const __restrict seckey,
     dilithium_utils::sample_in_ball<τ>(hash_out, c);
     ntt::ntt(c);
 
-    dilithium_utils::polyvec_mul_poly<l>(c, s1, z);
-    dilithium_utils::polyvec_intt<l>(z);
-    dilithium_utils::polyvec_add_to<l>(y, z);
+    polyvec::mul_by_poly<l>(c, s1, z);
+    polyvec::intt<l>(z);
+    polyvec::add_to<l>(y, z);
 
     field::zq_t r0[k * ntt::N]{};
     field::zq_t r1[k * ntt::N]{};
 
-    dilithium_utils::polyvec_mul_poly<k>(c, s2, r1);
-    dilithium_utils::polyvec_intt<k>(r1);
-    dilithium_utils::polyvec_neg<k>(r1);
-    dilithium_utils::polyvec_add_to<k>(w, r1);
-    dilithium_utils::polyvec_lowbits<k, α>(r1, r0);
+    polyvec::mul_by_poly<k>(c, s2, r1);
+    polyvec::intt<k>(r1);
+    polyvec::neg<k>(r1);
+    polyvec::add_to<k>(w, r1);
+    polyvec::lowbits<k, α>(r1, r0);
 
-    const field::zq_t z_norm = dilithium_utils::polyvec_infinity_norm<l>(z);
-    const field::zq_t r0_norm = dilithium_utils::polyvec_infinity_norm<k>(r0);
+    const field::zq_t z_norm = polyvec::infinity_norm<l>(z);
+    const field::zq_t r0_norm = polyvec::infinity_norm<k>(r0);
 
     constexpr field::zq_t bound0{ γ1 - β };
     constexpr field::zq_t bound1{ γ2 - β };
@@ -180,15 +180,15 @@ sign(const uint8_t* const __restrict seckey,
     field::zq_t h0[k * ntt::N]{};
     field::zq_t h1[k * ntt::N]{};
 
-    dilithium_utils::polyvec_mul_poly<k>(c, t0, h0);
-    dilithium_utils::polyvec_intt<k>(h0);
+    polyvec::mul_by_poly<k>(c, t0, h0);
+    polyvec::intt<k>(h0);
     std::memcpy(h1, h0, sizeof(h0));
-    dilithium_utils::polyvec_neg<k>(h0);
-    dilithium_utils::polyvec_add_to<k>(h1, r1);
-    dilithium_utils::polyvec_make_hint<k, α>(h0, r1, h);
+    polyvec::neg<k>(h0);
+    polyvec::add_to<k>(h1, r1);
+    polyvec::make_hint<k, α>(h0, r1, h);
 
-    const field::zq_t ct0_norm = dilithium_utils::polyvec_infinity_norm<k>(h1);
-    const size_t count_1 = dilithium_utils::polyvec_count_1s<k>(h);
+    const field::zq_t ct0_norm = polyvec::infinity_norm<k>(h1);
+    const size_t count_1 = polyvec::count_1s<k>(h);
 
     constexpr field::zq_t bound2{ γ2 };
 
@@ -206,8 +206,8 @@ sign(const uint8_t* const __restrict seckey,
   constexpr size_t sigoff2 = sigoff1 + (32 * l * gamma1_bw);
 
   std::memcpy(sig + sigoff0, hash_out, sizeof(hash_out));
-  dilithium_utils::polyvec_sub_from_x<l, γ1>(z);
-  dilithium_utils::polyvec_encode<l, gamma1_bw>(z, sig + sigoff1);
+  polyvec::sub_from_x<l, γ1>(z);
+  polyvec::encode<l, gamma1_bw>(z, sig + sigoff1);
   bit_packing::encode_hint_bits<k, ω>(h, sig + sigoff2);
 }
 

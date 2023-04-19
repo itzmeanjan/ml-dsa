@@ -50,25 +50,25 @@ keygen(
   field::zq_t s1_prime[l * ntt::N]{};
 
   std::memcpy(s1_prime, s1, sizeof(s1));
-  dilithium_utils::polyvec_ntt<l>(s1_prime);
+  polyvec::ntt<l>(s1_prime);
 
   field::zq_t t[k * ntt::N]{};
 
-  dilithium_utils::matrix_multiply<k, l, l, 1>(A, s1_prime, t);
-  dilithium_utils::polyvec_intt<k>(t);
-  dilithium_utils::polyvec_add_to<k>(s2, t);
+  polyvec::matrix_multiply<k, l, l, 1>(A, s1_prime, t);
+  polyvec::intt<k>(t);
+  polyvec::add_to<k>(s2, t);
 
   field::zq_t t1[k * ntt::N]{};
   field::zq_t t0[k * ntt::N]{};
 
-  dilithium_utils::polyvec_power2round<k, d>(t, t1, t0);
+  polyvec::power2round<k, d>(t, t1, t0);
 
   constexpr size_t t1_bw = std::bit_width(field::Q) - d;
   uint8_t crh_in[32 + k * 32 * t1_bw]{};
   uint8_t tr[32]{};
 
   std::memcpy(crh_in, rho, 32);
-  dilithium_utils::polyvec_encode<k, t1_bw>(t1, crh_in + 32);
+  polyvec::encode<k, t1_bw>(t1, crh_in + 32);
 
   shake256::shake256 hasher1{};
   hasher1.hash(crh_in, sizeof(crh_in));
@@ -79,20 +79,20 @@ keygen(
   std::memcpy(seckey + 32, key, 32);
   std::memcpy(seckey + 64, tr, 32);
 
-  dilithium_utils::polyvec_sub_from_x<l, η>(s1);
-  dilithium_utils::polyvec_sub_from_x<k, η>(s2);
+  polyvec::sub_from_x<l, η>(s1);
+  polyvec::sub_from_x<k, η>(s2);
 
   constexpr size_t eta_bw = std::bit_width(2 * η);
   constexpr size_t s1_len = l * eta_bw * 32;
   constexpr size_t s2_len = k * eta_bw * 32;
 
-  dilithium_utils::polyvec_encode<l, eta_bw>(s1, seckey + 96);
-  dilithium_utils::polyvec_encode<k, eta_bw>(s2, seckey + 96 + s1_len);
+  polyvec::encode<l, eta_bw>(s1, seckey + 96);
+  polyvec::encode<k, eta_bw>(s2, seckey + 96 + s1_len);
 
   constexpr uint32_t t0_rng = 1u << (d - 1);
 
-  dilithium_utils::polyvec_sub_from_x<k, t0_rng>(t0);
-  dilithium_utils::polyvec_encode<k, d>(t0, seckey + 96 + s1_len + s2_len);
+  polyvec::sub_from_x<k, t0_rng>(t0);
+  polyvec::encode<k, d>(t0, seckey + 96 + s1_len + s2_len);
 }
 
 }

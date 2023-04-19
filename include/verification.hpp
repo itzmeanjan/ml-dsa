@@ -44,7 +44,7 @@ verify(const uint8_t* const __restrict pubkey,
   field::zq_t t1[k * ntt::N]{};
 
   dilithium_utils::expand_a<k, l>(pubkey + puboff0, A);
-  dilithium_utils::polyvec_decode<k, t1_bw>(pubkey + puboff1, t1);
+  polyvec::decode<k, t1_bw>(pubkey + puboff1, t1);
 
   uint8_t crh_in[32]{};
   uint8_t mu[64]{};
@@ -67,39 +67,39 @@ verify(const uint8_t* const __restrict pubkey,
   field::zq_t z[l * ntt::N]{};
   field::zq_t h[k * ntt::N]{};
 
-  dilithium_utils::polyvec_decode<l, gamma1_bw>(sig + sigoff1, z);
-  dilithium_utils::polyvec_sub_from_x<l, γ1>(z);
+  polyvec::decode<l, gamma1_bw>(sig + sigoff1, z);
+  polyvec::sub_from_x<l, γ1>(z);
   const bool failed = bit_packing::decode_hint_bits<k, ω>(sig + sigoff2, h);
 
   field::zq_t w0[k * ntt::N]{};
   field::zq_t w1[k * ntt::N]{};
   field::zq_t w2[k * ntt::N]{};
 
-  const field::zq_t z_norm = dilithium_utils::polyvec_infinity_norm<l>(z);
-  const size_t count_1 = dilithium_utils::polyvec_count_1s<k>(h);
+  const field::zq_t z_norm = polyvec::infinity_norm<l>(z);
+  const size_t count_1 = polyvec::count_1s<k>(h);
 
-  dilithium_utils::polyvec_ntt<l>(z);
-  dilithium_utils::matrix_multiply<k, l, l, 1>(A, z, w0);
+  polyvec::ntt<l>(z);
+  polyvec::matrix_multiply<k, l, l, 1>(A, z, w0);
 
-  dilithium_utils::polyvec_shl<k, d>(t1);
-  dilithium_utils::polyvec_ntt<k>(t1);
-  dilithium_utils::polyvec_mul_poly<k>(c, t1, w2);
-  dilithium_utils::polyvec_neg<k>(w2);
+  polyvec::shl<k, d>(t1);
+  polyvec::ntt<k>(t1);
+  polyvec::mul_by_poly<k>(c, t1, w2);
+  polyvec::neg<k>(w2);
 
-  dilithium_utils::polyvec_add_to<k>(w0, w2);
-  dilithium_utils::polyvec_intt<k>(w2);
+  polyvec::add_to<k>(w0, w2);
+  polyvec::intt<k>(w2);
 
   constexpr uint32_t α = γ2 << 1;
   constexpr uint32_t m = (field::Q - 1u) / α;
   constexpr size_t w1bw = std::bit_width(m - 1u);
 
-  dilithium_utils::polyvec_use_hint<k, α>(h, w2, w1);
+  polyvec::use_hint<k, α>(h, w2, w1);
 
   uint8_t hash_in[64 + (k * w1bw * 32)]{};
   uint8_t hash_out[32]{};
 
   std::memcpy(hash_in, mu, sizeof(mu));
-  dilithium_utils::polyvec_encode<k, w1bw>(w1, hash_in + 64);
+  polyvec::encode<k, w1bw>(w1, hash_in + 64);
 
   shake256::shake256 hasher2{};
   hasher2.hash(hash_in, sizeof(hash_in));

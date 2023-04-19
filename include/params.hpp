@@ -63,4 +63,12 @@ check_d(const size_t d)
   return d == 13;
 }
 
+// Compile-time check to ensure that operand matrices are having compatible
+// dimension for matrix multiplication
+constexpr bool
+check_matrix_dim(const size_t a_cols, const size_t b_rows)
+{
+  return !static_cast<bool>(a_cols ^ b_rows);
+}
+
 }
