@@ -8,8 +8,8 @@
 #include "shake256.hpp"
 #include <cstring>
 
-// Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
-namespace dilithium_utils {
+// Sampling polynomials/ vector of polynomials related routines
+namespace sampling {
 
 // Given a 32 -bytes uniform seed ρ, a k x l matrix is deterministically
 // sampled, where each coefficient is a degree-255 polynomial ∈ R_q

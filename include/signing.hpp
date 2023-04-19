@@ -70,7 +70,7 @@ sign(const uint8_t* const __restrict seckey,
 
   field::zq_t A[k * l * ntt::N]{};
 
-  dilithium_utils::expand_a<k, l>(rho, A);
+  sampling::expand_a<k, l>(rho, A);
 
   uint8_t mu[64]{};
 
@@ -124,7 +124,7 @@ sign(const uint8_t* const __restrict seckey,
     field::zq_t y_prime[l * ntt::N]{};
     field::zq_t w[k * ntt::N]{};
 
-    dilithium_utils::expand_mask<γ1, l>(rho_prime, kappa, y);
+    sampling::expand_mask<γ1, l>(rho_prime, kappa, y);
 
     std::memcpy(y_prime, y, sizeof(y));
 
@@ -149,7 +149,7 @@ sign(const uint8_t* const __restrict seckey,
     hasher2.hash(hash_in, sizeof(hash_in));
     hasher2.read(hash_out, sizeof(hash_out));
 
-    dilithium_utils::sample_in_ball<τ>(hash_out, c);
+    sampling::sample_in_ball<τ>(hash_out, c);
     ntt::ntt(c);
 
     polyvec::mul_by_poly<l>(c, s1, z);

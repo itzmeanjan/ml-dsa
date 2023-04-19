@@ -39,13 +39,13 @@ keygen(
 
   field::zq_t A[k * l * ntt::N]{};
 
-  dilithium_utils::expand_a<k, l>(rho, A);
+  sampling::expand_a<k, l>(rho, A);
 
   field::zq_t s1[l * ntt::N]{};
   field::zq_t s2[k * ntt::N]{};
 
-  dilithium_utils::expand_s<η, l, 0>(rho_prime, s1);
-  dilithium_utils::expand_s<η, k, l>(rho_prime, s2);
+  sampling::expand_s<η, l, 0>(rho_prime, s1);
+  sampling::expand_s<η, k, l>(rho_prime, s2);
 
   field::zq_t s1_prime[l * ntt::N]{};
 

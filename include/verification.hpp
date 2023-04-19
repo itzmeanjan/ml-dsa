@@ -43,7 +43,7 @@ verify(const uint8_t* const __restrict pubkey,
   field::zq_t A[k * l * ntt::N]{};
   field::zq_t t1[k * ntt::N]{};
 
-  dilithium_utils::expand_a<k, l>(pubkey + puboff0, A);
+  sampling::expand_a<k, l>(pubkey + puboff0, A);
   polyvec::decode<k, t1_bw>(pubkey + puboff1, t1);
 
   uint8_t crh_in[32]{};
@@ -61,7 +61,7 @@ verify(const uint8_t* const __restrict pubkey,
 
   field::zq_t c[ntt::N]{};
 
-  dilithium_utils::sample_in_ball<τ>(sig + sigoff0, c);
+  sampling::sample_in_ball<τ>(sig + sigoff0, c);
   ntt::ntt(c);
 
   field::zq_t z[l * ntt::N]{};

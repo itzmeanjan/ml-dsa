@@ -18,7 +18,7 @@ test_sample_in_ball()
   prng::prng_t prng;
 
   prng.read(seed, sizeof(seed));
-  dilithium_utils::sample_in_ball<τ>(seed, poly);
+  sampling::sample_in_ball<τ>(seed, poly);
 
   field::zq_t sqrd_norm{ 0u };
 
