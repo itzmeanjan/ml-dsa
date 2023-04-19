@@ -44,7 +44,7 @@ template<const size_t k,
          const uint32_t β,
          const size_t ω,
          const bool randomized = false>
-static void
+static inline void
 sign(const uint8_t* const __restrict seckey,
      const uint8_t* const __restrict msg,
      const size_t mlen,

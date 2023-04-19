@@ -20,7 +20,7 @@ namespace dilithium {
 //
 // See section 5.4 of specification for public key and secret key byte length.
 template<const size_t k, const size_t l, const size_t d, const uint32_t η>
-static void
+static inline void
 keygen(
   const uint8_t* const __restrict seed, // 32 -bytes seed
   uint8_t* const __restrict pubkey,     // (32 + k * 320) -bytes
