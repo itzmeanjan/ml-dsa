@@ -22,42 +22,6 @@ constexpr uint32_t Q = (1u << 23) - (1u << 13) + 1u;
 // See https://www.nayuki.io/page/barrett-reduction-algorithm for more.
 constexpr uint32_t R = 8396807;
 
-// Extended GCD algorithm for computing multiplicative inverse of prime ( = Q )
-// field element
-//
-// Taken from
-// https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ff.hpp#L49-L82
-static constexpr std::array<int32_t, 3>
-xgcd(const uint32_t x, const uint32_t y)
-{
-  int32_t old_r = static_cast<int32_t>(x), r = static_cast<int32_t>(y);
-  int32_t old_s = 1, s = 0;
-  int32_t old_t = 0, t = 1;
-
-  while (r != 0) {
-    int32_t quotient = old_r / r;
-    int32_t tmp = 0;
-
-    tmp = old_r;
-    old_r = r;
-    r = tmp - quotient * r;
-
-    tmp = old_s;
-    old_s = s;
-    s = tmp - quotient * s;
-
-    tmp = old_t;
-    old_t = t;
-    t = tmp - quotient * t;
-  }
-
-  return {
-    old_s, // a
-    old_t, // b
-    old_r  // g
-  };       // s.t. `ax + by = g`
-}
-
 // Dilithium Prime Field element e ∈ [0, Q), with arithmetic operations defined
 // & implemented over it.
 struct zq_t
@@ -162,40 +126,6 @@ struct zq_t
     return zq_t{ t7 };
   }
 
-  // Multiplicative inverse over prime field Z_q | q = 2^23 - 2^13 + 1
-  //
-  // Say input is a & return value of this function is b, then
-  //
-  // assert (a * b) % q == 1
-  //
-  // When input a = 0, multiplicative inverse can't be computed, hence return
-  // value is 0.
-  //
-  // Taken from
-  // https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ff.hpp#L190-L216
-  constexpr zq_t inv() const
-  {
-    const bool flg0 = this->v == 0;
-    const uint32_t t0 = this->v + flg0 * 1;
-
-    auto res = xgcd(t0, Q);
-
-    const bool flg1 = res[0] < 0;
-    const uint32_t t1 = static_cast<uint32_t>(flg1 * Q + res[0]);
-
-    const bool flg2 = t1 >= Q;
-    const uint32_t t2 = t1 - flg2 * Q;
-    const uint32_t t3 = t2 - flg0 * 1;
-
-    return zq_t{ t3 };
-  }
-
-  // Division over prime field Z_q | q = 2^23 - 2^13 + 1
-  constexpr zq_t operator/(const zq_t& rhs) const
-  {
-    return (*this) * rhs.inv();
-  }
-
   // Raises field element to N -th power, using exponentiation by repeated
   // squaring rule
   //
@@ -221,6 +151,25 @@ struct zq_t
     return res;
   }
 
+  // Multiplicative inverse over prime field Z_q | q = 2^23 - 2^13 + 1
+  //
+  // Say input is a & return value of this function is b, then
+  //
+  // assert (a * b) % q == 1
+  //
+  // When input a = 0, multiplicative inverse can't be computed, hence return
+  // value is 0.
+  //
+  // Taken from
+  // https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ff.hpp#L190-L216
+  constexpr zq_t inv() const { return *this ^ static_cast<size_t>(Q - 2); }
+
+  // Division over prime field Z_q | q = 2^23 - 2^13 + 1
+  constexpr zq_t operator/(const zq_t& rhs) const
+  {
+    return (*this) * rhs.inv();
+  }
+
   // Equality check between two field elements ∈ Z_q | q = 2^23 - 2^13 + 1
   constexpr bool operator==(const zq_t& rhs) const
   {
@@ -228,10 +177,7 @@ struct zq_t
   }
 
   // Non-equality check between two field elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  constexpr bool operator!=(const zq_t& rhs) const
-  {
-    return static_cast<bool>(this->v ^ rhs.v);
-  }
+  constexpr bool operator!=(const zq_t& rhs) const { return !(*this == rhs); }
 
   // Greater than operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
   constexpr bool operator>(const zq_t& rhs) const { return this->v > rhs.v; }
