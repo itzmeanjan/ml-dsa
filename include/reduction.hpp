@@ -3,8 +3,9 @@
 #include "params.hpp"
 #include <utility>
 
-// Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
-namespace dilithium_utils {
+// Utility functions used for extracting out high/ low order bits and making/
+// using hint bits
+namespace reduction {
 
 // Given an element of Z_q | q = 2^23 - 2^13 + 1, this routine extracts out high
 // and low order bits s.t.

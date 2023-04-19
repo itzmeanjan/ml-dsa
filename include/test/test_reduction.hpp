@@ -21,7 +21,7 @@ test_power2round()
   for (size_t i = 0; i < rounds; i++) {
     const field::zq_t r = field::zq_t::random(prng);
 
-    const auto t1 = dilithium_utils::power2round<d>(r);
+    const auto t1 = reduction::power2round<d>(r);
     const field::zq_t t2 = t1.first * t0 + t1.second;
 
     assert(r == t2);
@@ -45,10 +45,10 @@ test_decompose()
     const field::zq_t r = field::zq_t::random(prng);
     constexpr field::zq_t z_{ z };
 
-    const field::zq_t h = dilithium_utils::make_hint<alpha>(z_, r);
-    const field::zq_t rz = dilithium_utils::use_hint<alpha>(h, r);
+    const field::zq_t h = reduction::make_hint<alpha>(z_, r);
+    const field::zq_t rz = reduction::use_hint<alpha>(h, r);
 
-    const field::zq_t rz_ = dilithium_utils::highbits<alpha>(r + z_);
+    const field::zq_t rz_ = reduction::highbits<alpha>(r + z_);
 
     assert(rz == rz_);
   }

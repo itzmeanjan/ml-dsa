@@ -18,7 +18,7 @@ power2round(const field::zq_t* const __restrict poly,
   requires(dilithium_params::check_d(d))
 {
   for (size_t i = 0; i < ntt::N; i++) {
-    const auto ext = dilithium_utils::power2round<d>(poly[i]);
+    const auto ext = reduction::power2round<d>(poly[i]);
 
     poly_hi[i] = ext.first;
     poly_lo[i] = ext.second;
@@ -59,7 +59,7 @@ highbits(const field::zq_t* const __restrict polya,
          field::zq_t* const __restrict polyb)
 {
   for (size_t i = 0; i < ntt::N; i++) {
-    polyb[i] = dilithium_utils::highbits<alpha>(polya[i]);
+    polyb[i] = reduction::highbits<alpha>(polya[i]);
   }
 }
 
@@ -71,7 +71,7 @@ lowbits(const field::zq_t* const __restrict src,
         field::zq_t* const __restrict dst)
 {
   for (size_t i = 0; i < ntt::N; i++) {
-    dst[i] = dilithium_utils::lowbits<alpha>(src[i]);
+    dst[i] = reduction::lowbits<alpha>(src[i]);
   }
 }
 
@@ -104,7 +104,7 @@ make_hint(const field::zq_t* const __restrict polya,
           field::zq_t* const __restrict polyc)
 {
   for (size_t i = 0; i < ntt::N; i++) {
-    polyc[i] = dilithium_utils::make_hint<alpha>(polya[i], polyb[i]);
+    polyc[i] = reduction::make_hint<alpha>(polya[i], polyb[i]);
   }
 }
 
@@ -119,7 +119,7 @@ use_hint(const field::zq_t* const __restrict polyh,
          field::zq_t* const __restrict polyrz)
 {
   for (size_t i = 0; i < ntt::N; i++) {
-    polyrz[i] = dilithium_utils::use_hint<alpha>(polyh[i], polyr[i]);
+    polyrz[i] = reduction::use_hint<alpha>(polyh[i], polyr[i]);
   }
 }
 
