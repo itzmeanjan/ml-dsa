@@ -1,17 +1,10 @@
 #pragma once
 #include "field.hpp"
-#include "utility"
+#include "params.hpp"
+#include <utility>
 
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium_utils {
-
-// Compile-time check to ensure that number of bits to be dropped from a
-// polynomial coefficient is supplied correctly.
-constexpr bool
-check_d(const size_t d)
-{
-  return d == 13;
-}
 
 // Given an element of Z_q | q = 2^23 - 2^13 + 1, this routine extracts out high
 // and low order bits s.t.
@@ -26,9 +19,9 @@ check_d(const size_t d)
 // This implementation collects some ideas from
 // https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23
 template<const size_t d>
-inline static std::pair<field::zq_t, field::zq_t>
+static inline std::pair<field::zq_t, field::zq_t>
 power2round(const field::zq_t r)
-  requires(check_d(d))
+  requires(dilithium_params::check_d(d))
 {
   constexpr uint32_t max = 1u << (d - 1);
 
@@ -42,15 +35,6 @@ power2round(const field::zq_t r)
   return std::make_pair(hi, lo);
 }
 
-constexpr bool
-check_α(const uint32_t alpha)
-{
-  constexpr uint32_t a = ((field::Q - 1) / 88) << 1;
-  constexpr uint32_t b = ((field::Q - 1) / 32) << 1;
-
-  return (alpha == a) || (alpha == b);
-}
-
 // Given an element of Z_q | q = 2^23 - 2^13 + 1, this routine computes high and
 // low order bits s.t.
 //
@@ -61,9 +45,9 @@ check_α(const uint32_t alpha)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-inline static std::pair<field::zq_t, field::zq_t>
+static inline std::pair<field::zq_t, field::zq_t>
 decompose(const field::zq_t r)
-  requires(check_α(alpha))
+  requires(dilithium_params::check_γ2(alpha / 2))
 {
   constexpr uint32_t t0 = alpha >> 1;
   constexpr uint32_t t1 = field::Q - 1u;
@@ -90,9 +74,8 @@ decompose(const field::zq_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-inline static field::zq_t
+static inline field::zq_t
 highbits(const field::zq_t r)
-  requires(check_α(alpha))
 {
   const auto s = decompose<alpha>(r);
   return s.first;
@@ -104,9 +87,8 @@ highbits(const field::zq_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-inline static field::zq_t
+static inline field::zq_t
 lowbits(const field::zq_t r)
-  requires(check_α(alpha))
 {
   const auto s = decompose<alpha>(r);
   return s.second;
@@ -121,9 +103,8 @@ lowbits(const field::zq_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-inline static field::zq_t
+static inline field::zq_t
 make_hint(const field::zq_t z, const field::zq_t r)
-  requires(check_α(alpha))
 {
   const field::zq_t r1 = highbits<alpha>(r);
   const field::zq_t v1 = highbits<alpha>(r + z);
@@ -137,9 +118,8 @@ make_hint(const field::zq_t z, const field::zq_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-inline static field::zq_t
+static inline field::zq_t
 use_hint(const field::zq_t h, const field::zq_t r)
-  requires(check_α(alpha))
 {
   constexpr uint32_t m = (field::Q - 1) / alpha;
   constexpr field::zq_t t0{ alpha >> 1 };

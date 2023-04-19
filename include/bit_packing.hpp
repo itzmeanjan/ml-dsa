@@ -1,18 +1,10 @@
 #pragma once
 #include "ntt.hpp"
+#include "params.hpp"
 #include <cstring>
 
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium_utils {
-
-// Compile-time check to ensure that significant bit width of Z_q element
-// doesn't cross maximum bit width of field prime q ( = 2^23 - 2^13 + 1 )
-constexpr bool
-check_sbw(const size_t sbw)
-{
-  constexpr size_t mbw = std::bit_width(field::Q - 1);
-  return sbw <= mbw;
-}
 
 // Given a degree-255 polynomial, where significant portion of each ( total 256
 // of them ) coefficient ∈ [0, 2^sbw), this routine serializes the polynomial to
@@ -23,7 +15,7 @@ check_sbw(const size_t sbw)
 template<const size_t sbw>
 static inline void
 encode(const field::zq_t* const __restrict poly, uint8_t* const __restrict arr)
-  requires(check_sbw(sbw))
+  requires(dilithium_params::check_sbw(sbw))
 {
   constexpr size_t blen = ntt::N * sbw;
   constexpr size_t len = blen >> 3;
@@ -195,7 +187,7 @@ encode(const field::zq_t* const __restrict poly, uint8_t* const __restrict arr)
 template<const size_t sbw>
 static inline void
 decode(const uint8_t* const __restrict arr, field::zq_t* const __restrict poly)
-  requires(check_sbw(sbw))
+  requires(dilithium_params::check_sbw(sbw))
 {
   constexpr size_t blen = ntt::N * sbw;
 

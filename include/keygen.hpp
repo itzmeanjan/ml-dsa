@@ -25,7 +25,7 @@ keygen(
   uint8_t* const __restrict pubkey,     // (32 + k * 320) -bytes
   uint8_t* const __restrict seckey // (96 + 32 * (ebw*(k + l) + k*d)) -bytes
   )
-  requires(dilithium_utils::check_η(η) && dilithium_utils::check_d(d))
+  requires(dilithium_params::check_η(η) && dilithium_params::check_d(d))
 {
   uint8_t seed_hash[32 + 64 + 32]{};
 

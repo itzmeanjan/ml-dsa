@@ -1,5 +1,6 @@
 #pragma once
 #include "bit_packing.hpp"
+#include "params.hpp"
 #include "poly.hpp"
 
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
@@ -34,7 +35,7 @@ static inline void
 polyvec_power2round(const field::zq_t* const __restrict poly,
                     field::zq_t* const __restrict poly_hi,
                     field::zq_t* const __restrict poly_lo)
-  requires(check_d(d))
+  requires(dilithium_params::check_d(d))
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;

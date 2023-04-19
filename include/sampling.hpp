@@ -1,6 +1,7 @@
 #pragma once
 #include "field.hpp"
 #include "ntt.hpp"
+#include "params.hpp"
 #include "poly.hpp"
 #include "shake128.hpp"
 #include "shake256.hpp"
@@ -57,22 +58,6 @@ expand_a(const uint8_t* const __restrict rho, field::zq_t* const __restrict mat)
   }
 }
 
-// Compile-time check to ensure that η ∈ {2, 4}, so that sampled secret key
-// range stays short i.e. [-η, η]
-constexpr bool
-check_η(const uint32_t η)
-{
-  return (η == 2u) || (η == 4u);
-}
-
-// Compile-time check to ensure that starting nonce belongs to allowed set of
-// values when uniform sampling polynomial coefficients in [-η, η]
-constexpr bool
-check_nonce(const size_t nonce)
-{
-  return (nonce == 0) || (nonce == 4) || (nonce == 5) || (nonce == 7);
-}
-
 // Uniform sampling k -many degree-255 polynomials s.t. each coefficient of
 // those polynomials ∈ [-η, η].
 //
@@ -90,7 +75,7 @@ template<const uint32_t η, const size_t k, const uint16_t nonce>
 static inline void
 expand_s(const uint8_t* const __restrict rho_prime,
          field::zq_t* const __restrict vec)
-  requires(check_η(η) && check_nonce(nonce))
+  requires(dilithium_params::check_η(η) && dilithium_params::check_nonce(nonce))
 {
   constexpr field::zq_t eta_{ η };
 
@@ -148,13 +133,6 @@ expand_s(const uint8_t* const __restrict rho_prime,
   }
 }
 
-// Compile-time check to ensure that γ1 has recommended value
-constexpr bool
-check_γ1(const uint32_t γ1)
-{
-  return (γ1 == (1u << 17)) || (γ1 == (1u << 19));
-}
-
 // Given a 64 -bytes seed and 2 -bytes nonce, this routine does uniform sampling
 // from output of SHAKE256 XOF, computing a l x 1 vector of degree-255
 // polynomials s.t. each coefficient ∈ [-(γ1-1), γ1]
@@ -167,7 +145,7 @@ static inline void
 expand_mask(const uint8_t* const __restrict seed,
             const uint16_t nonce,
             field::zq_t* const __restrict vec)
-  requires(check_γ1(γ1))
+  requires(dilithium_params::check_γ1(γ1))
 {
   constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);
 
@@ -192,14 +170,6 @@ expand_mask(const uint8_t* const __restrict seed,
   }
 }
 
-// Compile-time check to ensure that τ is set to parameter recommended in
-// Dilithium specification
-constexpr bool
-check_τ(const uint32_t τ)
-{
-  return (τ == 39) || (τ == 49) || (τ == 60);
-}
-
 // Given a 32 -bytes seed, this routine creates a degree-255 polynomial with τ
 // -many coefficients set to +/- 1, while remaining (256 - τ) -many set to 0.
 //
@@ -210,7 +180,7 @@ template<const uint32_t τ>
 static inline void
 sample_in_ball(const uint8_t* const __restrict seed,
                field::zq_t* const __restrict poly)
-  requires(check_τ(τ))
+  requires(dilithium_params::check_τ(τ))
 {
   uint8_t tau_bits[8];
   uint8_t buf[shake256::rate / 8];

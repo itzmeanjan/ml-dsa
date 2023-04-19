@@ -13,7 +13,7 @@ namespace test_dilithium {
 template<const size_t sbw>
 void
 test_encode_decode()
-  requires(dilithium_utils::check_sbw(sbw))
+  requires(dilithium_params::check_sbw(sbw))
 {
   constexpr size_t alen = sbw * 32;
   constexpr size_t plen = sizeof(field::zq_t) * ntt::N;

@@ -1,4 +1,5 @@
 #pragma once
+#include "params.hpp"
 #include "reduction.hpp"
 #include <iomanip>
 #include <sstream>
@@ -14,7 +15,7 @@ namespace dilithium_utils {
 template<const size_t k, const size_t d>
 inline static constexpr size_t
 pubkey_length()
-  requires(check_d(d))
+  requires(dilithium_params::check_d(d))
 {
   constexpr size_t t1_bw = std::bit_width(field::Q) - d;
   constexpr size_t pklen = 32 + k * 32 * t1_bw;
@@ -29,7 +30,7 @@ pubkey_length()
 template<const size_t k, const size_t l, const uint32_t η, const size_t d>
 inline static constexpr size_t
 seckey_length()
-  requires(check_d(d))
+  requires(dilithium_params::check_d(d))
 {
   constexpr size_t eta_bw = std::bit_width(2 * η);
   constexpr size_t sklen = 32 + 32 + 32 + 32 * (eta_bw * (k + l) + k * d);
