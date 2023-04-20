@@ -8,9 +8,9 @@ auto compute_max = [](const std::vector<double>& v) -> double {
   return *std::max_element(v.begin(), v.end());
 };
 
-using namespace bench_dilithium;
-
 // register for benchmarking Dilithium Key Generation, Signing & Verification
+
+using namespace bench_dilithium;
 
 BENCHMARK(dilithium2_keygen)
   ->ComputeStatistics("min", compute_min)
@@ -36,9 +36,17 @@ BENCHMARK(dilithium3_verify)
   ->ComputeStatistics("min", compute_min)
   ->ComputeStatistics("max", compute_max);
 
-BENCHMARK(dilithium5_keygen)->UseManualTime();
-BENCHMARK(dilithium5_sign)->Arg(32)->UseManualTime();
-BENCHMARK(dilithium5_verify)->Arg(32)->UseManualTime();
+BENCHMARK(dilithium5_keygen)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium5_sign)
+  ->Arg(32)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium5_verify)
+  ->Arg(32)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
 
 // benchmark runner main routine
 BENCHMARK_MAIN();
