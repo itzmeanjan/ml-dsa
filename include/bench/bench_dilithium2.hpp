@@ -1,6 +1,6 @@
 #pragma once
-#include "bench_common.hpp"
 #include "dilithium2.hpp"
+#include <benchmark/benchmark.h>
 
 // Benchmark Dilithium PQC DSA suite implementation targeting CPU, using
 // google-benchmark
@@ -19,22 +19,10 @@ dilithium2_keygen(benchmark::State& state)
   uint8_t* seckey = static_cast<uint8_t*>(std::malloc(sklen));
 
   prng::prng_t prng;
-
-  std::vector<uint64_t> durations;
+  prng.read(seed, slen);
 
   for (auto _ : state) {
-    // use random seed for key generation
-    prng.read(seed, slen);
-
-    const auto t0 = std::chrono::high_resolution_clock::now();
     dilithium2::keygen(seed, pubkey, seckey);
-    const auto t1 = std::chrono::high_resolution_clock::now();
-
-    const auto sdur = std::chrono::duration_cast<seconds_t>(t1 - t0);
-    const auto nsdur = std::chrono::duration_cast<nano_t>(t1 - t0);
-
-    state.SetIterationTime(sdur.count());
-    durations.push_back(nsdur.count());
 
     benchmark::DoNotOptimize(seed);
     benchmark::DoNotOptimize(pubkey);
@@ -42,21 +30,7 @@ dilithium2_keygen(benchmark::State& state)
     benchmark::ClobberMemory();
   }
 
-  state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
-
-  const auto min_idx = std::min_element(durations.begin(), durations.end());
-  const auto min = durations.at(std::distance(durations.begin(), min_idx));
-  state.counters["min_exec_time (ns)"] = static_cast<double>(min);
-
-  const auto max_idx = std::max_element(durations.begin(), durations.end());
-  const auto max = durations.at(std::distance(durations.begin(), max_idx));
-  state.counters["max_exec_time (ns)"] = static_cast<double>(max);
-
-  const auto lenby2 = durations.size() / 2;
-  const auto mid_idx = durations.begin() + lenby2;
-  std::nth_element(durations.begin(), mid_idx, durations.end());
-  const auto mid = durations[lenby2];
-  state.counters["median_exec_time (ns)"] = static_cast<double>(mid);
+  state.SetItemsProcessed(state.iterations());
 
   std::free(seed);
   std::free(pubkey);
@@ -80,26 +54,13 @@ dilithium2_sign(benchmark::State& state)
   uint8_t* msg = static_cast<uint8_t*>(std::malloc(mlen));
 
   prng::prng_t prng;
+  prng.read(seed, slen);
+  prng.read(msg, mlen);
 
-  std::vector<uint64_t> durations;
+  dilithium2::keygen(seed, pkey, skey);
 
   for (auto _ : state) {
-    // use random seed for key generation
-    prng.read(seed, slen);
-    // use random message ( to be signed )
-    prng.read(msg, mlen);
-    // generate keypair ( from random sampled seed )
-    dilithium2::keygen(seed, pkey, skey);
-
-    const auto t0 = std::chrono::high_resolution_clock::now();
     dilithium2::sign(skey, msg, mlen, sig);
-    const auto t1 = std::chrono::high_resolution_clock::now();
-
-    const auto sdur = std::chrono::duration_cast<seconds_t>(t1 - t0);
-    const auto nsdur = std::chrono::duration_cast<nano_t>(t1 - t0);
-
-    state.SetIterationTime(sdur.count());
-    durations.push_back(nsdur.count());
 
     benchmark::DoNotOptimize(skey);
     benchmark::DoNotOptimize(msg);
@@ -107,23 +68,9 @@ dilithium2_sign(benchmark::State& state)
     benchmark::ClobberMemory();
   }
 
-  state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
+  state.SetItemsProcessed(state.iterations());
 
-  const auto min_idx = std::min_element(durations.begin(), durations.end());
-  const auto min = durations.at(std::distance(durations.begin(), min_idx));
-  state.counters["min_exec_time (ns)"] = static_cast<double>(min);
-
-  const auto max_idx = std::max_element(durations.begin(), durations.end());
-  const auto max = durations.at(std::distance(durations.begin(), max_idx));
-  state.counters["max_exec_time (ns)"] = static_cast<double>(max);
-
-  const auto lenby2 = durations.size() / 2;
-  const auto mid_idx = durations.begin() + lenby2;
-  std::nth_element(durations.begin(), mid_idx, durations.end());
-  const auto mid = durations[lenby2];
-  state.counters["median_exec_time (ns)"] = static_cast<double>(mid);
-
-  bool flg = dilithium2::verify(pkey, msg, mlen, sig);
+  const bool flg = dilithium2::verify(pkey, msg, mlen, sig);
 
   std::free(seed);
   std::free(pkey);
@@ -151,31 +98,14 @@ dilithium2_verify(benchmark::State& state)
   uint8_t* msg = static_cast<uint8_t*>(std::malloc(mlen));
 
   prng::prng_t prng;
+  prng.read(seed, slen);
+  prng.read(msg, mlen);
 
-  std::vector<uint64_t> durations;
+  dilithium2::keygen(seed, pkey, skey);
+  dilithium2::sign(skey, msg, mlen, sig);
 
   for (auto _ : state) {
-    // use random seed for key generation
-    prng.read(seed, slen);
-    // use random message ( to be signed )
-    prng.read(msg, mlen);
-    // generate keypair ( from random sampled seed )
-    dilithium2::keygen(seed, pkey, skey);
-    // sign message
-    dilithium2::sign(skey, msg, mlen, sig);
-
-    const auto t0 = std::chrono::high_resolution_clock::now();
-    bool flg = false;
-    flg = dilithium2::verify(pkey, msg, mlen, sig);
-    const auto t1 = std::chrono::high_resolution_clock::now();
-
-    const auto sdur = std::chrono::duration_cast<seconds_t>(t1 - t0);
-    const auto nsdur = std::chrono::duration_cast<nano_t>(t1 - t0);
-
-    state.SetIterationTime(sdur.count());
-    durations.push_back(nsdur.count());
-
-    assert(flg);
+    bool flg = dilithium2::verify(pkey, msg, mlen, sig);
 
     benchmark::DoNotOptimize(flg);
     benchmark::DoNotOptimize(pkey);
@@ -184,21 +114,7 @@ dilithium2_verify(benchmark::State& state)
     benchmark::ClobberMemory();
   }
 
-  state.SetItemsProcessed(static_cast<int64_t>(state.iterations()));
-
-  const auto min_idx = std::min_element(durations.begin(), durations.end());
-  const auto min = durations.at(std::distance(durations.begin(), min_idx));
-  state.counters["min_exec_time (ns)"] = static_cast<double>(min);
-
-  const auto max_idx = std::max_element(durations.begin(), durations.end());
-  const auto max = durations.at(std::distance(durations.begin(), max_idx));
-  state.counters["max_exec_time (ns)"] = static_cast<double>(max);
-
-  const auto lenby2 = durations.size() / 2;
-  const auto mid_idx = durations.begin() + lenby2;
-  std::nth_element(durations.begin(), mid_idx, durations.end());
-  const auto mid = durations[lenby2];
-  state.counters["median_exec_time (ns)"] = static_cast<double>(mid);
+  state.SetItemsProcessed(state.iterations());
 
   std::free(seed);
   std::free(pkey);
