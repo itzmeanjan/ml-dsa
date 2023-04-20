@@ -1,13 +1,15 @@
 #pragma once
-#include "ff.hpp"
+#include "bit_packing.hpp"
+#include "field.hpp"
 #include "ntt.hpp"
+#include "params.hpp"
 #include "poly.hpp"
 #include "shake128.hpp"
 #include "shake256.hpp"
 #include <cstring>
 
-// Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
-namespace dilithium_utils {
+// Sampling polynomials/ vector of polynomials related routines
+namespace sampling {
 
 // Given a 32 -bytes uniform seed ρ, a k x l matrix is deterministically
 // sampled, where each coefficient is a degree-255 polynomial ∈ R_q
@@ -18,12 +20,10 @@ namespace dilithium_utils {
 // See `Expanding the Matrix A` point in section 5.3 of Dilithium specification,
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t l>
-static void
-expand_a(const uint8_t* const __restrict rho, ff::ff_t* const __restrict mat)
+static inline void
+expand_a(const uint8_t* const __restrict rho, field::zq_t* const __restrict mat)
 {
   uint8_t msg[34]{};
-  uint8_t buf[3]{};
-
   std::memcpy(msg, rho, 32);
 
   for (size_t i = 0; i < k; i++) {
@@ -37,38 +37,26 @@ expand_a(const uint8_t* const __restrict rho, ff::ff_t* const __restrict mat)
       shake128::shake128 hasher{};
       hasher.hash(msg, sizeof(msg));
 
+      uint8_t buf[shake128::rate / 8];
       size_t n = 0;
+
       while (n < ntt::N) {
         hasher.read(buf, sizeof(buf));
 
-        const uint32_t t0 = static_cast<uint32_t>(buf[2] & 0b01111111);
-        const uint32_t t1 = static_cast<uint32_t>(buf[1]);
-        const uint32_t t2 = static_cast<uint32_t>(buf[0]);
+        for (size_t boff = 0; (boff < sizeof(buf)) && (n < ntt::N); boff += 3) {
+          const uint32_t t0 = static_cast<uint32_t>(buf[boff + 2] & 0b01111111);
+          const uint32_t t1 = static_cast<uint32_t>(buf[boff + 1]);
+          const uint32_t t2 = static_cast<uint32_t>(buf[boff + 0]);
 
-        const uint32_t t3 = (t0 << 16) ^ (t1 << 8) ^ (t2 << 0);
-        const bool flg = t3 < ff::Q;
-
-        mat[off + n] = ff::ff_t{ static_cast<uint32_t>(t3 * flg) };
-        n = n + flg * 1;
+          const uint32_t t3 = (t0 << 16) ^ (t1 << 8) ^ (t2 << 0);
+          if (t3 < field::Q) {
+            mat[off + n] = field::zq_t(t3);
+            n++;
+          }
+        }
       }
     }
   }
-}
-
-// Compile-time check to ensure that η ∈ {2, 4}, so that sampled secret key
-// range stays short i.e. [-η, η]
-inline static constexpr bool
-check_η(const uint32_t η)
-{
-  return (η == 2u) || (η == 4u);
-}
-
-// Compile-time check to ensure that starting nonce belongs to allowed set of
-// values when uniform sampling polynomial coefficients in [-η, η]
-inline static constexpr bool
-check_nonce(const size_t nonce)
-{
-  return (nonce == 0) || (nonce == 4) || (nonce == 5) || (nonce == 7);
 }
 
 // Uniform sampling k -many degree-255 polynomials s.t. each coefficient of
@@ -85,16 +73,14 @@ check_nonce(const size_t nonce)
 // specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t η, const size_t k, const uint16_t nonce>
-static void
+static inline void
 expand_s(const uint8_t* const __restrict rho_prime,
-         ff::ff_t* const __restrict vec)
-  requires(check_η(η) && check_nonce(nonce))
+         field::zq_t* const __restrict vec)
+  requires(dilithium_params::check_η(η) && dilithium_params::check_nonce(nonce))
 {
-  constexpr ff::ff_t eta_{ η };
+  constexpr field::zq_t eta_{ η };
 
   uint8_t msg[66]{};
-  uint8_t buf = 0;
-
   std::memcpy(msg, rho_prime, 64);
 
   for (size_t i = 0; i < k; i++) {
@@ -107,48 +93,45 @@ expand_s(const uint8_t* const __restrict rho_prime,
     shake256::shake256 hasher{};
     hasher.hash(msg, sizeof(msg));
 
+    uint8_t buf[shake256::rate / 8];
     size_t n = 0;
+
     while (n < ntt::N) {
-      hasher.read(&buf, 1);
+      hasher.read(buf, sizeof(buf));
 
-      const uint8_t t0 = buf & 0x0f;
-      const uint8_t t1 = buf >> 4;
+      for (size_t boff = 0; (boff < sizeof(buf)) && (n < ntt::N); boff++) {
+        const uint8_t t0 = buf[boff] & 0x0f;
+        const uint8_t t1 = buf[boff] >> 4;
 
-      if constexpr (η == 2u) {
-        const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
-        const bool flg0 = t0 < 15;
+        if constexpr (η == 2u) {
+          const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
+          const bool flg0 = t0 < 15;
 
-        vec[off + n] = eta_ - ff::ff_t{ t2 };
-        n += flg0 * 1;
+          vec[off + n] = eta_ - field::zq_t{ t2 };
+          n += flg0 * 1;
 
-        const uint32_t t3 = static_cast<uint32_t>(t1 % 5);
-        const bool flg1 = (t1 < 15) & (n < ntt::N);
-        const ff::ff_t br[]{ vec[off], eta_ - ff::ff_t{ t3 } };
+          const uint32_t t3 = static_cast<uint32_t>(t1 % 5);
+          const bool flg1 = (t1 < 15) & (n < ntt::N);
+          const field::zq_t br[]{ vec[off], eta_ - field::zq_t{ t3 } };
 
-        vec[off + flg1 * n] = br[flg1];
-        n += flg1 * 1;
-      } else {
-        const bool flg0 = t0 < 9;
+          vec[off + flg1 * n] = br[flg1];
+          n += flg1 * 1;
+        } else {
+          const bool flg0 = t0 < 9;
 
-        vec[off + n] = eta_ - ff::ff_t{ static_cast<uint32_t>(t0) };
-        n += flg0 * 1;
+          vec[off + n] = eta_ - field::zq_t{ static_cast<uint32_t>(t0) };
+          n += flg0 * 1;
 
-        const bool flg1 = (t1 < 9) & (n < ntt::N);
-        const ff::ff_t t2 = eta_ - ff::ff_t{ static_cast<uint32_t>(t1) };
-        const ff::ff_t br[]{ vec[off], t2 };
+          const bool flg1 = (t1 < 9) & (n < ntt::N);
+          const auto t2 = eta_ - field::zq_t{ static_cast<uint32_t>(t1) };
+          const field::zq_t br[]{ vec[off], t2 };
 
-        vec[off + flg1 * n] = br[flg1];
-        n += flg1 * 1;
+          vec[off + flg1 * n] = br[flg1];
+          n += flg1 * 1;
+        }
       }
     }
   }
-}
-
-// Compile-time check to ensure that γ1 has recommended value
-static inline constexpr bool
-check_γ1(const uint32_t γ1)
-{
-  return (γ1 == (1u << 17)) || (γ1 == (1u << 19));
 }
 
 // Given a 64 -bytes seed and 2 -bytes nonce, this routine does uniform sampling
@@ -159,11 +142,11 @@ check_γ1(const uint32_t γ1)
 // specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t γ1, const size_t l>
-static void
+static inline void
 expand_mask(const uint8_t* const __restrict seed,
             const uint16_t nonce,
-            ff::ff_t* const __restrict vec)
-  requires(check_γ1(γ1))
+            field::zq_t* const __restrict vec)
+  requires(dilithium_params::check_γ1(γ1))
 {
   constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);
 
@@ -183,17 +166,9 @@ expand_mask(const uint8_t* const __restrict seed,
     hasher.hash(msg, sizeof(msg));
     hasher.read(buf, sizeof(buf));
 
-    decode<gbw>(buf, vec + off);
-    poly_sub_from_x<γ1>(vec + off);
+    bit_packing::decode<gbw>(buf, vec + off);
+    poly::sub_from_x<γ1>(vec + off);
   }
-}
-
-// Compile-time check to ensure that τ is set to parameter recommended in
-// Dilithium specification
-static inline constexpr bool
-check_τ(const uint32_t τ)
-{
-  return (τ == 39) || (τ == 49) || (τ == 60);
 }
 
 // Given a 32 -bytes seed, this routine creates a degree-255 polynomial with τ
@@ -203,15 +178,15 @@ check_τ(const uint32_t τ)
 // Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t τ>
-static void
+static inline void
 sample_in_ball(const uint8_t* const __restrict seed,
-               ff::ff_t* const __restrict poly)
-  requires(check_τ(τ))
+               field::zq_t* const __restrict poly)
+  requires(dilithium_params::check_τ(τ))
 {
-  uint8_t tau_bits[8]{};
-  uint8_t buf = 0;
+  uint8_t tau_bits[8];
+  uint8_t buf[shake256::rate / 8];
 
-  shake256::shake256 hasher{};
+  shake256::shake256 hasher;
   hasher.hash(seed, 32);
   hasher.read(tau_bits, sizeof(tau_bits));
 
@@ -219,25 +194,29 @@ sample_in_ball(const uint8_t* const __restrict seed,
   size_t i = frm;
 
   while (i < ntt::N) {
-    const size_t tau_bit = i - frm;
+    hasher.read(buf, sizeof(buf));
 
-    const size_t tau_byte_off = tau_bit >> 3;
-    const size_t tau_bit_off = tau_bit & 7ul;
+    for (size_t off = 0; (off < sizeof(buf)) && (i < ntt::N); off++) {
+      const size_t tau_bit = i - frm;
 
-    const uint8_t s = (tau_bits[tau_byte_off] >> tau_bit_off) & 0b1;
-    const bool s_ = static_cast<bool>(s);
+      const size_t tau_byte_off = tau_bit >> 3;
+      const size_t tau_bit_off = tau_bit & 7ul;
 
-    hasher.read(&buf, 1);
+      const uint8_t s = (tau_bits[tau_byte_off] >> tau_bit_off) & 0b1;
+      const bool s_ = static_cast<bool>(s);
 
-    const bool flg = buf <= static_cast<uint8_t>(i);
+      const auto tmp = buf[off];
+      const bool flg = tmp <= static_cast<uint8_t>(i);
 
-    const ff::ff_t br0[]{ poly[i], poly[buf] };
-    const ff::ff_t br1[]{ poly[buf], ff::ff_t{ 1u } - ff::ff_t{ 2u * s_ } };
+      const field::zq_t br0[]{ poly[i], poly[tmp] };
+      const field::zq_t br1[]{ poly[tmp],
+                               field::zq_t{ 1u } - field::zq_t{ 2u * s_ } };
 
-    poly[i] = br0[flg];
-    poly[buf] = br1[flg];
+      poly[i] = br0[flg];
+      poly[tmp] = br1[flg];
 
-    i += 1ul * flg;
+      i += 1ul * flg;
+    }
   };
 }
 

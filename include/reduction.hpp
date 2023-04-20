@@ -1,17 +1,11 @@
 #pragma once
-#include "ff.hpp"
-#include "utility"
+#include "field.hpp"
+#include "params.hpp"
+#include <utility>
 
-// Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
-namespace dilithium_utils {
-
-// Compile-time check to ensure that number of bits to be dropped from a
-// polynomial coefficient is supplied correctly.
-inline static constexpr bool
-check_d(const size_t d)
-{
-  return d == 13;
-}
+// Utility functions used for extracting out high/ low order bits and making/
+// using hint bits
+namespace reduction {
 
 // Given an element of Z_q | q = 2^23 - 2^13 + 1, this routine extracts out high
 // and low order bits s.t.
@@ -26,9 +20,9 @@ check_d(const size_t d)
 // This implementation collects some ideas from
 // https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23
 template<const size_t d>
-inline static std::pair<ff::ff_t, ff::ff_t>
-power2round(const ff::ff_t r)
-  requires(check_d(d))
+static inline std::pair<field::zq_t, field::zq_t>
+power2round(const field::zq_t r)
+  requires(dilithium_params::check_d(d))
 {
   constexpr uint32_t max = 1u << (d - 1);
 
@@ -36,19 +30,10 @@ power2round(const ff::ff_t r)
   const uint32_t t2 = t1 >> d;
   const uint32_t t3 = t2 << d;
 
-  const ff::ff_t hi{ t2 };
-  const ff::ff_t lo = r - ff::ff_t{ t3 };
+  const field::zq_t hi{ t2 };
+  const field::zq_t lo = r - field::zq_t{ t3 };
 
   return std::make_pair(hi, lo);
-}
-
-inline static constexpr bool
-check_α(const uint32_t alpha)
-{
-  constexpr uint32_t a = ((ff::Q - 1) / 88) << 1;
-  constexpr uint32_t b = ((ff::Q - 1) / 32) << 1;
-
-  return (alpha == a) || (alpha == b);
 }
 
 // Given an element of Z_q | q = 2^23 - 2^13 + 1, this routine computes high and
@@ -61,25 +46,25 @@ check_α(const uint32_t alpha)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-inline static std::pair<ff::ff_t, ff::ff_t>
-decompose(const ff::ff_t r)
-  requires(check_α(alpha))
+static inline std::pair<field::zq_t, field::zq_t>
+decompose(const field::zq_t r)
+  requires(dilithium_params::check_γ2(alpha / 2))
 {
   constexpr uint32_t t0 = alpha >> 1;
-  constexpr uint32_t t1 = ff::Q - 1u;
+  constexpr uint32_t t1 = field::Q - 1u;
 
   const uint32_t t2 = r.v + t0 - 1u;
   const uint32_t t3 = t2 / alpha;
   const uint32_t t4 = t3 * alpha;
 
-  const ff::ff_t r0 = r - ff::ff_t{ t4 };
-  const ff::ff_t t5 = r - r0;
+  const field::zq_t r0 = r - field::zq_t{ t4 };
+  const field::zq_t t5 = r - r0;
 
   const bool flg = !static_cast<bool>(t5.v ^ t1);
-  const ff::ff_t br[]{ t5.v / alpha, 0u };
+  const field::zq_t br[]{ t5.v / alpha, 0u };
 
-  const ff::ff_t r1 = br[flg];
-  const ff::ff_t r0_ = r0 - ff::ff_t{ 1u * flg };
+  const field::zq_t r1 = br[flg];
+  const field::zq_t r0_ = r0 - field::zq_t{ 1u * flg };
 
   return std::make_pair(r1, r0_);
 }
@@ -90,9 +75,8 @@ decompose(const ff::ff_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-inline static ff::ff_t
-highbits(const ff::ff_t r)
-  requires(check_α(alpha))
+static inline field::zq_t
+highbits(const field::zq_t r)
 {
   const auto s = decompose<alpha>(r);
   return s.first;
@@ -104,9 +88,8 @@ highbits(const ff::ff_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-inline static ff::ff_t
-lowbits(const ff::ff_t r)
-  requires(check_α(alpha))
+static inline field::zq_t
+lowbits(const field::zq_t r)
 {
   const auto s = decompose<alpha>(r);
   return s.second;
@@ -121,14 +104,13 @@ lowbits(const ff::ff_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-inline static ff::ff_t
-make_hint(const ff::ff_t z, const ff::ff_t r)
-  requires(check_α(alpha))
+static inline field::zq_t
+make_hint(const field::zq_t z, const field::zq_t r)
 {
-  const ff::ff_t r1 = highbits<alpha>(r);
-  const ff::ff_t v1 = highbits<alpha>(r + z);
+  const field::zq_t r1 = highbits<alpha>(r);
+  const field::zq_t v1 = highbits<alpha>(r + z);
 
-  return ff::ff_t{ static_cast<uint32_t>(r1 != v1) };
+  return field::zq_t{ static_cast<uint32_t>(r1 != v1) };
 }
 
 // 1 -bit hint ( read h ) is used to recover higher order bits of r + z s.t.
@@ -137,25 +119,24 @@ make_hint(const ff::ff_t z, const ff::ff_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-inline static ff::ff_t
-use_hint(const ff::ff_t h, const ff::ff_t r)
-  requires(check_α(alpha))
+static inline field::zq_t
+use_hint(const field::zq_t h, const field::zq_t r)
 {
-  constexpr uint32_t m = (ff::Q - 1) / alpha;
-  constexpr ff::ff_t t0{ alpha >> 1 };
-  constexpr ff::ff_t t1 = ff::ff_t{ ff::Q } - t0;
-  constexpr ff::ff_t t2{ 1u };
+  constexpr uint32_t m = (field::Q - 1) / alpha;
+  constexpr field::zq_t t0{ alpha >> 1 };
+  constexpr field::zq_t t1 = field::zq_t{ field::Q } - t0;
+  constexpr field::zq_t t2{ 1u };
 
   const auto s = decompose<alpha>(r);
 
   if ((h == t2) && ((s.second.v > 0u) && (s.second.v < t1.v))) {
-    const bool flg = s.first == ff::ff_t{ m - 1u };
-    const ff::ff_t br[]{ s.first + t2, ff::ff_t{ 0u } };
+    const bool flg = s.first == field::zq_t{ m - 1u };
+    const field::zq_t br[]{ s.first + t2, field::zq_t{ 0u } };
 
     return br[flg];
   } else if ((h == t2) && (s.second.v >= t1.v)) {
-    const bool flg = s.first == ff::ff_t{ 0u };
-    const ff::ff_t br[]{ s.first - t2, ff::ff_t{ m - 1 } };
+    const bool flg = s.first == field::zq_t{ 0u };
+    const field::zq_t br[]{ s.first - t2, field::zq_t{ m - 1 } };
 
     return br[flg];
   } else {

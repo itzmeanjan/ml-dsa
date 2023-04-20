@@ -1,4 +1,5 @@
-#include "dilithium.hpp"
+#include "dilithium2.hpp"
+#include "prng.hpp"
 #include <cassert>
 #include <iostream>
 
@@ -8,28 +9,12 @@
 int
 main()
 {
-  // Dilithium2 Parameters
-  //
-  // See table 2 of Dilithium specification
-  // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-  // for all parameters
-  constexpr size_t k = 4;
-  constexpr size_t l = 4;
-  constexpr uint32_t η = 2;
-  constexpr size_t d = 13;
-  constexpr uint32_t γ1 = 1u << 17;
-  constexpr uint32_t γ2 = (ff::Q - 1) / 88;
-  constexpr uint32_t τ = 39;
-  constexpr uint32_t β = τ * η;
-  constexpr size_t ω = 80;
-
   constexpr size_t slen = 32; // seed length
   constexpr size_t mlen = 32; // message length ( can be anything >= 1 )
 
-  // compile-time compute public key, secret key and signature byte length
-  constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();
-  constexpr size_t sklen = dilithium_utils::seckey_length<k, l, η, d>();
-  constexpr size_t siglen = dilithium_utils::signature_length<k, l, γ1, ω>();
+  constexpr size_t pklen = dilithium2::PubKeyLength;
+  constexpr size_t sklen = dilithium2::SecKeyLength;
+  constexpr size_t siglen = dilithium2::SigLength;
 
   // allocate memory resources
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
@@ -39,19 +24,21 @@ main()
   uint8_t* sig = static_cast<uint8_t*>(std::malloc(siglen));
 
   // generate random 32 -bytes seed & N -bytes message ( to be signed )
-  dilithium_utils::random_data<uint8_t>(seed, slen);
-  dilithium_utils::random_data<uint8_t>(msg, mlen);
+  prng::prng_t prng;
+
+  prng.read(seed, slen);
+  prng.read(msg, mlen);
 
   bool flg = false;
 
   // Key generation -> signing -> verification
-  dilithium::keygen<k, l, d, η>(seed, pubkey, seckey);
-  dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω>(seckey, msg, mlen, sig);
+  dilithium2::keygen(seed, pubkey, seckey);
+  dilithium2::sign(seckey, msg, mlen, sig);
 
   // Default option is deterministic signing, for randomized signing, use
-  // dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, true>(seckey, msg, mlen, sig);
+  // dilithium2::sign<true>(seckey, msg, mlen, sig);
 
-  flg = dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pubkey, msg, mlen, sig);
+  flg = dilithium2::verify(pubkey, msg, mlen, sig);
 
   {
     using namespace dilithium_utils;

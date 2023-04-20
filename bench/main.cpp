@@ -1,29 +1,52 @@
 #include "bench/bench_dilithium.hpp"
 
+auto compute_min = [](const std::vector<double>& v) -> double {
+  return *std::min_element(v.begin(), v.end());
+};
+
+auto compute_max = [](const std::vector<double>& v) -> double {
+  return *std::max_element(v.begin(), v.end());
+};
+
 // register for benchmarking Dilithium Key Generation, Signing & Verification
+
 using namespace bench_dilithium;
 
-BENCHMARK(keygen<4, 4, 13, 2>)->UseManualTime();
-BENCHMARK(sign<4, 4, 13, 2, 131072, 95232, 39, 78, 80>)
+BENCHMARK(dilithium2_keygen)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium2_sign)
   ->Arg(32)
-  ->UseManualTime();
-BENCHMARK(verify<4, 4, 13, 2, 131072, 95232, 39, 78, 80>)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium2_verify)
   ->Arg(32)
-  ->UseManualTime();
-BENCHMARK(keygen<6, 5, 13, 4>)->UseManualTime();
-BENCHMARK(sign<6, 5, 13, 4, 524288, 261888, 49, 196, 55>)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+
+BENCHMARK(dilithium3_keygen)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium3_sign)
   ->Arg(32)
-  ->UseManualTime();
-BENCHMARK(verify<6, 5, 13, 4, 524288, 261888, 49, 196, 55>)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium3_verify)
   ->Arg(32)
-  ->UseManualTime();
-BENCHMARK(keygen<8, 7, 13, 2>)->UseManualTime();
-BENCHMARK(sign<8, 7, 13, 2, 524288, 261888, 60, 120, 75>)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+
+BENCHMARK(dilithium5_keygen)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium5_sign)
   ->Arg(32)
-  ->UseManualTime();
-BENCHMARK(verify<8, 7, 13, 2, 524288, 261888, 60, 120, 75>)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium5_verify)
   ->Arg(32)
-  ->UseManualTime();
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
 
 // benchmark runner main routine
 BENCHMARK_MAIN();

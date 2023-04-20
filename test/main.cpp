@@ -13,10 +13,10 @@ main()
   test_dilithium::test_power2round();
   std::cout << "[test] Extraction of high, low order bits using Power2Round\n";
 
-  test_dilithium::test_decompose<((ff::Q - 1u) / 88u) << 1, 77u>();
-  test_dilithium::test_decompose<((ff::Q - 1u) / 88u) << 1, 1321u>();
-  test_dilithium::test_decompose<((ff::Q - 1u) / 32u) << 1, 997u>();
-  test_dilithium::test_decompose<((ff::Q - 1u) / 32u) << 1, 1981u>();
+  test_dilithium::test_decompose<((field::Q - 1u) / 88u) << 1, 77u>();
+  test_dilithium::test_decompose<((field::Q - 1u) / 88u) << 1, 1321u>();
+  test_dilithium::test_decompose<((field::Q - 1u) / 32u) << 1, 997u>();
+  test_dilithium::test_decompose<((field::Q - 1u) / 32u) << 1, 1981u>();
   std::cout << "[test] Making and using of hint bits using Decompose\n";
 
   test_dilithium::test_sample_in_ball<39u>();
@@ -41,10 +41,11 @@ main()
   {
     using namespace test_dilithium;
 
-    // NIST security level 2, 3, 5 ( in order )
-    test_signing<4, 4, 13, 2, 1u << 17, (ff::Q - 1) / 88, 39, 78, 80>(33);
-    test_signing<6, 5, 13, 4, 1u << 19, (ff::Q - 1) / 32, 49, 196, 55>(37);
-    test_signing<8, 7, 13, 2, 1u << 19, (ff::Q - 1) / 32, 60, 120, 75>(43);
+    for (size_t mlen = 1; mlen < 33; mlen++) {
+      test_dilithium2_signing(mlen);
+      test_dilithium3_signing(mlen);
+      test_dilithium5_signing(mlen);
+    }
 
     std::cout << "[test] Dilithium KeyGen -> Signing -> Verification\n";
   }

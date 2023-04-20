@@ -1,18 +1,11 @@
 #pragma once
 #include "ntt.hpp"
+#include "params.hpp"
 #include <cstring>
 
-// Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
-namespace dilithium_utils {
-
-// Compile-time check to ensure that significant bit width of Z_q element
-// doesn't cross maximum bit width of field prime q ( = 2^23 - 2^13 + 1 )
-static inline constexpr bool
-check_sbw(const size_t sbw)
-{
-  constexpr size_t mbw = std::bit_width(ff::Q - 1);
-  return sbw <= mbw;
-}
+// Bit packing/ unpacking related utility functions for Dilithium Post-Quantum
+// Digital Signature Algorithm
+namespace bit_packing {
 
 // Given a degree-255 polynomial, where significant portion of each ( total 256
 // of them ) coefficient ∈ [0, 2^sbw), this routine serializes the polynomial to
@@ -21,9 +14,9 @@ check_sbw(const size_t sbw)
 // See section 5.2 ( which describes bit packing ) of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t sbw>
-static void
-encode(const ff::ff_t* const __restrict poly, uint8_t* const __restrict arr)
-  requires(check_sbw(sbw))
+static inline void
+encode(const field::zq_t* const __restrict poly, uint8_t* const __restrict arr)
+  requires(dilithium_params::check_sbw(sbw))
 {
   constexpr size_t blen = ntt::N * sbw;
   constexpr size_t len = blen >> 3;
@@ -193,13 +186,13 @@ encode(const ff::ff_t* const __restrict poly, uint8_t* const __restrict arr)
 // Dilithium specification's section 5.2
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t sbw>
-static void
-decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
-  requires(check_sbw(sbw))
+static inline void
+decode(const uint8_t* const __restrict arr, field::zq_t* const __restrict poly)
+  requires(dilithium_params::check_sbw(sbw))
 {
   constexpr size_t blen = ntt::N * sbw;
 
-  std::memset(poly, 0, ntt::N * sizeof(ff::ff_t));
+  std::memset(poly, 0, ntt::N * sizeof(field::zq_t));
 
   if constexpr (sbw == 3) {
     constexpr size_t itr_cnt = ntt::N >> 3;
@@ -361,12 +354,12 @@ decode(const uint8_t* const __restrict arr, ff::ff_t* const __restrict poly)
 // point `Signature` on page 21 ) of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t ω>
-static void
-encode_hint_bits(const ff::ff_t* const __restrict h,
+static inline void
+encode_hint_bits(const field::zq_t* const __restrict h,
                  uint8_t* const __restrict arr)
 {
   constexpr size_t len = ω + k;
-  constexpr ff::ff_t zero{ 0u };
+  constexpr field::zq_t zero{ 0u };
 
   std::memset(arr, 0, len);
 
@@ -394,11 +387,11 @@ encode_hint_bits(const ff::ff_t* const __restrict h,
 // bits. For example, say return value is true, it denotes that decoding has
 // failed.
 template<const size_t k, const size_t ω>
-static bool
+static inline bool
 decode_hint_bits(const uint8_t* const __restrict arr,
-                 ff::ff_t* const __restrict h)
+                 field::zq_t* const __restrict h)
 {
-  std::memset(h, 0, sizeof(ff::ff_t) * k * ntt::N);
+  std::memset(h, 0, sizeof(field::zq_t) * k * ntt::N);
 
   size_t idx = 0;
   bool failed = false;
@@ -419,7 +412,7 @@ decode_hint_bits(const uint8_t* const __restrict arr,
 
       failed |= flg1;
 
-      h[off + arr[j]] = ff::ff_t{ 1u };
+      h[off + arr[j]] = field::zq_t{ 1u };
     }
 
     idx = arr[ω + i];
