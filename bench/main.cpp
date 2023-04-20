@@ -24,9 +24,17 @@ BENCHMARK(dilithium2_verify)
   ->ComputeStatistics("min", compute_min)
   ->ComputeStatistics("max", compute_max);
 
-BENCHMARK(dilithium3_keygen)->UseManualTime();
-BENCHMARK(dilithium3_sign)->Arg(32)->UseManualTime();
-BENCHMARK(dilithium3_verify)->Arg(32)->UseManualTime();
+BENCHMARK(dilithium3_keygen)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium3_sign)
+  ->Arg(32)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium3_verify)
+  ->Arg(32)
+  ->ComputeStatistics("min", compute_min)
+  ->ComputeStatistics("max", compute_max);
 
 BENCHMARK(dilithium5_keygen)->UseManualTime();
 BENCHMARK(dilithium5_sign)->Arg(32)->UseManualTime();
