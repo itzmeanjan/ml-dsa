@@ -1,5 +1,6 @@
 #pragma once
 #include "bit_packing.hpp"
+#include "field.hpp"
 #include "prng.hpp"
 #include <cassert>
 
@@ -51,7 +52,9 @@ template<const size_t k, const size_t ω>
 void
 generate_random_hint_bits(field::zq_t* const __restrict poly)
 {
-  std::memset(poly, 0, sizeof(field::zq_t) * k * ntt::N);
+  for (size_t i = 0; i < k * ntt::N; i++) {
+    poly[i] = field::zq_t::zero();
+  }
 
   constexpr size_t frm = 0;
   constexpr size_t to = k * ntt::N - 1;

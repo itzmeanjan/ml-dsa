@@ -1,6 +1,8 @@
 #pragma once
+#include "field.hpp"
 #include "ntt.hpp"
 #include "params.hpp"
+#include <algorithm>
 #include <cstring>
 
 // Bit packing/ unpacking related utility functions for Dilithium Post-Quantum
@@ -192,7 +194,10 @@ decode(const uint8_t* const __restrict arr, field::zq_t* const __restrict poly)
 {
   constexpr size_t blen = ntt::N * sbw;
 
-  std::memset(poly, 0, ntt::N * sizeof(field::zq_t));
+  // Instead of std::memset use following loop to avoid compiler warnings.
+  for (size_t i = 0; i < ntt::N; i++) {
+    poly[i] = field::zq_t::zero();
+  }
 
   if constexpr (sbw == 3) {
     constexpr size_t itr_cnt = ntt::N >> 3;
@@ -391,7 +396,11 @@ static inline bool
 decode_hint_bits(const uint8_t* const __restrict arr,
                  field::zq_t* const __restrict h)
 {
-  std::memset(h, 0, sizeof(field::zq_t) * k * ntt::N);
+  // Instead of using std::memset, prefer following, to avoid compiler warnings.
+  // Compiler should ideally be able to use std::memset for executing following.
+  for (size_t i = 0; i < k * ntt::N; i++) {
+    h[i] = field::zq_t::zero();
+  }
 
   size_t idx = 0;
   bool failed = false;
