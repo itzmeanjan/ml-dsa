@@ -1,10 +1,8 @@
 #pragma once
 #include "prng.hpp"
-#include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
-#include <ostream>
 
 // Prime field arithmetic over Z_q, for Dilithium PQC s.t. Q = 2^23 - 2^13 + 1
 namespace field {
@@ -236,15 +234,6 @@ struct zq_t
     // explicit constructor of Zq expects its input ∈ [0, Q).
     return zq_t(mod_reduce(res));
   }
-
-  // Writes element of Z_q to output stream | q = 2^23 - 2^13 + 1
-  friend std::ostream& operator<<(std::ostream& os, const zq_t& elm);
 };
-
-inline std::ostream&
-operator<<(std::ostream& os, const zq_t& elm)
-{
-  return os << "Z_q(" << elm.v << ", " << Q << ")";
-}
 
 }
