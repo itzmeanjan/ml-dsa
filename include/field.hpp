@@ -57,14 +57,14 @@ struct zq_t
 {
   uint32_t v = 0u;
 
-  // Construct field element, holding canonical value _v % Q
-  inline constexpr zq_t(const uint32_t _v = 0u) { v = _v % Q; }
+  inline constexpr zq_t() = default;
 
-  // Construct field element, holding canonical value 0
-  static inline zq_t zero() { return zq_t{ 0u }; }
+  // Constructs field element s.t. input is already prime modulo reduced.
+  inline explicit constexpr zq_t(const uint32_t val) { v = val; }
 
-  // Construct field element, holding canonical value 1
-  static inline zq_t one() { return zq_t{ 1u }; }
+  static inline zq_t zero() { return zq_t(); }
+
+  static inline zq_t one() { return zq_t(1u); }
 
   // Addition over prime field Z_q | q = 2^23 - 2^13 + 1
   constexpr zq_t operator+(const zq_t& rhs) const
@@ -73,7 +73,14 @@ struct zq_t
     const bool flg = t0 >= Q;
     const uint32_t t1 = t0 - flg * Q;
 
-    return zq_t{ t1 };
+    return zq_t(t1);
+  }
+
+  // Negation over prime field Z_q | q = 2^23 - 2^13 + 1
+  constexpr zq_t operator-() const
+  {
+    const uint32_t tmp = Q - this->v;
+    return zq_t(tmp);
   }
 
   // Subtraction over prime field Z_q | q = 2^23 - 2^13 + 1
@@ -81,13 +88,6 @@ struct zq_t
   {
     const zq_t t0 = -rhs;
     return *this + t0;
-  }
-
-  // Negation over prime field Z_q | q = 2^23 - 2^13 + 1
-  constexpr zq_t operator-() const
-  {
-    const uint32_t tmp = Q - this->v;
-    return zq_t{ tmp };
   }
 
   // Multiplication over prime field Z_q | q = 2^23 - 2^13 + 1
@@ -152,7 +152,7 @@ struct zq_t
     const bool flg = t6 >= Q;
     const uint32_t t7 = t6 - flg * Q;
 
-    return zq_t{ t7 };
+    return zq_t(t7);
   }
 
   // Raises field element to N -th power, using exponentiation by repeated
@@ -164,7 +164,7 @@ struct zq_t
   {
     zq_t base = *this;
 
-    const zq_t br[]{ zq_t{ 1u }, base };
+    const zq_t br[]{ zq_t(1), base };
     zq_t res = br[n & 0b1ul];
 
     const size_t zeros = std::countl_zero(n);
@@ -173,7 +173,7 @@ struct zq_t
     for (size_t i = 1; i < till; i++) {
       base = base * base;
 
-      const zq_t br[]{ zq_t{ 1u }, base };
+      const zq_t br[]{ zq_t(1), base };
       res = res * br[(n >> i) & 0b1ul];
     }
 
@@ -231,7 +231,10 @@ struct zq_t
   {
     uint32_t res = 0;
     prng.read(reinterpret_cast<uint8_t*>(&res), sizeof(res));
-    return zq_t(res);
+
+    // Modulo reduce random sampled 32 -bit unsigned integer value, because
+    // explicit constructor of Zq expects its input ∈ [0, Q).
+    return zq_t(mod_reduce(res));
   }
 
   // Writes element of Z_q to output stream | q = 2^23 - 2^13 + 1
