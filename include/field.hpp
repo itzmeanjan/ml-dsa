@@ -22,6 +22,35 @@ constexpr uint32_t Q = (1u << 23) - (1u << 13) + 1u;
 // See https://www.nayuki.io/page/barrett-reduction-algorithm for more.
 constexpr uint32_t R = 8396807;
 
+// Given a 32 -bit unsigned integer value v, this routine can be used for
+// reducing it by modulo prime Q = 2^23 - 2^13 + 1, computing v' ∈ [0, Q),
+// without using division/ modulo division operator.
+//
+// ∀ v ∈ [0, 2^32), mod_reduce(v) == (v % Q) - must hold !
+inline constexpr uint32_t
+mod_reduce(const uint32_t val)
+{
+  constexpr uint32_t mask23 = (1u << 23) - 1u;
+  constexpr uint32_t mask13 = (1u << 13) - 1u;
+  constexpr uint32_t u23_max = mask23;
+
+  const uint32_t hi = val >> 23;
+  const uint32_t lo = val & mask23;
+
+  const uint32_t t0 = (hi << 13) - hi;
+  const uint32_t t1 = t0 + lo;
+  const bool flg0 = t0 > (u23_max - lo);
+  const uint32_t t2 = (-static_cast<uint32_t>(flg0)) & mask13;
+  const uint32_t t3 = t1 + t2;
+  const uint32_t t4 = t3 & mask23;
+
+  const bool flg1 = t4 > Q;
+  const uint32_t t5 = (-static_cast<uint32_t>(flg1)) & Q;
+  const uint32_t t6 = t4 - t5;
+
+  return t6;
+}
+
 // Dilithium Prime Field element e ∈ [0, Q), with arithmetic operations defined
 // & implemented over it.
 struct zq_t
