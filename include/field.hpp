@@ -68,8 +68,8 @@ struct zq_t
   constexpr zq_t operator+(const zq_t& rhs) const
   {
     const uint32_t t0 = this->v + rhs.v;
-    const bool flg = t0 >= Q;
-    const uint32_t t1 = t0 - flg * Q;
+    const uint32_t mask = (-static_cast<uint32_t>(t0 >= Q));
+    const uint32_t t1 = t0 - (mask & Q);
 
     return zq_t(t1);
   }
@@ -147,8 +147,8 @@ struct zq_t
     const uint64_t t5 = res * static_cast<uint64_t>(Q);
     const uint32_t t6 = static_cast<uint32_t>(t2 - t5);
 
-    const bool flg = t6 >= Q;
-    const uint32_t t7 = t6 - flg * Q;
+    const uint32_t mask = (-static_cast<uint32_t>(t6 >= Q));
+    const uint32_t t7 = t6 - (mask & Q);
 
     return zq_t(t7);
   }
@@ -219,10 +219,7 @@ struct zq_t
   constexpr bool operator<=(const zq_t& rhs) const { return this->v <= rhs.v; }
 
   // Shifts operand ∈ Z_q, leftwards by l bit positions | q = 2^23 - 2^13 + 1
-  constexpr zq_t operator<<(const size_t l) const
-  {
-    return zq_t{ this->v << l };
-  }
+  constexpr zq_t operator<<(const size_t l) const { return zq_t(this->v << l); }
 
   // Generate a random field element ∈ Z_q | q = 2^23 - 2^13 + 1
   static inline zq_t random(prng::prng_t& prng)
