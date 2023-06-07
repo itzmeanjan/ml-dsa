@@ -276,26 +276,26 @@ decode(const uint8_t* const __restrict arr, field::zq_t* const __restrict poly)
       const size_t poff = i << 3;
       const size_t boff = i * 13;
 
-      poly[poff + 0] = (static_cast<uint32_t>(arr[boff + 1] & mask5) << 8) |
-                       static_cast<uint32_t>(arr[boff + 0]);
-      poly[poff + 1] = (static_cast<uint32_t>(arr[boff + 3] & mask2) << 11) |
-                       (static_cast<uint32_t>(arr[boff + 2]) << 3) |
-                       static_cast<uint32_t>(arr[boff + 1] >> 5);
-      poly[poff + 2] = (static_cast<uint32_t>(arr[boff + 4] & mask7) << 6) |
-                       static_cast<uint32_t>(arr[boff + 3] >> 2);
-      poly[poff + 3] = (static_cast<uint32_t>(arr[boff + 6] & mask4) << 9) |
-                       (static_cast<uint32_t>(arr[boff + 5]) << 1) |
-                       static_cast<uint32_t>(arr[boff + 4] >> 7);
-      poly[poff + 4] = (static_cast<uint32_t>(arr[boff + 8] & mask1) << 12) |
-                       (static_cast<uint32_t>(arr[boff + 7]) << 4) |
-                       static_cast<uint32_t>(arr[boff + 6] >> 4);
-      poly[poff + 5] = (static_cast<uint32_t>(arr[boff + 9] & mask6) << 7) |
-                       static_cast<uint32_t>(arr[boff + 8] >> 1);
-      poly[poff + 6] = (static_cast<uint32_t>(arr[boff + 11] & mask3) << 10) |
-                       (static_cast<uint32_t>(arr[boff + 10]) << 2) |
-                       static_cast<uint32_t>(arr[boff + 9] >> 6);
-      poly[poff + 7] = (static_cast<uint32_t>(arr[boff + 12]) << 5) |
-                       static_cast<uint32_t>(arr[boff + 11] >> 3);
+      poly[poff + 0].v = (static_cast<uint32_t>(arr[boff + 1] & mask5) << 8) |
+                         static_cast<uint32_t>(arr[boff + 0]);
+      poly[poff + 1].v = (static_cast<uint32_t>(arr[boff + 3] & mask2) << 11) |
+                         (static_cast<uint32_t>(arr[boff + 2]) << 3) |
+                         static_cast<uint32_t>(arr[boff + 1] >> 5);
+      poly[poff + 2].v = (static_cast<uint32_t>(arr[boff + 4] & mask7) << 6) |
+                         static_cast<uint32_t>(arr[boff + 3] >> 2);
+      poly[poff + 3].v = (static_cast<uint32_t>(arr[boff + 6] & mask4) << 9) |
+                         (static_cast<uint32_t>(arr[boff + 5]) << 1) |
+                         static_cast<uint32_t>(arr[boff + 4] >> 7);
+      poly[poff + 4].v = (static_cast<uint32_t>(arr[boff + 8] & mask1) << 12) |
+                         (static_cast<uint32_t>(arr[boff + 7]) << 4) |
+                         static_cast<uint32_t>(arr[boff + 6] >> 4);
+      poly[poff + 5].v = (static_cast<uint32_t>(arr[boff + 9] & mask6) << 7) |
+                         static_cast<uint32_t>(arr[boff + 8] >> 1);
+      poly[poff + 6].v = (static_cast<uint32_t>(arr[boff + 11] & mask3) << 10) |
+                         (static_cast<uint32_t>(arr[boff + 10]) << 2) |
+                         static_cast<uint32_t>(arr[boff + 9] >> 6);
+      poly[poff + 7].v = (static_cast<uint32_t>(arr[boff + 12]) << 5) |
+                         static_cast<uint32_t>(arr[boff + 11] >> 3);
     }
   } else if constexpr (sbw == 18) {
     constexpr size_t itr_cnt = ntt::N >> 2;
