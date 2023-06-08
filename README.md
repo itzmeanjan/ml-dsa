@@ -101,7 +101,85 @@ test_dilithium.py::test_dilithium5 PASSED                                       
 
 ## Benchmarking
 
-Find micro-benchmarking ( using `google-benchmark` ) results [here](./bench).
+Benchmarking of various instantiation of Dilithium Post Quantum Digital Signature Algorithm can be done, by issuing
+
+```bash
+make benchmark
+```
+
+> **Note** Benchmarking expects presence of `google-benchmark` headers and library in global namespace ( so that it can be found by the compiler ).
+
+> **Warning** Ensure you've put all your CPU cores on performance mode before running benchmarks, follow [this](https://github.com/google/benchmark/blob/60b16f1/docs/user_guide.md#disabling-cpu-frequency-scaling) guide.
+
+> **Note** Only deterministic signing procedure is benchmarked, while signing message of length 32 -bytes. One can benchmark non-deterministic signing procedure by explicitly passing truth value to template parameter of `sign(...)` routine.
+
+### On 12th Gen Intel(R) Core(TM) i7-1260P **[ Compiled with GCC ]**
+
+```bash
+2023-06-08T17:00:31+04:00
+Running ./bench/a.out
+Run on (16 X 3562.43 MHz CPU s)
+CPU Caches:
+  L1 Data 48 KiB (x8)
+  L1 Instruction 32 KiB (x8)
+  L2 Unified 1280 KiB (x8)
+  L3 Unified 18432 KiB (x1)
+Load Average: 0.43, 0.40, 0.39
+--------------------------------------------------------------------------------
+Benchmark                     Time             CPU   Iterations items_per_second
+--------------------------------------------------------------------------------
+dilithium2_keygen          59.5 us         59.4 us        11768       16.8301k/s
+dilithium2_sign/32          189 us          189 us         3696       5.28747k/s
+dilithium2_verify/32       65.9 us         65.9 us        10567       15.1858k/s
+dilithium3_keygen          98.2 us         98.2 us         7140       10.1804k/s
+dilithium3_sign/32          933 us          933 us         2529        1071.29/s
+dilithium3_verify/32        105 us          105 us         6653        9.4921k/s
+dilithium5_keygen           164 us          164 us         4374       6.11558k/s
+dilithium5_sign/32          273 us          273 us         2560       3.65763k/s
+dilithium5_verify/32        173 us          173 us         4052       5.78499k/s
+```
+
+#### Performance Statistics of _Fiat-Shamir with Abort_ Paradigm Signing Algorithm Dilithium
+
+Message Signing Algorithm ( Deterministic ) | Min. Exec. Time | Max. Exec. Time | Median Exec. Time | Mean Exec. Time
+:-- | :-: | :-: | :-: | :-:
+Dilithium2 | 122 us | 987 us | **256 us** | 351 us
+Dilithium3 | 182 us | 1309 us | **417 us** | 526 us
+Dilithium5 | 274 us | 2603 us | **533 us** | 610 us
+
+### On 12th Gen Intel(R) Core(TM) i7-1260P **[ Compiled with Clang ]**
+
+```bash
+2023-06-08T17:15:22+04:00
+Running ./bench/a.out
+Run on (16 X 3436.72 MHz CPU s)
+CPU Caches:
+  L1 Data 48 KiB (x8)
+  L1 Instruction 32 KiB (x8)
+  L2 Unified 1280 KiB (x8)
+  L3 Unified 18432 KiB (x1)
+Load Average: 0.60, 0.66, 0.58
+--------------------------------------------------------------------------------
+Benchmark                     Time             CPU   Iterations items_per_second
+--------------------------------------------------------------------------------
+dilithium2_keygen          45.4 us         45.3 us        15245       22.0851k/s
+dilithium2_sign/32          277 us          277 us         3828       3.60687k/s
+dilithium2_verify/32       50.7 us         50.7 us        13791       19.7402k/s
+dilithium3_keygen          77.8 us         77.7 us         9010       12.8624k/s
+dilithium3_sign/32          331 us          331 us         5199       3.02039k/s
+dilithium3_verify/32       81.2 us         81.2 us         8599       12.3189k/s
+dilithium5_keygen           127 us          127 us         5537       7.87793k/s
+dilithium5_sign/32          576 us          575 us         1000       1.73773k/s
+dilithium5_verify/32        134 us          134 us         5199        7.4441k/s
+```
+
+#### Performance Statistics of _Fiat-Shamir with Abort_ Paradigm Signing Algorithm Dilithium
+
+Message Signing Algorithm ( Deterministic ) | Min. Exec. Time | Max. Exec. Time | Median Exec. Time | Mean Exec. Time
+:-- | :-: | :-: | :-: | :-:
+Dilithium2 | 88.5 us | 749 us | **230 us** | 258 us
+Dilithium3 | 135 us | 1509 us | **299 us** | 425 us
+Dilithium5 | 210 us | 1313 us | **302 us** | 467 us
 
 ## Usage
 
