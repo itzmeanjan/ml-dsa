@@ -1,10 +1,8 @@
 #pragma once
 #include "prng.hpp"
-#include <array>
 #include <bit>
 #include <cstddef>
 #include <cstdint>
-#include <ostream>
 
 // Prime field arithmetic over Z_q, for Dilithium PQC s.t. Q = 2^23 - 2^13 + 1
 namespace field {
@@ -22,29 +20,65 @@ constexpr uint32_t Q = (1u << 23) - (1u << 13) + 1u;
 // See https://www.nayuki.io/page/barrett-reduction-algorithm for more.
 constexpr uint32_t R = 8396807;
 
+// Given a 32 -bit unsigned integer value v, this routine can be used for
+// reducing it by modulo prime Q = 2^23 - 2^13 + 1, computing v' ∈ [0, Q),
+// without using division/ modulo division operator.
+//
+// ∀ v ∈ [0, 2^32), mod_reduce(v) == (v % Q) - must hold !
+inline constexpr uint32_t
+mod_reduce(const uint32_t val)
+{
+  constexpr uint32_t mask23 = (1u << 23) - 1u;
+  constexpr uint32_t mask13 = (1u << 13) - 1u;
+  constexpr uint32_t u23_max = mask23;
+
+  const uint32_t hi = val >> 23;
+  const uint32_t lo = val & mask23;
+
+  const uint32_t t0 = (hi << 13) - hi;
+  const uint32_t t1 = t0 + lo;
+  const bool flg0 = t0 > (u23_max - lo);
+  const uint32_t t2 = (-static_cast<uint32_t>(flg0)) & mask13;
+  const uint32_t t3 = t1 + t2;
+  const uint32_t t4 = t3 & mask23;
+
+  const bool flg1 = t4 > Q;
+  const uint32_t t5 = (-static_cast<uint32_t>(flg1)) & Q;
+  const uint32_t t6 = t4 - t5;
+
+  return t6;
+}
+
 // Dilithium Prime Field element e ∈ [0, Q), with arithmetic operations defined
 // & implemented over it.
 struct zq_t
 {
   uint32_t v = 0u;
 
-  // Construct field element, holding canonical value _v % Q
-  inline constexpr zq_t(const uint32_t _v = 0u) { v = _v % Q; }
+  inline constexpr zq_t() = default;
 
-  // Construct field element, holding canonical value 0
-  static inline zq_t zero() { return zq_t{ 0u }; }
+  // Constructs field element s.t. input is already prime modulo reduced.
+  inline explicit constexpr zq_t(const uint32_t val) { v = val; }
 
-  // Construct field element, holding canonical value 1
-  static inline zq_t one() { return zq_t{ 1u }; }
+  static inline zq_t zero() { return zq_t(); }
+
+  static inline zq_t one() { return zq_t(1u); }
 
   // Addition over prime field Z_q | q = 2^23 - 2^13 + 1
   constexpr zq_t operator+(const zq_t& rhs) const
   {
     const uint32_t t0 = this->v + rhs.v;
-    const bool flg = t0 >= Q;
-    const uint32_t t1 = t0 - flg * Q;
+    const uint32_t mask = (-static_cast<uint32_t>(t0 >= Q));
+    const uint32_t t1 = t0 - (mask & Q);
 
-    return zq_t{ t1 };
+    return zq_t(t1);
+  }
+
+  // Negation over prime field Z_q | q = 2^23 - 2^13 + 1
+  constexpr zq_t operator-() const
+  {
+    const uint32_t tmp = Q - this->v;
+    return zq_t(tmp);
   }
 
   // Subtraction over prime field Z_q | q = 2^23 - 2^13 + 1
@@ -52,13 +86,6 @@ struct zq_t
   {
     const zq_t t0 = -rhs;
     return *this + t0;
-  }
-
-  // Negation over prime field Z_q | q = 2^23 - 2^13 + 1
-  constexpr zq_t operator-() const
-  {
-    const uint32_t tmp = Q - this->v;
-    return zq_t{ tmp };
   }
 
   // Multiplication over prime field Z_q | q = 2^23 - 2^13 + 1
@@ -120,10 +147,10 @@ struct zq_t
     const uint64_t t5 = res * static_cast<uint64_t>(Q);
     const uint32_t t6 = static_cast<uint32_t>(t2 - t5);
 
-    const bool flg = t6 >= Q;
-    const uint32_t t7 = t6 - flg * Q;
+    const uint32_t mask = (-static_cast<uint32_t>(t6 >= Q));
+    const uint32_t t7 = t6 - (mask & Q);
 
-    return zq_t{ t7 };
+    return zq_t(t7);
   }
 
   // Raises field element to N -th power, using exponentiation by repeated
@@ -135,7 +162,7 @@ struct zq_t
   {
     zq_t base = *this;
 
-    const zq_t br[]{ zq_t{ 1u }, base };
+    const zq_t br[]{ zq_t(1), base };
     zq_t res = br[n & 0b1ul];
 
     const size_t zeros = std::countl_zero(n);
@@ -144,7 +171,7 @@ struct zq_t
     for (size_t i = 1; i < till; i++) {
       base = base * base;
 
-      const zq_t br[]{ zq_t{ 1u }, base };
+      const zq_t br[]{ zq_t(1), base };
       res = res * br[(n >> i) & 0b1ul];
     }
 
@@ -192,27 +219,18 @@ struct zq_t
   constexpr bool operator<=(const zq_t& rhs) const { return this->v <= rhs.v; }
 
   // Shifts operand ∈ Z_q, leftwards by l bit positions | q = 2^23 - 2^13 + 1
-  constexpr zq_t operator<<(const size_t l) const
-  {
-    return zq_t{ this->v << l };
-  }
+  constexpr zq_t operator<<(const size_t l) const { return zq_t(this->v << l); }
 
   // Generate a random field element ∈ Z_q | q = 2^23 - 2^13 + 1
   static inline zq_t random(prng::prng_t& prng)
   {
     uint32_t res = 0;
     prng.read(reinterpret_cast<uint8_t*>(&res), sizeof(res));
-    return zq_t(res);
+
+    // Modulo reduce random sampled 32 -bit unsigned integer value, because
+    // explicit constructor of Zq expects its input ∈ [0, Q).
+    return zq_t(mod_reduce(res));
   }
-
-  // Writes element of Z_q to output stream | q = 2^23 - 2^13 + 1
-  friend std::ostream& operator<<(std::ostream& os, const zq_t& elm);
 };
-
-inline std::ostream&
-operator<<(std::ostream& os, const zq_t& elm)
-{
-  return os << "Z_q(" << elm.v << ", " << Q << ")";
-}
 
 }

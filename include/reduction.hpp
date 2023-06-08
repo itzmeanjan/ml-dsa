@@ -61,7 +61,7 @@ decompose(const field::zq_t r)
   const field::zq_t t5 = r - r0;
 
   const bool flg = !static_cast<bool>(t5.v ^ t1);
-  const field::zq_t br[]{ t5.v / alpha, 0u };
+  const field::zq_t br[]{ field::zq_t(t5.v / alpha), field::zq_t::zero() };
 
   const field::zq_t r1 = br[flg];
   const field::zq_t r0_ = r0 - field::zq_t{ 1u * flg };
