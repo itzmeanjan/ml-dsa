@@ -11,8 +11,8 @@ inline void
 dilithium3_keygen(benchmark::State& state)
 {
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium3::PubKeyLength;
-  constexpr size_t sklen = dilithium3::SecKeyLength;
+  constexpr size_t pklen = dilithium3::PubKeyLen;
+  constexpr size_t sklen = dilithium3::SecKeyLen;
 
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pubkey = static_cast<uint8_t*>(std::malloc(pklen));
@@ -43,9 +43,9 @@ dilithium3_sign(benchmark::State& state)
 {
   const size_t mlen = state.range(0);
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium3::PubKeyLength;
-  constexpr size_t sklen = dilithium3::SecKeyLength;
-  constexpr size_t siglen = dilithium3::SigLength;
+  constexpr size_t pklen = dilithium3::PubKeyLen;
+  constexpr size_t sklen = dilithium3::SecKeyLen;
+  constexpr size_t siglen = dilithium3::SigLen;
 
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pkey = static_cast<uint8_t*>(std::malloc(pklen));
@@ -60,7 +60,7 @@ dilithium3_sign(benchmark::State& state)
   dilithium3::keygen(seed, pkey, skey);
 
   for (auto _ : state) {
-    dilithium3::sign(skey, msg, mlen, sig);
+    dilithium3::sign(skey, msg, mlen, sig, nullptr);
 
     benchmark::DoNotOptimize(skey);
     benchmark::DoNotOptimize(msg);
@@ -87,9 +87,9 @@ dilithium3_verify(benchmark::State& state)
 {
   const size_t mlen = state.range(0);
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium3::PubKeyLength;
-  constexpr size_t sklen = dilithium3::SecKeyLength;
-  constexpr size_t siglen = dilithium3::SigLength;
+  constexpr size_t pklen = dilithium3::PubKeyLen;
+  constexpr size_t sklen = dilithium3::SecKeyLen;
+  constexpr size_t siglen = dilithium3::SigLen;
 
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pkey = static_cast<uint8_t*>(std::malloc(pklen));
@@ -102,7 +102,7 @@ dilithium3_verify(benchmark::State& state)
   prng.read(msg, mlen);
 
   dilithium3::keygen(seed, pkey, skey);
-  dilithium3::sign(skey, msg, mlen, sig);
+  dilithium3::sign(skey, msg, mlen, sig, nullptr);
 
   for (auto _ : state) {
     bool flg = dilithium3::verify(pkey, msg, mlen, sig);
