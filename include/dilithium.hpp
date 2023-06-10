@@ -7,9 +7,9 @@
 // Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium {
 
-// Given 32 -bytes seed, this routine generates Dilithium public key and secret
-// key pair, using deterministic key generation algorithm, as described in
-// figure 4 of Dilithium specification
+// Given a 32 -bytes seed, this routine generates a public key and secret key
+// pair, using deterministic key generation algorithm, as described in figure 4
+// of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 //
 // See table 2 of specification for allowed parameters.
@@ -22,11 +22,9 @@ namespace dilithium {
 // See section 5.4 of specification for public key and secret key byte length.
 template<const size_t k, const size_t l, const size_t d, const uint32_t η>
 static inline void
-keygen(
-  const uint8_t* const __restrict seed, // 32 -bytes seed
-  uint8_t* const __restrict pubkey,     // (32 + k * 320) -bytes
-  uint8_t* const __restrict seckey // (96 + 32 * (ebw*(k + l) + k*d)) -bytes
-  )
+keygen(const uint8_t* const __restrict seed,
+       uint8_t* const __restrict pubkey,
+       uint8_t* const __restrict seckey)
   requires(dilithium_params::check_keygen_params(k, l, d, η))
 {
   uint8_t seed_hash[32 + 64 + 32]{};
@@ -97,20 +95,17 @@ keygen(
   polyvec::encode<k, d>(t0, seckey + 96 + s1_len + s2_len);
 }
 
-// Given a Dilithium secret key and message, this routine uses Dilithium
-// signing algorithm for computing deterministic ( default choice ) or
-// randomized signature for input messsage, using provided parameters.
+// Given a Dilithium secret key and non-empty message, this routine uses
+// Dilithium signing algorithm for computing deterministic ( default choice ) or
+// randomized signature for input messsage M, using provided parameters.
 //
 // If you're interested in generating randomized signature, you should pass
-// truth value to last template parameter ( find `randomized` ). By default,
+// truth value for last template parameter ( find `randomized` ). By default,
 // this implementation generates deterministic signature i.e. for same message
-// M, it'll generate same signature everytime. Note, that when randomized
-// signing is enabled ( at compile-time ), randomness of 64 -bytes is sampled
-// from system randomness generator, which should ideally be a h/w secure
-// element, though that might not be the case on all platforms. Which is why I
-// suggest you read
-// https://en.cppreference.com/w/cpp/numeric/random/random_device, because
-// that's what we use for seeding the random byte generator.
+// M, it'll generate same signature everytime. Note, when randomized signing is
+// enabled ( compile-time choice ), uniform random 64 -bytes seed must be passed
+// using last function parameter ( see `seed` ), which can be left empty ( say
+// set to nullptr ) in case you're not adopting to use randomized signing.
 //
 // Signing algorithm is described in figure 4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
@@ -134,10 +129,13 @@ template<const size_t k,
          const size_t ω,
          const bool randomized = false>
 static inline void
-sign(const uint8_t* const __restrict seckey,
-     const uint8_t* const __restrict msg,
-     const size_t mlen,
-     uint8_t* const __restrict sig)
+sign(
+  const uint8_t* const __restrict seckey,
+  const uint8_t* const __restrict msg,
+  const size_t mlen,
+  uint8_t* const __restrict sig,
+  const uint8_t* const __restrict seed // 64 -bytes seed, for randomized signing
+  )
   requires(dilithium_params::check_signing_params(k, l, d, η, γ1, γ2, τ, β, ω))
 {
   constexpr uint32_t t0_rng = 1u << (d - 1);
@@ -172,8 +170,7 @@ sign(const uint8_t* const __restrict seckey,
   uint8_t rho_prime[64]{};
 
   if constexpr (randomized) {
-    prng::prng_t prng;
-    prng.read(rho_prime, sizeof(rho_prime));
+    std::memcpy(rho_prime, seed, sizeof(rho_prime));
   } else {
     uint8_t crh_in[32 + 64]{};
 
