@@ -5,6 +5,7 @@
 #include <charconv>
 #include <iomanip>
 #include <sstream>
+#include <vector>
 
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium_utils {
@@ -70,22 +71,20 @@ to_hex(const uint8_t* const bytes, const size_t len)
 
 // Given a hex encoded string of length 2*L, this routine can be used for
 // parsing it as a byte array of length L.
-template<const size_t L>
-inline std::array<uint8_t, L>
-from_hex(std::string_view bytes)
+inline std::vector<uint8_t>
+from_hex(std::string_view hex)
 {
-  const size_t blen = bytes.length();
+  const size_t hlen = hex.length();
+  assert(hlen % 2 == 0);
 
-  assert(blen % 2 == 0);
-  assert(blen / 2 == L);
+  const size_t blen = hlen / 2;
+  std::vector<uint8_t> res(blen, 0);
 
-  std::array<uint8_t, L> res{};
-
-  for (size_t i = 0; i < L; i++) {
+  for (size_t i = 0; i < blen; i++) {
     const size_t off = i * 2;
 
     uint8_t byte = 0;
-    auto sstr = bytes.substr(off, 2);
+    auto sstr = hex.substr(off, 2);
     std::from_chars(sstr.data(), sstr.data() + 2, byte, 16);
 
     res[i] = byte;
