@@ -320,7 +320,7 @@ verify(const uint8_t* const __restrict pubkey,
   requires(dilithium_params::check_verify_params(k, l, d, γ1, γ2, τ, β, ω))
 {
   constexpr size_t t1_bw = std::bit_width(field::Q) - d;
-  constexpr size_t pklen = dilithium_utils::pubkey_length<k, d>();
+  constexpr size_t pklen = dilithium_utils::pub_key_len<k, d>();
 
   constexpr size_t puboff0 = 0;
   constexpr size_t puboff1 = puboff0 + 32;
