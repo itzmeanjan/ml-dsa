@@ -59,10 +59,10 @@ sign(
   dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, r>(seckey, msg, mlen, sig, seed);
 }
 
-// Given a public key, a message M and a signature S, this routine can be used
-// for verifying if the signature is valid for the provided message or not,
-// returning truth value only in case of successful signature verification,
-// otherwise false is returned.
+// Given a Dilithium2 public key, a message M and a signature S, this routine
+// can be used for verifying if the signature is valid for the provided message
+// or not, returning truth value only in case of successful signature
+// verification, otherwise false is returned.
 inline bool
 verify(const uint8_t* const __restrict pubkey, // 1312 -bytes public key
        const uint8_t* const __restrict msg,    // N -bytes message, signed
