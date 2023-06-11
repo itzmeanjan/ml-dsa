@@ -1,4 +1,4 @@
-name: Test Dilithium using CI
+name: Test Dilithium Post-Quantum Digital Signature Scheme using CI
 
 on:
   push:
@@ -9,16 +9,16 @@ on:
 jobs:
   build:
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     steps:
     - uses: actions/checkout@v3
     - name: Setup Compiler
-      run: sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 10; sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
+      run: |
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 10
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 9
     - name : Fetch Dependency
       run: git submodule update --init
-    - name: Install Python dependencies
-      run: python3 -m pip install -r wrapper/python/requirements.txt --user
     - name: Execute Tests
       run: make
     - name: Cleanup
