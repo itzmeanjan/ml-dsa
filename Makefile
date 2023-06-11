@@ -11,7 +11,7 @@ wrapper/libdilithium.so: wrapper/dilithium.cpp include/*.hpp sha3/include/*.hpp
 
 lib: wrapper/libdilithium.so
 
-test/a.out: test/main.cpp include/*.hpp
+test/a.out: test/main.cpp include/*.hpp include/test/*.hpp sha3/include/*.hpp
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(IFLAGS) $(DEPFLAGS) $< -o $@
 
 testing: test/a.out
@@ -26,7 +26,7 @@ clean:
 format:
 	find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i --style=Mozilla && python3 -m black wrapper/python/*.py
 
-bench/a.out: bench/main.cpp include/*.hpp
+bench/a.out: bench/main.cpp include/*.hpp include/bench/*.hpp sha3/include/*.hpp
 	# make sure you've google-benchmark globally installed;
 	# see https://github.com/google/benchmark/tree/60b16f1#installation
 	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(IFLAGS) $(DEPFLAGS) $< -lbenchmark -o $@
