@@ -50,5 +50,10 @@ main()
     std::cout << "[test] Dilithium KeyGen -> Signing -> Verification\n";
   }
 
+  test_dilithium::test_dilithium2_signing_kat();
+  test_dilithium::test_dilithium3_signing_kat();
+  test_dilithium::test_dilithium5_signing_kat();
+  std::cout << "[test] Dilithium Known Answer Tests\n";
+
   return EXIT_SUCCESS;
 }
