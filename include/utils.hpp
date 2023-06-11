@@ -1,8 +1,11 @@
 #pragma once
 #include "params.hpp"
 #include "reduction.hpp"
+#include <cassert>
+#include <charconv>
 #include <iomanip>
 #include <sstream>
+#include <vector>
 
 // Utility functions for Dilithium Post-Quantum Digital Signature Algorithm
 namespace dilithium_utils {
@@ -14,7 +17,7 @@ namespace dilithium_utils {
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t d>
 inline static constexpr size_t
-pubkey_length()
+pub_key_len()
   requires(dilithium_params::check_d(d))
 {
   constexpr size_t t1_bw = std::bit_width(field::Q) - d;
@@ -29,7 +32,7 @@ pubkey_length()
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t l, const uint32_t η, const size_t d>
 inline static constexpr size_t
-seckey_length()
+sec_key_len()
   requires(dilithium_params::check_d(d))
 {
   constexpr size_t eta_bw = std::bit_width(2 * η);
@@ -44,7 +47,7 @@ seckey_length()
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t l, const uint32_t γ1, const size_t ω>
 inline static constexpr size_t
-sig_length()
+sig_len()
 {
   constexpr size_t gamma1_bw = std::bit_width(γ1);
   constexpr size_t siglen = 32 + (32 * l * gamma1_bw) + (ω + k);
@@ -64,6 +67,30 @@ to_hex(const uint8_t* const bytes, const size_t len)
   }
 
   return ss.str();
+}
+
+// Given a hex encoded string of length 2*L, this routine can be used for
+// parsing it as a byte array of length L.
+inline std::vector<uint8_t>
+from_hex(std::string_view hex)
+{
+  const size_t hlen = hex.length();
+  assert(hlen % 2 == 0);
+
+  const size_t blen = hlen / 2;
+  std::vector<uint8_t> res(blen, 0);
+
+  for (size_t i = 0; i < blen; i++) {
+    const size_t off = i * 2;
+
+    uint8_t byte = 0;
+    auto sstr = hex.substr(off, 2);
+    std::from_chars(sstr.data(), sstr.data() + 2, byte, 16);
+
+    res[i] = byte;
+  }
+
+  return res;
 }
 
 }

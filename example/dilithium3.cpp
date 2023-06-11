@@ -5,16 +5,17 @@
 
 // Compile it with
 //
-// g++ -std=c++20 -O3 -I ./include -I ./sha3/include example/dilithium3.cpp
+// g++ -std=c++20 -O3 -march=native -I ./include -I ./sha3/include
+// example/dilithium3.cpp
 int
 main()
 {
   constexpr size_t slen = 32; // seed length
   constexpr size_t mlen = 32; // message length ( can be anything >= 1 )
 
-  constexpr size_t pklen = dilithium3::PubKeyLength;
-  constexpr size_t sklen = dilithium3::SecKeyLength;
-  constexpr size_t siglen = dilithium3::SigLength;
+  constexpr size_t pklen = dilithium3::PubKeyLen;
+  constexpr size_t sklen = dilithium3::SecKeyLen;
+  constexpr size_t siglen = dilithium3::SigLen;
 
   // allocate memory resources
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
@@ -33,10 +34,10 @@ main()
 
   // Key generation -> signing -> verification
   dilithium3::keygen(seed, pubkey, seckey);
-  dilithium3::sign(seckey, msg, mlen, sig);
+  dilithium3::sign(seckey, msg, mlen, sig, nullptr);
 
   // Default option is deterministic signing, for randomized signing, use
-  // dilithium3::sign<true>(seckey, msg, mlen, sig);
+  // dilithium3::sign<true>(seckey, msg, mlen, sig, seed);
 
   flg = dilithium3::verify(pubkey, msg, mlen, sig);
 

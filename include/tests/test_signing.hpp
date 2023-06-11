@@ -47,9 +47,9 @@ inline void
 test_dilithium2_signing(const size_t mlen)
 {
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium2::PubKeyLength;
-  constexpr size_t sklen = dilithium2::SecKeyLength;
-  constexpr size_t siglen = dilithium2::SigLength;
+  constexpr size_t pklen = dilithium2::PubKeyLen;
+  constexpr size_t sklen = dilithium2::SecKeyLen;
+  constexpr size_t siglen = dilithium2::SigLen;
 
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pkey0 = static_cast<uint8_t*>(std::malloc(pklen));
@@ -68,7 +68,7 @@ test_dilithium2_signing(const size_t mlen)
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
   dilithium2::keygen(seed, pkey0, skey);
-  dilithium2::sign(skey, msg0, mlen, sig0);
+  dilithium2::sign(skey, msg0, mlen, sig0, nullptr);
 
   std::memcpy(sig1, sig0, siglen);
   std::memcpy(pkey1, pkey0, pklen);
@@ -107,9 +107,9 @@ inline void
 test_dilithium3_signing(const size_t mlen)
 {
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium3::PubKeyLength;
-  constexpr size_t sklen = dilithium3::SecKeyLength;
-  constexpr size_t siglen = dilithium3::SigLength;
+  constexpr size_t pklen = dilithium3::PubKeyLen;
+  constexpr size_t sklen = dilithium3::SecKeyLen;
+  constexpr size_t siglen = dilithium3::SigLen;
 
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pkey0 = static_cast<uint8_t*>(std::malloc(pklen));
@@ -128,7 +128,7 @@ test_dilithium3_signing(const size_t mlen)
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
   dilithium3::keygen(seed, pkey0, skey);
-  dilithium3::sign(skey, msg0, mlen, sig0);
+  dilithium3::sign(skey, msg0, mlen, sig0, nullptr);
 
   std::memcpy(sig1, sig0, siglen);
   std::memcpy(pkey1, pkey0, pklen);
@@ -167,9 +167,9 @@ inline void
 test_dilithium5_signing(const size_t mlen)
 {
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium5::PubKeyLength;
-  constexpr size_t sklen = dilithium5::SecKeyLength;
-  constexpr size_t siglen = dilithium5::SigLength;
+  constexpr size_t pklen = dilithium5::PubKeyLen;
+  constexpr size_t sklen = dilithium5::SecKeyLen;
+  constexpr size_t siglen = dilithium5::SigLen;
 
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pkey0 = static_cast<uint8_t*>(std::malloc(pklen));
@@ -188,7 +188,7 @@ test_dilithium5_signing(const size_t mlen)
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
   dilithium5::keygen(seed, pkey0, skey);
-  dilithium5::sign(skey, msg0, mlen, sig0);
+  dilithium5::sign(skey, msg0, mlen, sig0, nullptr);
 
   std::memcpy(sig1, sig0, siglen);
   std::memcpy(pkey1, pkey0, pklen);

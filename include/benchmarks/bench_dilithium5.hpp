@@ -1,18 +1,18 @@
 #pragma once
-#include "dilithium2.hpp"
+#include "dilithium5.hpp"
 #include <benchmark/benchmark.h>
 
 // Benchmark Dilithium PQC DSA suite implementation targeting CPU, using
 // google-benchmark
 namespace bench_dilithium {
 
-// Benchmark Dilithium2 key generation algorithm's performance
+// Benchmark Dilithium5 key generation algorithm's performance
 inline void
-dilithium2_keygen(benchmark::State& state)
+dilithium5_keygen(benchmark::State& state)
 {
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium2::PubKeyLength;
-  constexpr size_t sklen = dilithium2::SecKeyLength;
+  constexpr size_t pklen = dilithium5::PubKeyLen;
+  constexpr size_t sklen = dilithium5::SecKeyLen;
 
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pubkey = static_cast<uint8_t*>(std::malloc(pklen));
@@ -22,7 +22,7 @@ dilithium2_keygen(benchmark::State& state)
   prng.read(seed, slen);
 
   for (auto _ : state) {
-    dilithium2::keygen(seed, pubkey, seckey);
+    dilithium5::keygen(seed, pubkey, seckey);
 
     benchmark::DoNotOptimize(seed);
     benchmark::DoNotOptimize(pubkey);
@@ -37,15 +37,15 @@ dilithium2_keygen(benchmark::State& state)
   std::free(seckey);
 }
 
-// Benchmark Dilithium2 signing algorithm's performance
+// Benchmark Dilithium5 signing algorithm's performance
 inline void
-dilithium2_sign(benchmark::State& state)
+dilithium5_sign(benchmark::State& state)
 {
   const size_t mlen = state.range(0);
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium2::PubKeyLength;
-  constexpr size_t sklen = dilithium2::SecKeyLength;
-  constexpr size_t siglen = dilithium2::SigLength;
+  constexpr size_t pklen = dilithium5::PubKeyLen;
+  constexpr size_t sklen = dilithium5::SecKeyLen;
+  constexpr size_t siglen = dilithium5::SigLen;
 
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pkey = static_cast<uint8_t*>(std::malloc(pklen));
@@ -57,10 +57,10 @@ dilithium2_sign(benchmark::State& state)
   prng.read(seed, slen);
   prng.read(msg, mlen);
 
-  dilithium2::keygen(seed, pkey, skey);
+  dilithium5::keygen(seed, pkey, skey);
 
   for (auto _ : state) {
-    dilithium2::sign(skey, msg, mlen, sig);
+    dilithium5::sign(skey, msg, mlen, sig, nullptr);
 
     benchmark::DoNotOptimize(skey);
     benchmark::DoNotOptimize(msg);
@@ -70,7 +70,7 @@ dilithium2_sign(benchmark::State& state)
 
   state.SetItemsProcessed(state.iterations());
 
-  const bool flg = dilithium2::verify(pkey, msg, mlen, sig);
+  const bool flg = dilithium5::verify(pkey, msg, mlen, sig);
 
   std::free(seed);
   std::free(pkey);
@@ -81,15 +81,15 @@ dilithium2_sign(benchmark::State& state)
   assert(flg);
 }
 
-// Benchmark Dilithium2 signature verification routine's performance
+// Benchmark Dilithium5 signature verification routine's performance
 inline void
-dilithium2_verify(benchmark::State& state)
+dilithium5_verify(benchmark::State& state)
 {
   const size_t mlen = state.range(0);
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium2::PubKeyLength;
-  constexpr size_t sklen = dilithium2::SecKeyLength;
-  constexpr size_t siglen = dilithium2::SigLength;
+  constexpr size_t pklen = dilithium5::PubKeyLen;
+  constexpr size_t sklen = dilithium5::SecKeyLen;
+  constexpr size_t siglen = dilithium5::SigLen;
 
   uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
   uint8_t* pkey = static_cast<uint8_t*>(std::malloc(pklen));
@@ -101,11 +101,11 @@ dilithium2_verify(benchmark::State& state)
   prng.read(seed, slen);
   prng.read(msg, mlen);
 
-  dilithium2::keygen(seed, pkey, skey);
-  dilithium2::sign(skey, msg, mlen, sig);
+  dilithium5::keygen(seed, pkey, skey);
+  dilithium5::sign(skey, msg, mlen, sig, nullptr);
 
   for (auto _ : state) {
-    bool flg = dilithium2::verify(pkey, msg, mlen, sig);
+    bool flg = dilithium5::verify(pkey, msg, mlen, sig);
 
     benchmark::DoNotOptimize(flg);
     benchmark::DoNotOptimize(pkey);
