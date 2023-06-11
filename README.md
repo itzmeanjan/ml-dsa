@@ -5,19 +5,17 @@ CRYSTALS-Dilithium: Post-Quantum Digital Signature Algorithm
 
 ## Motivation
 
-Dilithium is one of those post-quantum digital signature algorithms ( DSA ), which is selected by NIST for standardization. Dilithium's security is based on hardness of finding short vectors in lattice i.e. it's lattice based Post Quantum Cryptographic (PQC) construction.
+Dilithium is one of those post-quantum digital signature algorithms ( DSA ), which is selected by NIST for standardization. Dilithium's security is based on hardness of finding short vectors in lattice i.e. it's a lattice based Post Quantum Cryptographic (PQC) construction.
 
-Dilithium DSA has three main algorithms
+Dilithium DSA offers following three algorithms.
 
 Algorithm | What does it do ?
 --- | --:
-KeyGen | It takes a 32 -bytes seed, which is used for deterministically computing both public key and secret key.
-Sign | It takes secret key and N (>0) -bytes message as input, which is used for deterministically ( default ) / randomly ( randomness is sampled using PRNG, find more @ [prng.hpp](./include/prng.hpp) ) signing message, producing signature bytes.
-Verify | It takes public key, N (>0) -bytes message and signature, returning boolean value, denoting status of successful signature verification operation.
+KeyGen | It takes a 32 -bytes seed, which is used for deterministically computing both public key and secret key i.e. keypair.
+Sign | It takes a secret key and a N (>0) -bytes message as input, which is used for deterministically ( default )/ randomly ( in this case, you must supply 64 uniform random sampled bytes as seed ) signing message, producing signature bytes.
+Verify | It takes a public key, N (>0) -bytes message and signature, returning boolean value, denoting status of successful signature verification operation.
 
-Here I'm maintaining Dilithium as zero-dependency, header-only & easy-to-use C++ library, offering key generation, signing & verification API for three NIST security level ( i.e. 2, 3, 5 ) parameters, as defined in table 2 of Dilithium specification.
-
-`sha3` is the only dependency of this project, which itself is a zero-dependency, header-only C++ library, implementing SHA3 specification of NIST ( i.e. FIPS PUB 202 ). This is done purposefully, in order to modularize commonly seen symmetric key cryptography dependency in post-quantum cryptographic constructions.
+Here I'm maintaining Dilithium as a zero-dependency, header-only & easy-to-use C++ library, offering key generation, signing & verification API for three NIST security level ( i.e. 2, 3, 5 ) parameters, as defined in table 2 of Dilithium specification. For more details see [below](#usage).
 
 > **Note** Find Dilithium specification [here](https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf), which you should refer to when understanding intricate details of this implementation.
 
@@ -25,7 +23,7 @@ Here I'm maintaining Dilithium as zero-dependency, header-only & easy-to-use C++
 
 ## Prerequisites
 
-- A C++ compiler with C++20 standard library such as `g++`/ `clang++`
+- A C++ compiler with C++20 standard library such as `g++`/ `clang++`.
 
 ```bash
 $ clang++ --version
@@ -38,7 +36,7 @@ $ g++ --version
 g++ (Ubuntu 12.2.0-17ubuntu1) 12.2.0
 ```
 
-- System development utilities such as `make`, `cmake` & `git`
+- System development utilities such as `make`, `cmake`.
 
 ```bash
 $ make --version
@@ -46,17 +44,15 @@ GNU Make 4.3
 
 $ cmake --version
 cmake version 3.25.1
-
-$ git --version
-git version 2.39.2
 ```
 
-- For benchmarking purposes, you must have `google-benchmark` library globally installed. I found [this](https://github.com/google/benchmark/tree/60b16f1#installation) guide to be useful.
+- For benchmarking Dilithium algorithms, you must have `google-benchmark` header and library globally installed. I found [this](https://github.com/google/benchmark#installation) guide useful.
 
-- Note, `sha3` is a dependency of this project, which is pinned to a specific commit, using git submodule. Import `sha3` dependency after cloning Dilithium.
+- Note, `sha3` is the only dependency of this project, implementing FIPS-202 SHA3 standard as a header-only, zero-dependency C++ library. It is pinned to a specific commit, using git submodule. Import `sha3` dependency after cloning Dilithium.
 
 ```bash
 git clone https://github.com/itzmeanjan/dilithium.git
+
 pushd dilithium
 git submodule update --init
 # now you can {test, benchmark, use} `dilithium`
@@ -65,16 +61,15 @@ popd
 
 ## Testing
 
-For ensuring functional correctness ( & conformance with specification ) of Dilithium Digital Signature Algorithm, along with its components, issue
+For ensuring functional correctness ( & conformance with the Dilithium specification ) of this Dilithium library implemenation, issue
 
-> **Note** Dilithium Known Answer Tests are generated following procedure described in https://gist.github.com/itzmeanjan/d14afc3866b82119221682f0f3c9822d
+> **Note** Dilithium Known Answer Tests are generated following the procedure, described in https://gist.github.com/itzmeanjan/d14afc3866b82119221682f0f3c9822d
 
 ```bash
 make
 ```
 
 ```bash
-./test/a.out
 [test] Dilithium prime field arithmetic
 [test] (i)NTT over degree-255 polynomial
 [test] Extraction of high, low order bits using Power2Round
@@ -83,35 +78,24 @@ make
 [test] Polynomial encoding/ decoding
 [test] Hint bit polynomial encoding/ decoding
 [test] Dilithium KeyGen -> Signing -> Verification
-bash test_kat.sh
-~/Documents/work/dilithium/wrapper/python ~/Documents/work/dilithium
-============================================================= test session starts ==============================================================
-platform linux -- Python 3.11.2, pytest-7.2.0, pluggy-1.0.0 -- /home/anjan/Documents/my_work/dilithium/wrapper/python/bin/python3
-cachedir: .pytest_cache
-rootdir: /home/anjan/Documents/my_work/dilithium/wrapper/python
-collected 107 items / 104 deselected / 3 selected                                                                                              
-
-test_dilithium.py::test_dilithium2 PASSED                                                                                                [ 33%]
-test_dilithium.py::test_dilithium3 PASSED                                                                                                [ 66%]
-test_dilithium.py::test_dilithium5 PASSED                                                                                                [100%]
-
-====================================================== 3 passed, 104 deselected in 1.05s =======================================================
-~/Documents/work/dilithium
+[test] Dilithium Known Answer Tests
 ```
 
 ## Benchmarking
 
-Benchmarking of various instantiation of Dilithium Post Quantum Digital Signature Algorithm can be done, by issuing
+Benchmarking key generation, signing and verification algorithms for various instantiations of Dilithium signature scheme can be done, by issuing
 
 ```bash
 make benchmark
 ```
 
-> **Note** Benchmarking expects presence of `google-benchmark` headers and library in global namespace ( so that it can be found by the compiler ).
+> **Note** Benchmarking expects presence of `google-benchmark` headers and library in global namespace ( so that it can be found by the compiler ) i.e. header and library path must live on **$PATH**.
 
-> **Warning** Ensure you've put all your CPU cores on performance mode before running benchmarks, follow [this](https://github.com/google/benchmark/blob/60b16f1/docs/user_guide.md#disabling-cpu-frequency-scaling) guide.
+> **Warning** Ensure you've put all your CPU cores on performance mode before running benchmarks, follow [this](https://github.com/google/benchmark/blob/main/docs/reducing_variance.md) guide.
 
-> **Note** Only deterministic signing procedure is benchmarked, while signing message of length 32 -bytes. One can benchmark non-deterministic signing procedure by explicitly passing truth value to template parameter of `sign(...)` routine.
+> **Note** Only deterministic signing procedure is benchmarked here, while signing random message of length 32 -bytes. One can benchmark non-deterministic signing procedure by explicitly passing truth value to template parameter of `sign(...)` routine and they must supply a 64 -bytes uniform random sampled seed, when invoking `sign` routine.
+
+> **Note** Relying only on average ( or mean ) timing measurement for understanding performance characteristics of Dilithium signing algorithm may not be a good idea, given that it's a post-quantum digital signature scheme of **"Fiat-Shamir with Aborts"** paradigm - broadly speaking, during signing procedure it may need to abort and restart again, multiple times, based on what message one is signing or what sort of random seed is being used for randomized signing. So it's a better idea to also compute other statistics such as minimum, maximum and *median* ( pretty useful ) when timing execution of signing procedure. In following benchmark results, you'll see such tables demonstrating broader performance characteristics of Dilithium signing procedure for various parameter sets.
 
 ### On 12th Gen Intel(R) Core(TM) i7-1260P **[ Compiled with GCC ]**
 
@@ -138,8 +122,6 @@ dilithium5_keygen           164 us          164 us         4374       6.11558k/s
 dilithium5_sign/32          273 us          273 us         2560       3.65763k/s
 dilithium5_verify/32        173 us          173 us         4052       5.78499k/s
 ```
-
-#### Performance Statistics of _Fiat-Shamir with Abort_ Paradigm Signing Algorithm Dilithium
 
 Message Signing Algorithm ( Deterministic ) | Min. Exec. Time | Max. Exec. Time | Median Exec. Time | Mean Exec. Time
 :-- | :-: | :-: | :-: | :-:
@@ -173,8 +155,6 @@ dilithium5_sign/32          576 us          575 us         1000       1.73773k/s
 dilithium5_verify/32        134 us          134 us         5199        7.4441k/s
 ```
 
-#### Performance Statistics of _Fiat-Shamir with Abort_ Paradigm Signing Algorithm Dilithium
-
 Message Signing Algorithm ( Deterministic ) | Min. Exec. Time | Max. Exec. Time | Median Exec. Time | Mean Exec. Time
 :-- | :-: | :-: | :-: | :-:
 Dilithium2 | 88.5 us | 749 us | **230 us** | 258 us
@@ -183,10 +163,10 @@ Dilithium5 | 210 us | 1313 us | **302 us** | 467 us
 
 ## Usage
 
-Dilithium is a zero-dependency, header-only C++ library which is fairly easy-to-use
+Dilithium is a zero-dependency, header-only C++ library which is fairly easy-to-use. Let's see how to get started using it.
 
-- Clone Dilithium repository
-- Fetch the only dependency `sha3`, by enabling git submodule
+- Clone Dilithium repository.
+- Fetch the only dependency `sha3`, by enabling git submodule.
 
 ```bash
 pushd dilithium
@@ -194,52 +174,121 @@ git submodule update --init
 popd
 ```
 
-- Write program which makes use of Dilithium{2,3,5} {keygen, signing, verification} API ( all of these routines and constants, representing how many bytes of memory to allocate for holding public/ secret key and signature, live under `dilithium{2,3,5}::` namespace ), while importing proper header file.
+- Write a program which makes use of Dilithium{2,3,5} {keygen, signing, verification} API ( all of these routines and constants, representing how many bytes of memory to allocate for holding public/ secret key and signature, live under `dilithium{2,3,5}::` namespace ), while importing proper header file.
 - Finally compile your program, while letting your compiler know where it can find Dilithium ( `./include` ) and Sha3 ( `./sha3/include` ) headers.
 
-> **Note** `dilithium{2,3,5}::*` -> Dilithium{2,3,5} key generation, signing and verification algorithm implementation, along with compile-time computed constants, representing how many bytes of memory to allocate for holding public/ secret key and signature.
+```bash
+# Assuming `dilithium` was cloned just under $HOME
 
-**Dilithium API Usage Flow**
+DILITHIUM_HEADERS=~/dilithium/include
+SHA3_HEADERS=~/dilithium/sha3/include
 
-1) Generate keypair, given 32 -bytes seed.
+g++ -std=c++20 -Wall -pendantic -O3 -march=native -I $DILITHIUM_HEADERS -I $SHA3_HEADERS main.cpp
+```
+
+### Dilithium API Usage Flow
+
+Let's walk through an example, where I show you how to use Dilithium key generation, signing ( both deterministic and randomized ) and verification API for Dilithium2 instantiation. It should be pretty similar using other Dilithium instances.
+
+1) Let's begin by generating a Dilithium2 keypair, given 32 -bytes seed.
 
 ```cpp
+// main.cpp
+
 // In case interested in using Dilithium3 or Dilithium5 API, import "dilithium3.hpp" or "dilithium5.hpp" and use keygen/ sign/ verify functions living either under `dilithium3::` or `dilithium5::` namespace.
 #include "dilithium2.hpp"
+#include "prng.hpp"
 
 int main() {
-    uint8_t seed[32]; // fill it up
-    uint8_t pubkey[dilithium2::PubKeyLength];
-    uint8_t seckey[dilithium2::SecKeyLength];
-    
-    constexpr size_t mlen = 32;
-    uint8_t msg[mlen]; // fill it up, to be signed
-    uint8_t sig[dilithium2::SigLength];
+    uint8_t seed[32];
+    uint8_t pubkey[dilithium2::PubKeyLen];
+    uint8_t seckey[dilithium2::SecKeyLen];
+
+    // Sample seed bytes from PRNG
+    //
+    // Be careful, read API documentation in include/prng.hpp
+    // before you consider using it in production.
+    prng::prng_t prng;
+    prng.read(seed, sizeof(seed));
 
     dilithium2::keygen(seed, pubkey, seckey);
+
     // ...
 
     return 0;
 }
 ```
 
-2) Given secret key and non-empty message M, sign it, computing signature.
+2) Given a Dilithium2 secret key and non-empty message M, sign it, computing signature.
 
 ```cpp
-// Default behaviour is deterministic signing
-dilithium2::sign(seckey, msg, mlen, sig);
-// In case you're interested in randomized signing, try explicitly setting boolean truth value for template parameter
-dilithium2::sign<true>(seckey, msg, mlen, sig);
+int main() {
+  // Key Generation
+  // ...
+
+  uint8_t msg[32];
+  uint8_t sig[dilithium2::SigLen];
+
+  // Sample psuedo-random message, to be signed
+  prng.read(msg, sizeof(msg));
+
+  // Default behaviour is deterministic signing and
+  // you can safely pass null pointer for last parameter
+  // i.e. random seed. It won't be access, in case you adopt
+  // default deterministic signing.
+  dilithium2::sign(seckey, msg, mlen, sig, nullptr);
+
+  // ...
+
+  return 0;
+}
 ```
 
-3) Verify signature, given public key and message M.
+3) In case you're interested in randomized signing, you may explicitly opt in ( at compile-time ) by passing truth value for the only template parameter present in `sign` function definition, while also supplying a 64 -bytes uniform sampled random seed, when invoking `sign` procedure.
 
 ```cpp
-bool flg = dilithium2::verify(pubkey, msg, mlen, sig);
-assert(flg);
+int main() {
+  // Key Generation
+  // ...
+
+  // Deterministic Signing ( default )
+  // ...
+
+  // 64 -bytes random seed to be used for randomized
+  // message signing. We'll sample random seed bytes using PRNG.
+  uint8_t rnd_seed[64];
+  prng.read(rnd_seed, sizeof(rnd_seed));
+
+  // You must pass 64 -bytes random seed when you opt for
+  // randomized signing. In case you don't do that, it'll
+  // result in undefined behaviour.
+  dilithium2::sign<true>(seckey, msg, mlen, sig, rng_seed);
+
+  return 0;
+}
 ```
 
-I suggest you look at following three example programs, which demonstrates how to use Dilithium PQ DSA API
+4) Verify signature, given public key, message M and the signature itself. It returns boolean truth value in case of successful signature verification otherwise it returns false.
+
+```cpp
+int main() {
+  // Key Generation
+  // ...
+
+  // Deterministic Signing ( default )
+  // ...
+
+  // Randomized Signing ( explicit )
+  // ...
+
+  bool flg = dilithium2::verify(pubkey, msg, mlen, sig);
+  assert(flg);
+
+  return 0;
+}
+```
+
+I suggest you look at following three example programs, which demonstrates how to use Dilithium API.
 
 - For Dilithium2 ( i.e. parameters providing NIST security level 2 ) see [dilithium2.cpp](./example/dilithium2.cpp)
 - For Dilithium3 ( i.e. parameters providing NIST security level 3 ) see [dilithium3.cpp](./example/dilithium3.cpp)
@@ -277,12 +326,29 @@ verified   : true
 
 ## Important Implementation Note
 
-If you're planning to use randomized signing feature, by explicitly passing boolean truth value to template parameter of `sign(...)` function, you should note that a custom defined PRNG is used for sampling 64 required random bytes. The PRNG in use, is defined in [prng.hpp](./include/prng.hpp). If you go through the implementation of `sign(...)` function, you should find that default constructor of PRNG is used for random sampling bytes, in case randomized signing is opted for. The way default constructor of `prng::prng_t` is implemented
+You'll notice Dilithium 
 
-- `std::random_device` is requested for 32 random bytes ( as eight `uint32_t`s ).
-- Those 32 random bytes are absorbed into SHAKE128 XOF state.
-- Finally PRNG is ready to be requested for arbitrary many random bytes i.e. requested bytes are squeezed from finalized SHAKE128 XOF state.
+- key generation API accepts a 32 -bytes seed
+- while randomized signing API accepts a 64 -bytes seed ( it's safe to pass `nullptr` when using default deterministic signing )
 
-`std::random_device` itself is not always guaranteed to provide you with system randomness in all possible usecases. It's an implementation defined behaviour. So it's better to be careful and confirm if `std::random_device` actually has access to system randomness before using randomized signing feature. Read https://en.cppreference.com/w/cpp/numeric/random/random_device/random_device 's notes section.
+for all three instantiations of Dilithium signing scheme, this is what you, as an API user, need to ensure that you always call those routines with uniformly random sampled seeds.
 
-`prng::prng_t` has another explicit constructor, which accepts N -bytes as input, which is absorbed into SHAKE128 XOF state, before PRNG becomes ready for use. These N -bytes are supplied by user, so it's now user's responsibility to initialize PRNG with proper random seed. But right now, signing interface is not flexible enough to accept another seed ( which can be used for explicitly initializing PRNG ), in case randomized message signing is opted for. I hope to improve this in coming days, as I collect more feedback.
+I provide you with a PRNG implementation, which lives in [include/prng.hpp](./include/prng.hpp). Before you start using that, I want you to take a moment and understand what can be the implication of using the default constructor of `prng::prng_t`. 
+
+- In case default constructor is used, `std::random_device` is requested for 32 random bytes ( in form of eight `uint32_t`s ), which is hashed using SHAKE128 XOF. When you request ( using `read()` function ) arbitrary many random bytes from that initialized PRNG, it's actually squeezed out from SHAKE128 XOF state. Now one thing to note here is `std::random_device` itself is not guaranteed to provide you with system randomness in all possible usecases/ targets. It's an implementation defined behaviour. So it's better to be careful. Read https://en.cppreference.com/w/cpp/numeric/random/random_device/random_device 's notes section. 
+- But there's another way of using `prng::prng_t` - you can use its explicit constructor for creating a PRNG by hashing N -many random bytes, supplied as input. These N bytes input can be presampled from any secure randomness source that you may have access to. After that same underlying SHAKE128 XOF is used for squeezing arbitrary many bytes arbitrary many times from PRNG.
+
+```cpp
+#include "prng.hpp"
+
+// Prefer N to be >= 32
+constexpr size_t slen = 32; // = N bytes
+uint8_t seed[slen];
+
+// fill `seed` with N many random bytes
+
+// default initialization ( recommended only if you're sure that target system provides you with reliable randomness source when accessing `std::random_device` )
+prng::prng_t prng0;
+// explicit initialization ( safer alternative )
+prng::prng_t prng1{seed, slen};
+```
