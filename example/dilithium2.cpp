@@ -5,7 +5,8 @@
 
 // Compile it with
 //
-// g++ -std=c++20 -O3 -march=native -I ./include -I ./sha3/include example/dilithium2.cpp
+// g++ -std=c++20 -O3 -march=native -I ./include -I ./sha3/include
+// example/dilithium2.cpp
 int
 main()
 {
