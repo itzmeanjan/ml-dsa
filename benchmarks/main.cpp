@@ -1,4 +1,4 @@
-#include "bench/bench_dilithium.hpp"
+#include "benchmarks/bench_dilithium.hpp"
 
 auto compute_min = [](const std::vector<double>& v) -> double {
   return *std::min_element(v.begin(), v.end());
