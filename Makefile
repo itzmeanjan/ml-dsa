@@ -1,33 +1,64 @@
 CXX = g++
-CXXFLAGS = -std=c++20 -Wall -Wextra -pedantic
-OPTFLAGS = -O3 -march=native -mtune=native
-IFLAGS = -I ./include
-DEPFLAGS = -I ./sha3/include
+CXX_FLAGS = -std=c++20
+WARN_FLAGS = -Wall -Wextra -pedantic
+OPT_FLAGS = -O3 -march=native
+LINK_FLAGS = -flto
+I_FLAGS = -I ./include
+DEP_IFLAGS = -I ./sha3/include
+
+SRC_DIR = include
+DILITHIUM_SOURCES := $(wildcard $(SRC_DIR)/*.hpp)
+BUILD_DIR = build
+
+TEST_DIR = tests
+TEST_SOURCES := $(wildcard $(TEST_DIR)/*.cpp)
+TEST_OBJECTS := $(addprefix $(BUILD_DIR)/, $(notdir $(patsubst %.cpp,%.o,$(TEST_SOURCES))))
+TEST_LINK_FLAGS = -lgtest -lgtest_main
+TEST_BINARY = $(BUILD_DIR)/test.out
+
+BENCHMARK_DIR = benchmarks
+BENCHMARK_SOURCES := $(wildcard $(BENCHMARK_DIR)/*.cpp)
+BENCHMARK_OBJECTS := $(addprefix $(BUILD_DIR)/, $(notdir $(patsubst %.cpp,%.o,$(BENCHMARK_SOURCES))))
+BENCHMARK_LINK_FLAGS = -lbenchmark -lbenchmark_main -lpthread
+BENCHMARK_BINARY = $(BUILD_DIR)/bench.out
+PERF_LINK_FLAGS = -lbenchmark -lbenchmark_main -lpfm -lpthread
+PERF_BINARY = $(BUILD_DIR)/perf.out
 
 all: test
 
-tests/a.out: tests/main.cpp include/*.hpp include/tests/*.hpp sha3/include/*.hpp
-	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(IFLAGS) $(DEPFLAGS) $< -o $@
+$(BUILD_DIR):
+	mkdir -p $@
 
-test: tests/a.out
+$(BUILD_DIR)/%.o: $(TEST_DIR)/%.cpp $(BUILD_DIR)
+	$(CXX) $(CXX_FLAGS) $(WARN_FLAGS) $(OPT_FLAGS) $(I_FLAGS) $(DEP_IFLAGS) -c $< -o $@
+
+$(TEST_BINARY): $(TEST_OBJECTS)
+	$(CXX) $(OPT_FLAGS) $(LINK_FLAGS) $^ $(TEST_LINK_FLAGS) -o $@
+
+test: $(TEST_BINARY)
 	./$<
 
+$(BUILD_DIR)/%.o: $(BENCHMARK_DIR)/%.cpp $(BUILD_DIR)
+	$(CXX) $(CXX_FLAGS) $(WARN_FLAGS) $(OPT_FLAGS) $(I_FLAGS) $(DEP_IFLAGS) -c $< -o $@
+
+$(BENCHMARK_BINARY): $(BENCHMARK_OBJECTS)
+	$(CXX) $(OPT_FLAGS) $(LINK_FLAGS) $^ $(BENCHMARK_LINK_FLAGS) -o $@
+
+benchmark: $(BENCHMARK_BINARY)
+	# Must *not* build google-benchmark with libPFM
+	./$< --benchmark_time_unit=us --benchmark_min_warmup_time=.5 --benchmark_enable_random_interleaving=true --benchmark_repetitions=32 --benchmark_min_time=0.1s --benchmark_display_aggregates_only=true --benchmark_counters_tabular=true
+
+$(PERF_BINARY): $(BENCHMARK_OBJECTS)
+	$(CXX) $(OPT_FLAGS) $(LINK_FLAGS) $^ $(PERF_LINK_FLAGS) -o $@
+
+perf: $(PERF_BINARY)
+	# Must build google-benchmark with libPFM, follow https://gist.github.com/itzmeanjan/05dc3e946f635d00c5e0b21aae6203a7
+	./$< --benchmark_time_unit=us --benchmark_min_warmup_time=.5 --benchmark_enable_random_interleaving=true --benchmark_repetitions=32 --benchmark_min_time=0.1s --benchmark_display_aggregates_only=true --benchmark_counters_tabular=true --benchmark_perf_counters=CYCLES
+
+.PHONY: format clean
+
 clean:
-	find . -name '*.out' -o -name '*.o' -o -name '*.so' -o -name '*.gch' | xargs rm -rf
+	rm -rf $(BUILD_DIR)
 
-format:
-	find . -name '*.cpp' -o -name '*.hpp' | xargs clang-format -i --style=Mozilla
-
-benchmarks/a.out: benchmarks/main.cpp include/*.hpp include/benchmarks/*.hpp sha3/include/*.hpp
-	# make sure you've google-benchmark globally installed;
-	# see https://github.com/google/benchmark/tree/60b16f1#installation
-	$(CXX) $(CXXFLAGS) $(OPTFLAGS) $(IFLAGS) $(DEPFLAGS) $< -lbenchmark -o $@
-
-benchmark: benchmarks/a.out
-	# Ensure you've CPU frequency scaling disabled when running benchmarks, 
-	# follow https://github.com/google/benchmark/blob/b177433f3ee2513b1075140c723d73ab8901790f/docs/reducing_variance.md
-	#
-	# No repeatition, showing mean time taken
-	./$< --benchmark_time_unit=us --benchmark_counters_tabular=true
-	# N(>0) repeatitions, showing only aggregates
-	./$< --benchmark_time_unit=us --benchmark_repetitions=32 --benchmark_counters_tabular=true --benchmark_display_aggregates_only=true
+format: $(DILITHIUM_SOURCES) $(TEST_SOURCES) $(BENCHMARK_SOURCES)
+	clang-format -i --style=Mozilla $^
