@@ -1,11 +1,5 @@
-#pragma once
 #include "bit_packing.hpp"
-#include "field.hpp"
-#include "prng.hpp"
-#include <cassert>
-
-// Test functional correctness of Dilithium PQC suite implementation
-namespace test_dilithium {
+#include <gtest/gtest.h>
 
 // Check for functional correctness of
 //
@@ -43,7 +37,18 @@ test_encode_decode()
   std::free(polyb);
   std::free(arr);
 
-  assert(!flg);
+  EXPECT_FALSE(flg);
+}
+
+TEST(Dilithium, PolynomialEncodingDecoding)
+{
+  test_encode_decode<3>();
+  test_encode_decode<4>();
+  test_encode_decode<6>();
+  test_encode_decode<10>();
+  test_encode_decode<13>();
+  test_encode_decode<18>();
+  test_encode_decode<20>();
 }
 
 // Generates random hint bit polynomial vector of dimension k x 1, with <= ω
@@ -105,7 +110,12 @@ test_encode_decode_hint_bits()
   std::free(arr0);
   std::free(arr1);
 
-  assert(flg & !failed0 & failed1);
+  EXPECT_TRUE(flg & !failed0 & failed1);
 }
 
+TEST(Dilithium, HintBitPolynomialEncodingDecoding)
+{
+  test_encode_decode_hint_bits<4, 80>();
+  test_encode_decode_hint_bits<6, 55>();
+  test_encode_decode_hint_bits<8, 75>();
 }

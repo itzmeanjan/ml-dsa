@@ -1,18 +1,13 @@
-#pragma once
 #include "dilithium2.hpp"
 #include "dilithium3.hpp"
 #include "dilithium5.hpp"
-#include "utils.hpp"
 #include <algorithm>
-#include <cassert>
 #include <charconv>
 #include <fstream>
+#include <gtest/gtest.h>
 #include <string>
 #include <string_view>
 #include <vector>
-
-// Test functional correctness of Dilithium PQC suite implementation
-namespace test_dilithium {
 
 using namespace std::literals;
 namespace utils = dilithium_utils;
@@ -20,8 +15,7 @@ namespace utils = dilithium_utils;
 // Use Dilithium2 known answer tests to ensure functional correctness and
 // compatibility of this Dilithium library implementation with the specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf.
-inline void
-test_dilithium2_signing_kat()
+TEST(Dilithium, Dilithium2KnownAnswerTests)
 {
   const std::string kat_file = "./kats/dilithium2.kat";
   std::fstream file(kat_file);
@@ -81,10 +75,10 @@ test_dilithium2_signing_kat()
 
       // Check if computed public key, secret key and signature matches expected
       // ones, from KAT file.
-      assert(std::ranges::equal(pkey, _pkey));
-      assert(std::ranges::equal(skey, _skey));
-      assert(std::ranges::equal(sig, _sig));
-      assert(f);
+      EXPECT_EQ(pkey, _pkey);
+      EXPECT_EQ(skey, _skey);
+      EXPECT_EQ(sig, _sig);
+      EXPECT_TRUE(f);
 
       std::string empty_line;
       std::getline(file, empty_line);
@@ -99,8 +93,7 @@ test_dilithium2_signing_kat()
 // Use Dilithium3 known answer tests to ensure functional correctness and
 // compatibility of this Dilithium library implementation with the specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf.
-inline void
-test_dilithium3_signing_kat()
+TEST(Dilithium, Dilithium3KnownAnswerTests)
 {
   const std::string kat_file = "./kats/dilithium3.kat";
   std::fstream file(kat_file);
@@ -160,10 +153,10 @@ test_dilithium3_signing_kat()
 
       // Check if computed public key, secret key and signature matches expected
       // ones, from KAT file.
-      assert(std::ranges::equal(pkey, _pkey));
-      assert(std::ranges::equal(skey, _skey));
-      assert(std::ranges::equal(sig, _sig));
-      assert(f);
+      EXPECT_EQ(pkey, _pkey);
+      EXPECT_EQ(skey, _skey);
+      EXPECT_EQ(sig, _sig);
+      EXPECT_TRUE(f);
 
       std::string empty_line;
       std::getline(file, empty_line);
@@ -178,8 +171,7 @@ test_dilithium3_signing_kat()
 // Use Dilithium5 known answer tests to ensure functional correctness and
 // compatibility of this Dilithium library implementation with the specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf.
-inline void
-test_dilithium5_signing_kat()
+TEST(Dilithium, Dilithium5KnownAnswerTests)
 {
   const std::string kat_file = "./kats/dilithium5.kat";
   std::fstream file(kat_file);
@@ -239,10 +231,10 @@ test_dilithium5_signing_kat()
 
       // Check if computed public key, secret key and signature matches expected
       // ones, from KAT file.
-      assert(std::ranges::equal(pkey, _pkey));
-      assert(std::ranges::equal(skey, _skey));
-      assert(std::ranges::equal(sig, _sig));
-      assert(f);
+      EXPECT_EQ(pkey, _pkey);
+      EXPECT_EQ(skey, _skey);
+      EXPECT_EQ(sig, _sig);
+      EXPECT_TRUE(f);
 
       std::string empty_line;
       std::getline(file, empty_line);
@@ -252,6 +244,4 @@ test_dilithium5_signing_kat()
   }
 
   file.close();
-}
-
 }

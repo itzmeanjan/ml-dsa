@@ -1,13 +1,7 @@
-#pragma once
-#include "prng.hpp"
 #include "sampling.hpp"
-#include "utils.hpp"
-#include <cassert>
+#include <gtest/gtest.h>
 
-// Test functional correctness of Dilithium PQC suite implementation
-namespace test_dilithium {
-
-// Check whether hashing to a ball routine works as expected or not
+// Check whether hashing to a ball routine works as expected or not.
 template<const uint32_t τ>
 static void
 test_sample_in_ball()
@@ -26,7 +20,12 @@ test_sample_in_ball()
     sqrd_norm = sqrd_norm + (poly[i] * poly[i]);
   }
 
-  assert(sqrd_norm == field::zq_t{ τ });
+  EXPECT_EQ(sqrd_norm, field::zq_t(τ));
 }
 
+TEST(Dilithium, HashingToABall)
+{
+  test_sample_in_ball<39u>();
+  test_sample_in_ball<49u>();
+  test_sample_in_ball<60u>();
 }
