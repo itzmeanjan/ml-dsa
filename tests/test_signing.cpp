@@ -1,19 +1,14 @@
-#pragma once
 #include "dilithium2.hpp"
 #include "dilithium3.hpp"
 #include "dilithium5.hpp"
-#include "prng.hpp"
-#include <cassert>
-
-// Test functional correctness of Dilithium PQC suite implementation
-namespace test_dilithium {
+#include <gtest/gtest.h>
 
 // Given a byte array, this routine randomly selects a bit and flips it. This
 // routine is used for generating faulty data during testing.
 //
 // Collects inspiration from
 // https://github.com/itzmeanjan/gift-cofb/blob/0bd9baa/wrapper/python/test_gift_cofb.py#L79-L101
-inline void
+static inline void
 random_bit_flip(uint8_t* const arr, const size_t alen)
 {
   std::random_device rd;
@@ -91,7 +86,14 @@ test_dilithium2_signing(const size_t mlen)
   std::free(msg0);
   std::free(msg1);
 
-  assert(flg0 & !flg1 & !flg2 & !flg3);
+  EXPECT_TRUE(flg0 & !flg1 & !flg2 & !flg3);
+}
+
+TEST(Dilithium, Dilithium2KeygenSignVerifyFlow)
+{
+  for (size_t mlen = 1; mlen < 33; mlen++) {
+    test_dilithium2_signing(mlen);
+  }
 }
 
 // Test functional correctness of Dilithium signature scheme for parameters
@@ -151,7 +153,14 @@ test_dilithium3_signing(const size_t mlen)
   std::free(msg0);
   std::free(msg1);
 
-  assert(flg0 & !flg1 & !flg2 & !flg3);
+  EXPECT_TRUE(flg0 & !flg1 & !flg2 & !flg3);
+}
+
+TEST(Dilithium, Dilithium3KeygenSignVerifyFlow)
+{
+  for (size_t mlen = 1; mlen < 33; mlen++) {
+    test_dilithium3_signing(mlen);
+  }
 }
 
 // Test functional correctness of Dilithium signature scheme for parameters
@@ -211,7 +220,12 @@ test_dilithium5_signing(const size_t mlen)
   std::free(msg0);
   std::free(msg1);
 
-  assert(flg0 & !flg1 & !flg2 & !flg3);
+  EXPECT_TRUE(flg0 & !flg1 & !flg2 & !flg3);
 }
 
+TEST(Dilithium, Dilithium5KeygenSignVerifyFlow)
+{
+  for (size_t mlen = 1; mlen < 33; mlen++) {
+    test_dilithium5_signing(mlen);
+  }
 }

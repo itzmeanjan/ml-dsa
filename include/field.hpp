@@ -42,7 +42,7 @@ mod_reduce(const uint32_t val)
   const uint32_t t3 = t1 + t2;
   const uint32_t t4 = t3 & mask23;
 
-  const bool flg1 = t4 > Q;
+  const bool flg1 = t4 >= Q;
   const uint32_t t5 = (-static_cast<uint32_t>(flg1)) & Q;
   const uint32_t t6 = t4 - t5;
 

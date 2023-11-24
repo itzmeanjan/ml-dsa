@@ -1,30 +1,25 @@
-#pragma once
-#include "prng.hpp"
 #include "reduction.hpp"
-#include <cassert>
-
-// Test functional correctness of Dilithium PQC suite implementation
-namespace test_dilithium {
+#include <gtest/gtest.h>
 
 // Given a random element ∈ Z_q | q = 2^23 - 2^13 + 1, this routine tests
 // whether extracting high and low order bits & then reconstructing original
 // element using components of smaller bit width, work as expected or not.
-template<const size_t rounds = 65536ul>
-static void
-test_power2round()
+TEST(Dilithium, Power2Round)
 {
+  constexpr size_t itr_cnt = 1ul << 16;
+
   constexpr size_t d = 13;
-  constexpr field::zq_t t0{ 1u << d };
+  constexpr field::zq_t t0(1u << d);
 
   prng::prng_t prng;
 
-  for (size_t i = 0; i < rounds; i++) {
+  for (size_t i = 0; i < itr_cnt; i++) {
     const field::zq_t r = field::zq_t::random(prng);
 
     const auto t1 = reduction::power2round<d>(r);
     const field::zq_t t2 = t1.first * t0 + t1.second;
 
-    assert(r == t2);
+    EXPECT_EQ(r, t2);
   }
 }
 
@@ -50,8 +45,14 @@ test_decompose()
 
     const field::zq_t rz_ = reduction::highbits<alpha>(r + z_);
 
-    assert(rz == rz_);
+    EXPECT_EQ(rz, rz_);
   }
 }
 
+TEST(Dilithium, MakingAndUsingOfHintBits)
+{
+  test_decompose<((field::Q - 1u) / 88u) << 1, 77u>();
+  test_decompose<((field::Q - 1u) / 88u) << 1, 1321u>();
+  test_decompose<((field::Q - 1u) / 32u) << 1, 997u>();
+  test_decompose<((field::Q - 1u) / 32u) << 1, 1981u>();
 }
