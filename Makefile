@@ -3,8 +3,10 @@ CXX_FLAGS = -std=c++20
 WARN_FLAGS = -Wall -Wextra -pedantic
 OPT_FLAGS = -O3 -march=native
 LINK_FLAGS = -flto
+
+SHA3_INC_DIR = ./sha3/include
 I_FLAGS = -I ./include
-DEP_IFLAGS = -I ./sha3/include
+DEP_IFLAGS = -I $(SHA3_INC_DIR)
 
 SRC_DIR = include
 DILITHIUM_SOURCES := $(wildcard $(SRC_DIR)/*.hpp)
@@ -29,7 +31,10 @@ all: test
 $(BUILD_DIR):
 	mkdir -p $@
 
-$(BUILD_DIR)/%.o: $(TEST_DIR)/%.cpp $(BUILD_DIR)
+$(SHA3_INC_DIR):
+	git submodule update --init
+
+$(BUILD_DIR)/%.o: $(TEST_DIR)/%.cpp $(BUILD_DIR) $(SHA3_INC_DIR)
 	$(CXX) $(CXX_FLAGS) $(WARN_FLAGS) $(OPT_FLAGS) $(I_FLAGS) $(DEP_IFLAGS) -c $< -o $@
 
 $(TEST_BINARY): $(TEST_OBJECTS)
@@ -38,7 +43,7 @@ $(TEST_BINARY): $(TEST_OBJECTS)
 test: $(TEST_BINARY)
 	./$< --gtest_shuffle --gtest_random_seed=0
 
-$(BUILD_DIR)/%.o: $(BENCHMARK_DIR)/%.cpp $(BUILD_DIR)
+$(BUILD_DIR)/%.o: $(BENCHMARK_DIR)/%.cpp $(BUILD_DIR) $(SHA3_INC_DIR)
 	$(CXX) $(CXX_FLAGS) $(WARN_FLAGS) $(OPT_FLAGS) $(I_FLAGS) $(DEP_IFLAGS) -c $< -o $@
 
 $(BENCHMARK_BINARY): $(BENCHMARK_OBJECTS)
