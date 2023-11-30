@@ -29,10 +29,7 @@ constexpr size_t SigLen = dilithium_utils::sig_len<k, l, γ1, ω>();
 // Given a 32 -bytes seed, this routine can be used for generating a fresh
 // Dilithium5 keypair.
 inline void
-keygen(const uint8_t* const __restrict seed, // 32 -bytes seed
-       uint8_t* const __restrict pubkey,     // 2592 -bytes public key
-       uint8_t* const __restrict seckey      // 4864 -bytes secret key
-)
+keygen(std::span<const uint8_t, 32> seed, std::span<uint8_t, PubKeyLen> pubkey, std::span<uint8_t, SecKeyLen> seckey)
 {
   dilithium::keygen<k, l, d, η>(seed, pubkey, seckey);
 }
@@ -47,16 +44,13 @@ keygen(const uint8_t* const __restrict seed, // 32 -bytes seed
 // as that seed will never be accessed during signing.
 template<const bool random = false>
 inline void
-sign(
-  const uint8_t* const __restrict seckey, // 4864 -bytes secret key
-  const uint8_t* const __restrict msg,    // N -bytes message, to be signed
-  const size_t mlen,                      // Byte length of message (>0)
-  uint8_t* const __restrict sig,          // 4595 -bytes signature
-  const uint8_t* const __restrict seed // 64 -bytes seed, for randomized signing
-)
+sign(std::span<const uint8_t, SecKeyLen> seckey,
+     std::span<const uint8_t> msg,
+     std::span<uint8_t, SigLen> sig,
+     std::span<const uint8_t, 64 * random> seed)
 {
   constexpr bool r = random;
-  dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, r>(seckey, msg, mlen, sig, seed);
+  dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, r>(seckey, msg, sig, seed);
 }
 
 // Given a Dilithium5 public key, a message M and a signature S, this routine
@@ -64,13 +58,9 @@ sign(
 // or not, returning truth value only in case of successful signature
 // verification, otherwise false is returned.
 inline bool
-verify(const uint8_t* const __restrict pubkey, // 2592 -bytes public key
-       const uint8_t* const __restrict msg,    // N -bytes message, signed
-       const size_t mlen,                  // Byte length of signed message (>0)
-       const uint8_t* const __restrict sig // 4595 -bytes signature
-)
+verify(std::span<const uint8_t, PubKeyLen> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t, SigLen> sig)
 {
-  return dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pubkey, msg, mlen, sig);
+  return dilithium::verify<k, l, d, γ1, γ2, τ, β, ω>(pubkey, msg, sig);
 }
 
 }
