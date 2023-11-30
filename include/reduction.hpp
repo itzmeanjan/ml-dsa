@@ -20,13 +20,13 @@ namespace reduction {
 // This implementation collects some ideas from
 // https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23
 template<const size_t d>
-static inline std::pair<field::zq_t, field::zq_t>
+static inline constexpr std::pair<field::zq_t, field::zq_t>
 power2round(const field::zq_t r)
   requires(dilithium_params::check_d(d))
 {
   constexpr uint32_t max = 1u << (d - 1);
 
-  const uint32_t t1 = r.v + max - 1u;
+  const uint32_t t1 = r.raw() + max - 1u;
   const uint32_t t2 = t1 >> d;
   const uint32_t t3 = t2 << d;
 
@@ -46,22 +46,22 @@ power2round(const field::zq_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-static inline std::pair<field::zq_t, field::zq_t>
+static inline constexpr std::pair<field::zq_t, field::zq_t>
 decompose(const field::zq_t r)
   requires(dilithium_params::check_γ2(alpha / 2))
 {
   constexpr uint32_t t0 = alpha >> 1;
   constexpr uint32_t t1 = field::Q - 1u;
 
-  const uint32_t t2 = r.v + t0 - 1u;
+  const uint32_t t2 = r.raw() + t0 - 1u;
   const uint32_t t3 = t2 / alpha;
   const uint32_t t4 = t3 * alpha;
 
   const field::zq_t r0 = r - field::zq_t{ t4 };
   const field::zq_t t5 = r - r0;
 
-  const bool flg = !static_cast<bool>(t5.v ^ t1);
-  const field::zq_t br[]{ field::zq_t(t5.v / alpha), field::zq_t::zero() };
+  const bool flg = !static_cast<bool>(t5.raw() ^ t1);
+  const field::zq_t br[]{ field::zq_t(t5.raw() / alpha), field::zq_t::zero() };
 
   const field::zq_t r1 = br[flg];
   const field::zq_t r0_ = r0 - field::zq_t{ 1u * flg };
@@ -75,7 +75,7 @@ decompose(const field::zq_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-static inline field::zq_t
+static inline constexpr field::zq_t
 highbits(const field::zq_t r)
 {
   const auto s = decompose<alpha>(r);
@@ -88,7 +88,7 @@ highbits(const field::zq_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-static inline field::zq_t
+static inline constexpr field::zq_t
 lowbits(const field::zq_t r)
 {
   const auto s = decompose<alpha>(r);
@@ -104,7 +104,7 @@ lowbits(const field::zq_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-static inline field::zq_t
+static inline constexpr field::zq_t
 make_hint(const field::zq_t z, const field::zq_t r)
 {
   const field::zq_t r1 = highbits<alpha>(r);
@@ -119,7 +119,7 @@ make_hint(const field::zq_t z, const field::zq_t r)
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const uint32_t alpha>
-static inline field::zq_t
+static inline constexpr field::zq_t
 use_hint(const field::zq_t h, const field::zq_t r)
 {
   constexpr uint32_t m = (field::Q - 1) / alpha;
@@ -129,12 +129,12 @@ use_hint(const field::zq_t h, const field::zq_t r)
 
   const auto s = decompose<alpha>(r);
 
-  if ((h == t2) && ((s.second.v > 0u) && (s.second.v < t1.v))) {
+  if ((h == t2) && ((s.second > field::zq_t::zero()) && (s.second < t1))) {
     const bool flg = s.first == field::zq_t{ m - 1u };
     const field::zq_t br[]{ s.first + t2, field::zq_t{ 0u } };
 
     return br[flg];
-  } else if ((h == t2) && (s.second.v >= t1.v)) {
+  } else if ((h == t2) && (s.second >= t1)) {
     const bool flg = s.first == field::zq_t{ 0u };
     const field::zq_t br[]{ s.first - t2, field::zq_t{ m - 1 } };
 

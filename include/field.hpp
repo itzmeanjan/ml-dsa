@@ -32,7 +32,10 @@ public:
   inline constexpr zq_t() = default;
 
   // Constructs field element s.t. input is already reduced by prime modulo Q.
-  inline explicit constexpr zq_t(const uint32_t val) { v = val; }
+  inline constexpr zq_t(const uint32_t val) { v = val; }
+
+  // Returns canonical value held under Zq type. Returned value must ∈ [0, Q).
+  inline constexpr uint32_t raw() const { return this->v; }
 
   // Returns prime field element 1.
   static inline constexpr zq_t zero() { return zq_t(); }
@@ -41,7 +44,7 @@ public:
   static inline constexpr zq_t one() { return zq_t(1u); }
 
   // Modulo addition of two Zq elements.
-  inline constexpr zq_t operator+(const zq_t& rhs) const
+  inline constexpr zq_t operator+(const zq_t rhs) const
   {
     const uint32_t t0 = this->v + rhs.v;
     const uint32_t mask = (-static_cast<uint32_t>(t0 >= Q));
@@ -49,6 +52,9 @@ public:
 
     return zq_t(t1);
   }
+
+  // Compound modulo addition of two Zq elements.
+  inline constexpr void operator+=(const zq_t rhs) { *this = *this + rhs; }
 
   // Modulo negation of a Zq element.
   inline constexpr zq_t operator-() const
@@ -58,11 +64,14 @@ public:
   }
 
   // Modulo subtraction of one Zq element from another one.
-  inline constexpr zq_t operator-(const zq_t& rhs) const
+  inline constexpr zq_t operator-(const zq_t rhs) const
   {
     const zq_t t0 = -rhs;
     return *this + t0;
   }
+
+  // Compound modulo subtraction of two Zq elements.
+  inline constexpr void operator-=(const zq_t rhs) { *this = *this - rhs; }
 
   // Modulo multiplication over prime field Z_q | q = 2^23 - 2^13 + 1
   //
@@ -72,7 +81,7 @@ public:
   //
   // See https://www.nayuki.io/page/barrett-reduction-algorithm for Barrett
   // reduction algorithm
-  inline constexpr zq_t operator*(const zq_t& rhs) const
+  inline constexpr zq_t operator*(const zq_t rhs) const
   {
     const uint64_t t0 = static_cast<uint64_t>(this->v);
     const uint64_t t1 = static_cast<uint64_t>(rhs.v);
@@ -129,6 +138,9 @@ public:
     return zq_t(t7);
   }
 
+  // Compound modulo multiplication of two Zq elements.
+  inline constexpr void operator*=(const zq_t rhs) { *this = *this * rhs; }
+
   // Raises field element to N -th power, using exponentiation by repeated
   // squaring rule.
   //
@@ -158,76 +170,52 @@ public:
   //
   // Note, if Zq element is 0, we can't compute multiplicative inverse and 0 is
   // returned.
-  inline constexpr zq_t inv() const
-  {
-    return *this ^ static_cast<size_t>(Q - 2);
-  }
+  inline constexpr zq_t inv() const { return *this ^ static_cast<size_t>(Q - 2); }
 
   // Modulo division of two Zq elements.
   //
   // Note, if denominator is 0, returned result is 0 too, becaue we can't
   // compute multiplicative inverse of 0.
-  inline constexpr zq_t operator/(const zq_t& rhs) const
-  {
-    return *this * rhs.inv();
-  }
+  inline constexpr zq_t operator/(const zq_t rhs) const { return *this * rhs.inv(); }
 
   // Equality check between two field elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  inline constexpr bool operator==(const zq_t& rhs) const
-  {
-    return !static_cast<bool>(this->v ^ rhs.v);
-  }
+  inline constexpr bool operator==(const zq_t rhs) const { return !static_cast<bool>(this->v ^ rhs.v); }
 
   // Non-equality check between two field elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  inline constexpr bool operator!=(const zq_t& rhs) const
-  {
-    return !(*this == rhs);
-  }
+  inline constexpr bool operator!=(const zq_t rhs) const { return !(*this == rhs); }
 
   // Greater than operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  inline constexpr bool operator>(const zq_t& rhs) const
-  {
-    return this->v > rhs.v;
-  }
+  inline constexpr bool operator>(const zq_t rhs) const { return this->v > rhs.v; }
 
   // Greater than equal operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  inline constexpr bool operator>=(const zq_t& rhs) const
-  {
-    return this->v >= rhs.v;
-  }
+  inline constexpr bool operator>=(const zq_t rhs) const { return this->v >= rhs.v; }
 
   // Lesser than operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  inline constexpr bool operator<(const zq_t& rhs) const
-  {
-    return this->v < rhs.v;
-  }
+  inline constexpr bool operator<(const zq_t rhs) const { return this->v < rhs.v; }
 
   // Lesser than equal operator applied to elements ∈ Z_q | q = 2^23 - 2^13 + 1
-  inline constexpr bool operator<=(const zq_t& rhs) const
-  {
-    return this->v <= rhs.v;
-  }
+  inline constexpr bool operator<=(const zq_t rhs) const { return this->v <= rhs.v; }
 
   // Shifts operand ∈ Z_q, leftwards by l bit positions | q = 2^23 - 2^13 + 1
-  inline constexpr zq_t operator<<(const size_t l) const
-  {
-    return zq_t(this->v << l);
-  }
+  inline constexpr zq_t operator<<(const size_t l) const { return zq_t(this->v << l); }
 
   // Generate a random field element ∈ Z_q | q = 2^23 - 2^13 + 1
   static inline zq_t random(prng::prng_t& prng)
   {
     uint32_t res = 0;
-    prng.read(reinterpret_cast<uint8_t*>(&res), sizeof(res));
+    prng.read(std::span(reinterpret_cast<uint8_t*>(&res), sizeof(res)));
 
     // Modulo reduce random sampled 32 -bit unsigned integer value, because
     // explicit constructor of Zq expects its input ∈ [0, Q).
     return zq_t(barrett_reduce(res));
   }
 
+private:
+  // Underlying value held in this type.
+  //
+  // Note, v is always kept in its canonical form i.e. v ∈ [0, Q).
   uint32_t v = 0u;
 
-private:
   // Given a 32 -bit unsigned integer value v, this routine can be used for
   // reducing it by modulo prime Q = 2^23 - 2^13 + 1, computing v' ∈ [0, Q),
   // without using division/ modulo division operator.
