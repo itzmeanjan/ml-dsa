@@ -1,5 +1,8 @@
 #include "bit_packing.hpp"
+#include "field.hpp"
+#include <cstdint>
 #include <gtest/gtest.h>
+#include <vector>
 
 // Check for functional correctness of
 //
@@ -10,32 +13,32 @@ void
 test_encode_decode()
   requires(dilithium_params::check_sbw(sbw))
 {
-  constexpr size_t alen = sbw * 32;
-  constexpr size_t plen = sizeof(field::zq_t) * ntt::N;
+  // Encoded byte length of the polynomial
+  constexpr size_t enc_len = (sbw * ntt::N) / 8;
 
-  field::zq_t* polya = static_cast<field::zq_t*>(std::malloc(plen));
-  field::zq_t* polyb = static_cast<field::zq_t*>(std::malloc(plen));
-  uint8_t* arr = static_cast<uint8_t*>(std::malloc(alen));
+  std::vector<field::zq_t> polya(ntt::N, 0);
+  std::vector<field::zq_t> polyb(ntt::N, 0);
+  std::vector<uint8_t> arr(enc_len, 0);
+
+  auto _polya = std::span<field::zq_t, ntt::N>(polya);
+  auto _polyb = std::span<field::zq_t, ntt::N>(polyb);
+  auto _arr = std::span<uint8_t, enc_len>(arr);
 
   prng::prng_t prng;
 
   for (size_t i = 0; i < ntt::N; i++) {
-    polya[i] = field::zq_t::random(prng);
+    _polya[i] = field::zq_t::random(prng);
   }
 
-  bit_packing::encode<sbw>(polya, arr);
-  bit_packing::decode<sbw>(arr, polyb);
+  bit_packing::encode<sbw>(_polya, _arr);
+  bit_packing::decode<sbw>(_arr, _polyb);
 
   constexpr size_t mask = (1u << sbw) - 1u;
   bool flg = false;
 
   for (size_t i = 0; i < ntt::N; i++) {
-    flg |= static_cast<bool>((polya[i].v & mask) ^ polyb[i].v);
+    flg |= static_cast<bool>((_polya[i].raw() & mask) ^ _polyb[i].raw());
   }
-
-  std::free(polya);
-  std::free(polyb);
-  std::free(arr);
 
   EXPECT_FALSE(flg);
 }
@@ -55,7 +58,7 @@ TEST(Dilithium, PolynomialEncodingDecoding)
 // coefficients set to 1.
 template<const size_t k, const size_t ω>
 void
-generate_random_hint_bits(field::zq_t* const __restrict poly)
+generate_random_hint_bits(std::span<field::zq_t, k * ntt::N> poly)
 {
   for (size_t i = 0; i < k * ntt::N; i++) {
     poly[i] = field::zq_t::zero();
@@ -80,35 +83,35 @@ template<const size_t k, const size_t ω>
 void
 test_encode_decode_hint_bits()
 {
-  constexpr size_t hlen = sizeof(field::zq_t) * k * ntt::N;
-  constexpr size_t alen = ω + k;
+  // Encoded byte length of the hint polynomial
+  constexpr size_t enc_len = ω + k;
 
-  field::zq_t* h0 = static_cast<field::zq_t*>(std::malloc(hlen));
-  field::zq_t* h1 = static_cast<field::zq_t*>(std::malloc(hlen));
-  field::zq_t* h2 = static_cast<field::zq_t*>(std::malloc(hlen));
-  uint8_t* arr0 = static_cast<uint8_t*>(std::malloc(alen));
-  uint8_t* arr1 = static_cast<uint8_t*>(std::malloc(alen));
+  std::vector<field::zq_t> h0(k * ntt::N, 0);
+  std::vector<field::zq_t> h1(k * ntt::N, 0);
+  std::vector<field::zq_t> h2(k * ntt::N, 0);
+  std::vector<uint8_t> arr0(enc_len, 0);
+  std::vector<uint8_t> arr1(enc_len, 0);
 
-  generate_random_hint_bits<k, ω>(h0);
+  auto _h0 = std::span<field::zq_t, k * ntt::N>(h0);
+  auto _h1 = std::span<field::zq_t, k * ntt::N>(h1);
+  auto _h2 = std::span<field::zq_t, k * ntt::N>(h2);
+  auto _arr0 = std::span<uint8_t, enc_len>(arr0);
+  auto _arr1 = std::span<uint8_t, enc_len>(arr1);
 
-  bit_packing::encode_hint_bits<k, ω>(h0, arr0);
-  std::memcpy(arr1, arr0, alen);
-  arr1[alen - 1] = ~arr1[alen - 1];
+  generate_random_hint_bits<k, ω>(_h0);
 
-  const bool failed0 = bit_packing::decode_hint_bits<k, ω>(arr0, h1);
-  const bool failed1 = bit_packing::decode_hint_bits<k, ω>(arr1, h2);
+  bit_packing::encode_hint_bits<k, ω>(_h0, _arr0);
+  std::copy(_arr0.begin(), _arr0.end(), _arr1.begin());
+  _arr1[enc_len - 1] = ~_arr1[enc_len - 1];
+
+  const bool failed0 = bit_packing::decode_hint_bits<k, ω>(_arr0, _h1);
+  const bool failed1 = bit_packing::decode_hint_bits<k, ω>(_arr1, _h2);
 
   bool flg = true;
 
   for (size_t i = 0; i < k * ntt::N; i++) {
-    flg &= (h0[i] == h1[i]);
+    flg &= (_h0[i] == _h1[i]);
   }
-
-  std::free(h0);
-  std::free(h1);
-  std::free(h2);
-  std::free(arr0);
-  std::free(arr1);
 
   EXPECT_TRUE(flg & !failed0 & failed1);
 }

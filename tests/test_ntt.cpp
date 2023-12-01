@@ -1,5 +1,6 @@
 #include "ntt.hpp"
 #include <gtest/gtest.h>
+#include <vector>
 
 // Ensure functional correctness of (inverse) NTT implementation for degree-255
 // polynomial over Z_q | q = 2^23 - 2^13 + 1, using following rule
@@ -11,30 +12,28 @@
 // assert(f == f'')
 TEST(Dilithium, NumberTheoreticTransform)
 {
-  constexpr size_t poly_len = sizeof(field::zq_t) * ntt::N;
+  std::vector<field::zq_t> poly_a(ntt::N, 0);
+  std::vector<field::zq_t> poly_b(ntt::N, 0);
 
-  field::zq_t* poly_a = static_cast<field::zq_t*>(std::malloc(poly_len));
-  field::zq_t* poly_b = static_cast<field::zq_t*>(std::malloc(poly_len));
+  auto _poly_a = std::span<field::zq_t, ntt::N>(poly_a);
+  auto _poly_b = std::span<field::zq_t, ntt::N>(poly_b);
 
   prng::prng_t prng;
 
   for (size_t i = 0; i < ntt::N; i++) {
-    poly_a[i] = field::zq_t::random(prng);
+    _poly_a[i] = field::zq_t::random(prng);
   }
 
-  std::memcpy(poly_b, poly_a, poly_len);
+  std::copy(_poly_a.begin(), _poly_a.end(), _poly_b.begin());
 
-  ntt::ntt(poly_b);
-  ntt::intt(poly_b);
+  ntt::ntt(_poly_b);
+  ntt::intt(_poly_b);
 
   bool flg = true;
 
   for (size_t i = 0; i < ntt::N; i++) {
-    flg &= (poly_a[i] == poly_b[i]);
+    flg &= (_poly_a[i] == _poly_b[i]);
   }
-
-  std::free(poly_a);
-  std::free(poly_b);
 
   EXPECT_TRUE(flg);
 }

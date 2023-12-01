@@ -9,11 +9,11 @@
 // Collects inspiration from
 // https://github.com/itzmeanjan/gift-cofb/blob/0bd9baa/wrapper/python/test_gift_cofb.py#L79-L101
 static inline void
-random_bit_flip(uint8_t* const arr, const size_t alen)
+random_bit_flip(std::span<uint8_t> arr)
 {
   std::random_device rd;
   std::mt19937_64 gen(rd());
-  std::uniform_int_distribution<size_t> dis{ 0, alen - 1 };
+  std::uniform_int_distribution<size_t> dis{ 0, arr.size() - 1 };
 
   const size_t idx = dis(gen);
   const size_t bidx = dis(gen) & 7ul;
@@ -46,45 +46,46 @@ test_dilithium2_signing(const size_t mlen)
   constexpr size_t sklen = dilithium2::SecKeyLen;
   constexpr size_t siglen = dilithium2::SigLen;
 
-  uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
-  uint8_t* pkey0 = static_cast<uint8_t*>(std::malloc(pklen));
-  uint8_t* pkey1 = static_cast<uint8_t*>(std::malloc(pklen));
-  uint8_t* skey = static_cast<uint8_t*>(std::malloc(sklen));
-  uint8_t* sig0 = static_cast<uint8_t*>(std::malloc(siglen));
-  uint8_t* sig1 = static_cast<uint8_t*>(std::malloc(siglen));
-  uint8_t* msg0 = static_cast<uint8_t*>(std::malloc(mlen));
-  uint8_t* msg1 = static_cast<uint8_t*>(std::malloc(mlen));
+  std::vector<uint8_t> seed(slen, 0);
+  std::vector<uint8_t> pkey0(pklen, 0);
+  std::vector<uint8_t> pkey1(pklen, 0);
+  std::vector<uint8_t> skey(sklen, 0);
+  std::vector<uint8_t> sig0(siglen, 0);
+  std::vector<uint8_t> sig1(siglen, 0);
+  std::vector<uint8_t> msg0(mlen, 0);
+  std::vector<uint8_t> msg1(mlen, 0);
+
+  auto _seed = std::span<uint8_t, slen>(seed);
+  auto _pkey0 = std::span<uint8_t, pklen>(pkey0);
+  auto _pkey1 = std::span<uint8_t, pklen>(pkey1);
+  auto _skey = std::span<uint8_t, sklen>(skey);
+  auto _sig0 = std::span<uint8_t, siglen>(sig0);
+  auto _sig1 = std::span<uint8_t, siglen>(sig1);
+  auto _msg0 = std::span(msg0);
+  auto _msg1 = std::span(msg1);
 
   prng::prng_t prng;
 
-  prng.read(seed, slen);
-  prng.read(msg0, mlen);
+  prng.read(_seed);
+  prng.read(_msg0);
 
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
-  dilithium2::keygen(seed, pkey0, skey);
-  dilithium2::sign(skey, msg0, mlen, sig0, nullptr);
+  dilithium2::keygen(_seed, _pkey0, _skey);
+  dilithium2::sign(_skey, _msg0, _sig0, {});
 
-  std::memcpy(sig1, sig0, siglen);
-  std::memcpy(pkey1, pkey0, pklen);
-  std::memcpy(msg1, msg0, mlen);
+  std::copy(_sig0.begin(), _sig0.end(), _sig1.begin());
+  std::copy(_pkey0.begin(), _pkey0.end(), _pkey1.begin());
+  std::copy(_msg0.begin(), _msg0.end(), _msg1.begin());
 
-  random_bit_flip(sig1, siglen);
-  random_bit_flip(pkey1, pklen);
-  random_bit_flip(msg1, mlen);
+  random_bit_flip(_sig1);
+  random_bit_flip(_pkey1);
+  random_bit_flip(_msg1);
 
-  flg0 = dilithium2::verify(pkey0, msg0, mlen, sig0);
-  flg1 = dilithium2::verify(pkey0, msg0, mlen, sig1);
-  flg2 = dilithium2::verify(pkey1, msg0, mlen, sig0);
-  flg3 = dilithium2::verify(pkey0, msg1, mlen, sig0);
-
-  std::free(pkey0);
-  std::free(pkey1);
-  std::free(skey);
-  std::free(sig0);
-  std::free(sig1);
-  std::free(msg0);
-  std::free(msg1);
+  flg0 = dilithium2::verify(_pkey0, _msg0, _sig0);
+  flg1 = dilithium2::verify(_pkey0, _msg0, _sig1);
+  flg2 = dilithium2::verify(_pkey1, _msg0, _sig0);
+  flg3 = dilithium2::verify(_pkey0, _msg1, _sig0);
 
   EXPECT_TRUE(flg0 & !flg1 & !flg2 & !flg3);
 }
@@ -113,45 +114,46 @@ test_dilithium3_signing(const size_t mlen)
   constexpr size_t sklen = dilithium3::SecKeyLen;
   constexpr size_t siglen = dilithium3::SigLen;
 
-  uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
-  uint8_t* pkey0 = static_cast<uint8_t*>(std::malloc(pklen));
-  uint8_t* pkey1 = static_cast<uint8_t*>(std::malloc(pklen));
-  uint8_t* skey = static_cast<uint8_t*>(std::malloc(sklen));
-  uint8_t* sig0 = static_cast<uint8_t*>(std::malloc(siglen));
-  uint8_t* sig1 = static_cast<uint8_t*>(std::malloc(siglen));
-  uint8_t* msg0 = static_cast<uint8_t*>(std::malloc(mlen));
-  uint8_t* msg1 = static_cast<uint8_t*>(std::malloc(mlen));
+  std::vector<uint8_t> seed(slen, 0);
+  std::vector<uint8_t> pkey0(pklen, 0);
+  std::vector<uint8_t> pkey1(pklen, 0);
+  std::vector<uint8_t> skey(sklen, 0);
+  std::vector<uint8_t> sig0(siglen, 0);
+  std::vector<uint8_t> sig1(siglen, 0);
+  std::vector<uint8_t> msg0(mlen, 0);
+  std::vector<uint8_t> msg1(mlen, 0);
+
+  auto _seed = std::span<uint8_t, slen>(seed);
+  auto _pkey0 = std::span<uint8_t, pklen>(pkey0);
+  auto _pkey1 = std::span<uint8_t, pklen>(pkey1);
+  auto _skey = std::span<uint8_t, sklen>(skey);
+  auto _sig0 = std::span<uint8_t, siglen>(sig0);
+  auto _sig1 = std::span<uint8_t, siglen>(sig1);
+  auto _msg0 = std::span(msg0);
+  auto _msg1 = std::span(msg1);
 
   prng::prng_t prng;
 
-  prng.read(seed, slen);
-  prng.read(msg0, mlen);
+  prng.read(_seed);
+  prng.read(_msg0);
 
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
-  dilithium3::keygen(seed, pkey0, skey);
-  dilithium3::sign(skey, msg0, mlen, sig0, nullptr);
+  dilithium3::keygen(_seed, _pkey0, _skey);
+  dilithium3::sign(_skey, _msg0, _sig0, {});
 
-  std::memcpy(sig1, sig0, siglen);
-  std::memcpy(pkey1, pkey0, pklen);
-  std::memcpy(msg1, msg0, mlen);
+  std::copy(_sig0.begin(), _sig0.end(), _sig1.begin());
+  std::copy(_pkey0.begin(), _pkey0.end(), _pkey1.begin());
+  std::copy(_msg0.begin(), _msg0.end(), _msg1.begin());
 
-  random_bit_flip(sig1, siglen);
-  random_bit_flip(pkey1, pklen);
-  random_bit_flip(msg1, mlen);
+  random_bit_flip(_sig1);
+  random_bit_flip(_pkey1);
+  random_bit_flip(_msg1);
 
-  flg0 = dilithium3::verify(pkey0, msg0, mlen, sig0);
-  flg1 = dilithium3::verify(pkey0, msg0, mlen, sig1);
-  flg2 = dilithium3::verify(pkey1, msg0, mlen, sig0);
-  flg3 = dilithium3::verify(pkey0, msg1, mlen, sig0);
-
-  std::free(pkey0);
-  std::free(pkey1);
-  std::free(skey);
-  std::free(sig0);
-  std::free(sig1);
-  std::free(msg0);
-  std::free(msg1);
+  flg0 = dilithium3::verify(_pkey0, _msg0, _sig0);
+  flg1 = dilithium3::verify(_pkey0, _msg0, _sig1);
+  flg2 = dilithium3::verify(_pkey1, _msg0, _sig0);
+  flg3 = dilithium3::verify(_pkey0, _msg1, _sig0);
 
   EXPECT_TRUE(flg0 & !flg1 & !flg2 & !flg3);
 }
@@ -180,45 +182,46 @@ test_dilithium5_signing(const size_t mlen)
   constexpr size_t sklen = dilithium5::SecKeyLen;
   constexpr size_t siglen = dilithium5::SigLen;
 
-  uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
-  uint8_t* pkey0 = static_cast<uint8_t*>(std::malloc(pklen));
-  uint8_t* pkey1 = static_cast<uint8_t*>(std::malloc(pklen));
-  uint8_t* skey = static_cast<uint8_t*>(std::malloc(sklen));
-  uint8_t* sig0 = static_cast<uint8_t*>(std::malloc(siglen));
-  uint8_t* sig1 = static_cast<uint8_t*>(std::malloc(siglen));
-  uint8_t* msg0 = static_cast<uint8_t*>(std::malloc(mlen));
-  uint8_t* msg1 = static_cast<uint8_t*>(std::malloc(mlen));
+  std::vector<uint8_t> seed(slen, 0);
+  std::vector<uint8_t> pkey0(pklen, 0);
+  std::vector<uint8_t> pkey1(pklen, 0);
+  std::vector<uint8_t> skey(sklen, 0);
+  std::vector<uint8_t> sig0(siglen, 0);
+  std::vector<uint8_t> sig1(siglen, 0);
+  std::vector<uint8_t> msg0(mlen, 0);
+  std::vector<uint8_t> msg1(mlen, 0);
+
+  auto _seed = std::span<uint8_t, slen>(seed);
+  auto _pkey0 = std::span<uint8_t, pklen>(pkey0);
+  auto _pkey1 = std::span<uint8_t, pklen>(pkey1);
+  auto _skey = std::span<uint8_t, sklen>(skey);
+  auto _sig0 = std::span<uint8_t, siglen>(sig0);
+  auto _sig1 = std::span<uint8_t, siglen>(sig1);
+  auto _msg0 = std::span(msg0);
+  auto _msg1 = std::span(msg1);
 
   prng::prng_t prng;
 
-  prng.read(seed, slen);
-  prng.read(msg0, mlen);
+  prng.read(_seed);
+  prng.read(_msg0);
 
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
-  dilithium5::keygen(seed, pkey0, skey);
-  dilithium5::sign(skey, msg0, mlen, sig0, nullptr);
+  dilithium5::keygen(_seed, _pkey0, _skey);
+  dilithium5::sign(_skey, _msg0, _sig0, {});
 
-  std::memcpy(sig1, sig0, siglen);
-  std::memcpy(pkey1, pkey0, pklen);
-  std::memcpy(msg1, msg0, mlen);
+  std::copy(_sig0.begin(), _sig0.end(), _sig1.begin());
+  std::copy(_pkey0.begin(), _pkey0.end(), _pkey1.begin());
+  std::copy(_msg0.begin(), _msg0.end(), _msg1.begin());
 
-  random_bit_flip(sig1, siglen);
-  random_bit_flip(pkey1, pklen);
-  random_bit_flip(msg1, mlen);
+  random_bit_flip(_sig1);
+  random_bit_flip(_pkey1);
+  random_bit_flip(_msg1);
 
-  flg0 = dilithium5::verify(pkey0, msg0, mlen, sig0);
-  flg1 = dilithium5::verify(pkey0, msg0, mlen, sig1);
-  flg2 = dilithium5::verify(pkey1, msg0, mlen, sig0);
-  flg3 = dilithium5::verify(pkey0, msg1, mlen, sig0);
-
-  std::free(pkey0);
-  std::free(pkey1);
-  std::free(skey);
-  std::free(sig0);
-  std::free(sig1);
-  std::free(msg0);
-  std::free(msg1);
+  flg0 = dilithium5::verify(_pkey0, _msg0, _sig0);
+  flg1 = dilithium5::verify(_pkey0, _msg0, _sig1);
+  flg2 = dilithium5::verify(_pkey1, _msg0, _sig0);
+  flg3 = dilithium5::verify(_pkey0, _msg1, _sig0);
 
   EXPECT_TRUE(flg0 & !flg1 & !flg2 & !flg3);
 }
