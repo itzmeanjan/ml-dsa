@@ -36,9 +36,9 @@ keygen(std::span<const uint8_t, 32> seed,
   hasher.finalize();
   hasher.squeeze(_seed_hash);
 
-  auto rho = _seed_hash.subspan<0, 32>();
-  auto rho_prime = _seed_hash.subspan<rho.size(), 64>();
-  auto key = _seed_hash.subspan<rho.size() + rho_prime.size(), 32>();
+  auto rho = _seed_hash.template subspan<0, 32>();
+  auto rho_prime = _seed_hash.template subspan<rho.size(), 64>();
+  auto key = _seed_hash.template subspan<rho.size() + rho_prime.size(), 32>();
 
   std::array<field::zq_t, k * l * ntt::N> A{};
   sampling::expand_a<k, l>(rho, A);
@@ -163,7 +163,6 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
   constexpr size_t skoff3 = skoff2 + 32;
   constexpr size_t skoff4 = skoff3 + s1_len;
   constexpr size_t skoff5 = skoff4 + s2_len;
-  constexpr size_t skoff6 = seckey.size();
 
   auto rho = seckey.template subspan<skoff0, skoff1 - skoff0>();
   auto key = seckey.template subspan<skoff1, skoff2 - skoff1>();
@@ -205,7 +204,7 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
 
   polyvec::decode<l, eta_bw>(seckey.template subspan<skoff3, skoff4 - skoff3>(), s1);
   polyvec::decode<k, eta_bw>(seckey.template subspan<skoff4, skoff5 - skoff4>(), s2);
-  polyvec::decode<k, d>(seckey.template subspan<skoff5, skoff6 - skoff5>, t0);
+  polyvec::decode<k, d>(seckey.template subspan<skoff5, seckey.size() - skoff5>(), t0);
 
   polyvec::sub_from_x<l, η>(s1);
   polyvec::sub_from_x<k, η>(s2);
@@ -247,7 +246,7 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
     polyvec::highbits<k, α>(w, w1);
 
     std::memcpy(_hash_in.template subspan<0, _mu.size()>().data(), _mu.data(), _mu.size());
-    polyvec::encode<k, w1bw>(w1, _hash_in.template subspan<_mu.size(), _hash_in.size() - _mu.size()>);
+    polyvec::encode<k, w1bw>(w1, _hash_in.template subspan<_mu.size(), _hash_in.size() - _mu.size()>());
 
     hasher.reset();
     hasher.absorb(_hash_in);
@@ -314,7 +313,7 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
   std::memcpy(sig.template subspan<sigoff0, sigoff1 - sigoff0>().data(), hash_out.data(), hash_out.size());
   polyvec::sub_from_x<l, γ1>(z);
   polyvec::encode<l, gamma1_bw>(z, sig.template subspan<sigoff1, sigoff2 - sigoff1>());
-  bit_packing::encode_hint_bits<k, ω>(h, sig.template subspan<sigoff2, sigoff3 - sigoff3>());
+  bit_packing::encode_hint_bits<k, ω>(h, sig.template subspan<sigoff2, sigoff3 - sigoff2>());
 }
 
 // Given a Dilithium public key, message bytes and serialized signature, this

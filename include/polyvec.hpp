@@ -10,6 +10,7 @@
 // Utility functions applied on vector of degree-255 polynomials
 namespace polyvec {
 
+using const_poly_t = std::span<const field::zq_t, ntt::N>;
 using poly_t = std::span<field::zq_t, ntt::N>;
 
 // Applies NTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
@@ -45,8 +46,9 @@ power2round(std::span<const field::zq_t, k * ntt::N> poly,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly::power2round<d>(
-      poly_t(poly.subspan(off, ntt::N)), poly_t(poly_hi.subspan(off, ntt::N)), poly_t(poly_lo.subspan(off, ntt::N)));
+    poly::power2round<d>(const_poly_t(poly.subspan(off, ntt::N)),
+                         poly_t(poly_hi.subspan(off, ntt::N)),
+                         poly_t(poly_lo.subspan(off, ntt::N)));
   }
 }
 
@@ -71,7 +73,7 @@ matrix_multiply(std::span<const field::zq_t, a_rows * a_cols * ntt::N> a,
         const size_t aoff = (i * a_cols + k) * ntt::N;
         const size_t boff = (k * b_cols + j) * ntt::N;
 
-        poly::mul(poly_t(a.subspan(aoff, ntt::N)), poly_t(b.subspan(boff, ntt::N)), _tmp);
+        poly::mul(const_poly_t(a.subspan(aoff, ntt::N)), const_poly_t(b.subspan(boff, ntt::N)), _tmp);
 
         for (size_t l = 0; l < _tmp.size(); l++) {
           c[coff + l] += _tmp[l];
@@ -139,7 +141,7 @@ encode(std::span<const field::zq_t, k * ntt::N> src, std::span<uint8_t, k * sbw 
     const size_t off0 = i * ntt::N;
     const size_t off1 = i * poly_blen;
 
-    bit_packing::encode<sbw>(poly_t(src.subspan(off0, ntt::N)),
+    bit_packing::encode<sbw>(const_poly_t(src.subspan(off0, ntt::N)),
                              std::span<uint8_t, poly_blen>(dst.subspan(off1, poly_blen)));
   }
 }
@@ -158,7 +160,7 @@ decode(std::span<const uint8_t, k * sbw * ntt::N / 8> src, std::span<field::zq_t
     const size_t off0 = i * poly_blen;
     const size_t off1 = i * ntt::N;
 
-    bit_packing::decode<sbw>(std::span<uint8_t, poly_blen>(src.subspan(off0, poly_blen)),
+    bit_packing::decode<sbw>(std::span<const uint8_t, poly_blen>(src.subspan(off0, poly_blen)),
                              poly_t(dst.subspan(off1, ntt::N)));
   }
 }
@@ -171,7 +173,7 @@ highbits(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k 
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly::highbits<alpha>(poly_t(src.subspan(off, ntt::N)), poly_t(dst.subspan(off, ntt::N)));
+    poly::highbits<alpha>(const_poly_t(src.subspan(off, ntt::N)), poly_t(dst.subspan(off, ntt::N)));
   }
 }
 
@@ -183,7 +185,7 @@ lowbits(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k *
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly::lowbits<alpha>(poly_t(src.subspan(off, ntt::N)), poly_t(dst.subspan(off, ntt::N)));
+    poly::lowbits<alpha>(const_poly_t(src.subspan(off, ntt::N)), poly_t(dst.subspan(off, ntt::N)));
   }
 }
 
@@ -199,7 +201,7 @@ mul_by_poly(std::span<const field::zq_t, ntt::N> poly,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly::mul(poly, poly_t(src_vec.subspan(off, ntt::N)), poly_t(dst_vec.subspan(off, ntt::N)));
+    poly::mul(poly, const_poly_t(src_vec.subspan(off, ntt::N)), poly_t(dst_vec.subspan(off, ntt::N)));
   }
 }
 
@@ -216,7 +218,7 @@ infinity_norm(std::span<const field::zq_t, k * ntt::N> vec)
 
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    res = std::max(res, poly::infinity_norm(poly_t(vec.subspan(off, ntt::N))));
+    res = std::max(res, poly::infinity_norm(const_poly_t(vec.subspan(off, ntt::N))));
   }
 
   return res;
@@ -232,8 +234,9 @@ make_hint(std::span<const field::zq_t, k * ntt::N> polya,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly::make_hint<alpha>(
-      poly_t(polya.subspan(off, ntt::N)), poly_t(polyb.subspan(off, ntt::N)), poly_t(polyc.subspan(off, ntt::N)));
+    poly::make_hint<alpha>(const_poly_t(polya.subspan(off, ntt::N)),
+                           const_poly_t(polyb.subspan(off, ntt::N)),
+                           poly_t(polyc.subspan(off, ntt::N)));
   }
 }
 
@@ -248,8 +251,9 @@ use_hint(std::span<const field::zq_t, k * ntt::N> polyh,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    poly::use_hint<alpha>(
-      poly_t(polyh.subspan(off, ntt::N)), poly_t(polyr.subspan(off, ntt::N)), poly_t(polyrz.subspan(off, ntt::N)));
+    poly::use_hint<alpha>(const_poly_t(polyh.subspan(off, ntt::N)),
+                          const_poly_t(polyr.subspan(off, ntt::N)),
+                          poly_t(polyrz.subspan(off, ntt::N)));
   }
 }
 
@@ -263,7 +267,7 @@ count_1s(std::span<const field::zq_t, k * ntt::N> vec)
 
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
-    cnt += poly::count_1s(poly_t(vec.subspan(off, ntt::N)));
+    cnt += poly::count_1s(const_poly_t(vec.subspan(off, ntt::N)));
   }
 
   return cnt;

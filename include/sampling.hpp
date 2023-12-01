@@ -30,7 +30,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<field::zq_t, k * l * ntt::N
   std::array<uint8_t, rho.size() + 2> msg{};
   auto _msg = std::span(msg);
 
-  std::memcpy(_msg.subspan<0, rho.size()>().data(), rho.data(), rho.size());
+  std::memcpy(_msg.template subspan<0, rho.size()>().data(), rho.data(), rho.size());
 
   for (size_t i = 0; i < k; i++) {
     for (size_t j = 0; j < l; j++) {
@@ -90,7 +90,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<field::zq_t, k * ntt:
   std::array<uint8_t, rho_prime.size() + 2> msg{};
   auto _msg = std::span(msg);
 
-  std::memcpy(_msg.subspan<0, rho_prime.size()>().data(), rho_prime.data(), rho_prime.size());
+  std::memcpy(_msg.template subspan<0, rho_prime.size()>().data(), rho_prime.data(), rho_prime.size());
 
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -165,7 +165,7 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<f
   auto _msg = std::span(msg);
   auto _buf = std::span(buf);
 
-  std::memcpy(_msg.subspan<0, seed.size()>().data(), seed.data(), seed.size());
+  std::memcpy(_msg.template subspan<0, seed.size()>().data(), seed.data(), seed.size());
 
   for (size_t i = 0; i < l; i++) {
     const size_t off = i * ntt::N;
