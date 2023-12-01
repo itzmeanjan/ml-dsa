@@ -10,27 +10,27 @@ dilithium2_keygen(benchmark::State& state)
   constexpr size_t pklen = dilithium2::PubKeyLen;
   constexpr size_t sklen = dilithium2::SecKeyLen;
 
-  uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
-  uint8_t* pubkey = static_cast<uint8_t*>(std::malloc(pklen));
-  uint8_t* seckey = static_cast<uint8_t*>(std::malloc(sklen));
+  std::vector<uint8_t> seed(slen, 0);
+  std::vector<uint8_t> pubkey(pklen, 0);
+  std::vector<uint8_t> seckey(sklen, 0);
+
+  auto _seed = std::span<uint8_t, slen>(seed);
+  auto _pubkey = std::span<uint8_t, pklen>(pubkey);
+  auto _seckey = std::span<uint8_t, sklen>(seckey);
 
   prng::prng_t prng;
-  prng.read(seed, slen);
+  prng.read(_seed);
 
   for (auto _ : state) {
-    dilithium2::keygen(seed, pubkey, seckey);
+    dilithium2::keygen(_seed, _pubkey, _seckey);
 
-    benchmark::DoNotOptimize(seed);
-    benchmark::DoNotOptimize(pubkey);
-    benchmark::DoNotOptimize(seckey);
+    benchmark::DoNotOptimize(_seed);
+    benchmark::DoNotOptimize(_pubkey);
+    benchmark::DoNotOptimize(_seckey);
     benchmark::ClobberMemory();
   }
 
   state.SetItemsProcessed(state.iterations());
-
-  std::free(seed);
-  std::free(pubkey);
-  std::free(seckey);
 }
 
 // Benchmark Dilithium2 signing algorithm's performance
@@ -43,38 +43,35 @@ dilithium2_sign(benchmark::State& state)
   constexpr size_t sklen = dilithium2::SecKeyLen;
   constexpr size_t siglen = dilithium2::SigLen;
 
-  uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
-  uint8_t* pkey = static_cast<uint8_t*>(std::malloc(pklen));
-  uint8_t* skey = static_cast<uint8_t*>(std::malloc(sklen));
-  uint8_t* sig = static_cast<uint8_t*>(std::malloc(siglen));
-  uint8_t* msg = static_cast<uint8_t*>(std::malloc(mlen));
+  std::vector<uint8_t> seed(slen, 0);
+  std::vector<uint8_t> pkey(pklen, 0);
+  std::vector<uint8_t> skey(sklen, 0);
+  std::vector<uint8_t> sig(siglen, 0);
+  std::vector<uint8_t> msg(mlen, 0);
+
+  auto _seed = std::span<uint8_t, slen>(seed);
+  auto _pkey = std::span<uint8_t, pklen>(pkey);
+  auto _skey = std::span<uint8_t, sklen>(skey);
+  auto _sig = std::span<uint8_t, siglen>(sig);
+  auto _msg = std::span(msg);
 
   prng::prng_t prng;
-  prng.read(seed, slen);
-  prng.read(msg, mlen);
+  prng.read(_seed);
+  prng.read(_msg);
 
-  dilithium2::keygen(seed, pkey, skey);
+  dilithium2::keygen(_seed, _pkey, _skey);
 
   for (auto _ : state) {
-    dilithium2::sign(skey, msg, mlen, sig, nullptr);
+    dilithium2::sign(_skey, _msg, _sig, {});
 
-    benchmark::DoNotOptimize(skey);
-    benchmark::DoNotOptimize(msg);
-    benchmark::DoNotOptimize(sig);
+    benchmark::DoNotOptimize(_skey);
+    benchmark::DoNotOptimize(_msg);
+    benchmark::DoNotOptimize(_sig);
     benchmark::ClobberMemory();
   }
 
   state.SetItemsProcessed(state.iterations());
-
-  const bool flg = dilithium2::verify(pkey, msg, mlen, sig);
-
-  std::free(seed);
-  std::free(pkey);
-  std::free(skey);
-  std::free(sig);
-  std::free(msg);
-
-  assert(flg);
+  assert(dilithium2::verify(_pkey, _msg, _sig));
 }
 
 // Benchmark Dilithium2 signature verification routine's performance
@@ -87,46 +84,38 @@ dilithium2_verify(benchmark::State& state)
   constexpr size_t sklen = dilithium2::SecKeyLen;
   constexpr size_t siglen = dilithium2::SigLen;
 
-  uint8_t* seed = static_cast<uint8_t*>(std::malloc(slen));
-  uint8_t* pkey = static_cast<uint8_t*>(std::malloc(pklen));
-  uint8_t* skey = static_cast<uint8_t*>(std::malloc(sklen));
-  uint8_t* sig = static_cast<uint8_t*>(std::malloc(siglen));
-  uint8_t* msg = static_cast<uint8_t*>(std::malloc(mlen));
+  std::vector<uint8_t> seed(slen, 0);
+  std::vector<uint8_t> pkey(pklen, 0);
+  std::vector<uint8_t> skey(sklen, 0);
+  std::vector<uint8_t> sig(siglen, 0);
+  std::vector<uint8_t> msg(mlen, 0);
+
+  auto _seed = std::span<uint8_t, slen>(seed);
+  auto _pkey = std::span<uint8_t, pklen>(pkey);
+  auto _skey = std::span<uint8_t, sklen>(skey);
+  auto _sig = std::span<uint8_t, siglen>(sig);
+  auto _msg = std::span(msg);
 
   prng::prng_t prng;
-  prng.read(seed, slen);
-  prng.read(msg, mlen);
+  prng.read(_seed);
+  prng.read(_msg);
 
-  dilithium2::keygen(seed, pkey, skey);
-  dilithium2::sign(skey, msg, mlen, sig, nullptr);
+  dilithium2::keygen(_seed, _pkey, _skey);
+  dilithium2::sign(_skey, _msg, _sig, {});
 
   for (auto _ : state) {
-    bool flg = dilithium2::verify(pkey, msg, mlen, sig);
+    bool flg = dilithium2::verify(_pkey, _msg, _sig);
 
     benchmark::DoNotOptimize(flg);
-    benchmark::DoNotOptimize(pkey);
-    benchmark::DoNotOptimize(msg);
-    benchmark::DoNotOptimize(sig);
+    benchmark::DoNotOptimize(_pkey);
+    benchmark::DoNotOptimize(_msg);
+    benchmark::DoNotOptimize(_sig);
     benchmark::ClobberMemory();
   }
 
   state.SetItemsProcessed(state.iterations());
-
-  std::free(seed);
-  std::free(pkey);
-  std::free(skey);
-  std::free(sig);
-  std::free(msg);
 }
 
-BENCHMARK(dilithium2_keygen)
-  ->ComputeStatistics("min", compute_min)
-  ->ComputeStatistics("max", compute_max);
-BENCHMARK(dilithium2_sign)
-  ->Arg(32)
-  ->ComputeStatistics("min", compute_min)
-  ->ComputeStatistics("max", compute_max);
-BENCHMARK(dilithium2_verify)
-  ->Arg(32)
-  ->ComputeStatistics("min", compute_min)
-  ->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium2_keygen)->ComputeStatistics("min", compute_min)->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium2_sign)->Arg(32)->ComputeStatistics("min", compute_min)->ComputeStatistics("max", compute_max);
+BENCHMARK(dilithium2_verify)->Arg(32)->ComputeStatistics("min", compute_min)->ComputeStatistics("max", compute_max);
