@@ -1,4 +1,4 @@
-name: Test Dilithium Post-Quantum Digital Signature Scheme using CI
+name: Test Dilithium Post-Quantum Digital Signature Scheme
 
 on:
   push:
@@ -8,13 +8,18 @@ on:
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.os}}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
 
     steps:
     - uses: actions/checkout@v3
-    - name: Get CMake
-      run: sudo apt-get install cmake
+    # From https://github.com/marketplace/actions/actions-setup-cmake
+    - name: Setup CMake
+      uses: jwlawson/actions-setup-cmake@v1.13
+      with:
+        cmake-version: 'latest'
     - name: Setup Google-Test
       run: |
         pushd ~
@@ -28,7 +33,7 @@ jobs:
         popd
         popd
         popd
-    - name: Execute Tests
+    - name: Execute Tests on ${{matrix.os}}
       run: make -j
     - name: Cleanup
       run: make clean
