@@ -35,5 +35,3 @@ jobs:
         popd
     - name: Execute Tests on ${{matrix.os}}
       run: make -j
-    - name: Cleanup
-      run: make clean
