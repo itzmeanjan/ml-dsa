@@ -2,6 +2,7 @@
 #include "dilithium3.hpp"
 #include "dilithium5.hpp"
 #include <algorithm>
+#include <array>
 #include <charconv>
 #include <fstream>
 #include <gtest/gtest.h>
@@ -26,7 +27,8 @@ TEST(Dilithium, Dilithium2KnownAnswerTests)
     if (!std::getline(file, seed0).eof()) {
       auto seed1 = std::string_view(seed0);
       auto seed2 = seed1.substr(seed1.find("="sv) + 2, seed1.size());
-      auto seed = utils::from_hex(seed2); // 32 -bytes seed
+      auto seed = utils::from_hex(seed2);
+      auto _seed = std::span<uint8_t, 32>(seed); // 32 -bytes seed
 
       std::string pkey0;
       std::getline(file, pkey0);
@@ -55,7 +57,8 @@ TEST(Dilithium, Dilithium2KnownAnswerTests)
 
       auto msg1 = std::string_view(msg0);
       auto msg2 = msg1.substr(msg1.find("="sv) + 2, msg1.size());
-      auto msg = utils::from_hex(msg2); // Message to be signed
+      auto msg = utils::from_hex(msg2);
+      auto _msg = std::span(msg); // Message to be signed
 
       std::string sig0;
       std::getline(file, sig0);
@@ -64,14 +67,18 @@ TEST(Dilithium, Dilithium2KnownAnswerTests)
       auto sig2 = sig1.substr(sig1.find("="sv) + 2, sig1.size());
       auto sig = utils::from_hex(sig2); // Expected signature
 
-      std::vector<uint8_t> _pkey(dilithium2::PubKeyLen); // Computed public key
-      std::vector<uint8_t> _skey(dilithium2::SecKeyLen); // Computed secret key
-      std::vector<uint8_t> _sig(dilithium2::SigLen);     // Computed signature
+      std::vector<uint8_t> _pkey(dilithium2::PubKeyLen, 0);
+      std::vector<uint8_t> _skey(dilithium2::SecKeyLen, 0);
+      std::vector<uint8_t> _sig(dilithium2::SigLen, 0);
+
+      auto __pkey = std::span<uint8_t, dilithium2::PubKeyLen>(_pkey); // Computed public key
+      auto __skey = std::span<uint8_t, dilithium2::SecKeyLen>(_skey); // Computed secret key
+      auto __sig = std::span<uint8_t, dilithium2::SigLen>(_sig);      // Computed signature
 
       // Keygen -> Sign -> Verify
-      dilithium2::keygen(seed.data(), _pkey.data(), _skey.data());
-      dilithium2::sign(_skey.data(), msg.data(), mlen, _sig.data(), nullptr);
-      auto f = dilithium2::verify(_pkey.data(), msg.data(), mlen, _sig.data());
+      dilithium2::keygen(_seed, __pkey, __skey);
+      dilithium2::sign(__skey, _msg, __sig, {});
+      const auto f = dilithium2::verify(__pkey, _msg, __sig);
 
       // Check if computed public key, secret key and signature matches expected
       // ones, from KAT file.
@@ -104,7 +111,8 @@ TEST(Dilithium, Dilithium3KnownAnswerTests)
     if (!std::getline(file, seed0).eof()) {
       auto seed1 = std::string_view(seed0);
       auto seed2 = seed1.substr(seed1.find("="sv) + 2, seed1.size());
-      auto seed = utils::from_hex(seed2); // 32 -bytes seed
+      auto seed = utils::from_hex(seed2);
+      auto _seed = std::span<uint8_t, 32>(seed); // 32 -bytes seed
 
       std::string pkey0;
       std::getline(file, pkey0);
@@ -133,7 +141,8 @@ TEST(Dilithium, Dilithium3KnownAnswerTests)
 
       auto msg1 = std::string_view(msg0);
       auto msg2 = msg1.substr(msg1.find("="sv) + 2, msg1.size());
-      auto msg = utils::from_hex(msg2); // Message to be signed
+      auto msg = utils::from_hex(msg2);
+      auto _msg = std::span(msg); // Message to be signed
 
       std::string sig0;
       std::getline(file, sig0);
@@ -142,14 +151,18 @@ TEST(Dilithium, Dilithium3KnownAnswerTests)
       auto sig2 = sig1.substr(sig1.find("="sv) + 2, sig1.size());
       auto sig = utils::from_hex(sig2); // Expected signature
 
-      std::vector<uint8_t> _pkey(dilithium3::PubKeyLen); // Computed public key
-      std::vector<uint8_t> _skey(dilithium3::SecKeyLen); // Computed secret key
-      std::vector<uint8_t> _sig(dilithium3::SigLen);     // Computed signature
+      std::vector<uint8_t> _pkey(dilithium3::PubKeyLen, 0);
+      std::vector<uint8_t> _skey(dilithium3::SecKeyLen, 0);
+      std::vector<uint8_t> _sig(dilithium3::SigLen, 0);
+
+      auto __pkey = std::span<uint8_t, dilithium3::PubKeyLen>(_pkey); // Computed public key
+      auto __skey = std::span<uint8_t, dilithium3::SecKeyLen>(_skey); // Computed secret key
+      auto __sig = std::span<uint8_t, dilithium3::SigLen>(_sig);      // Computed signature
 
       // Keygen -> Sign -> Verify
-      dilithium3::keygen(seed.data(), _pkey.data(), _skey.data());
-      dilithium3::sign(_skey.data(), msg.data(), mlen, _sig.data(), nullptr);
-      auto f = dilithium3::verify(_pkey.data(), msg.data(), mlen, _sig.data());
+      dilithium3::keygen(_seed, __pkey, __skey);
+      dilithium3::sign(__skey, _msg, __sig, {});
+      const auto f = dilithium3::verify(__pkey, _msg, __sig);
 
       // Check if computed public key, secret key and signature matches expected
       // ones, from KAT file.
@@ -182,7 +195,8 @@ TEST(Dilithium, Dilithium5KnownAnswerTests)
     if (!std::getline(file, seed0).eof()) {
       auto seed1 = std::string_view(seed0);
       auto seed2 = seed1.substr(seed1.find("="sv) + 2, seed1.size());
-      auto seed = utils::from_hex(seed2); // 32 -bytes seed
+      auto seed = utils::from_hex(seed2);
+      auto _seed = std::span<uint8_t, 32>(seed); // 32 -bytes seed
 
       std::string pkey0;
       std::getline(file, pkey0);
@@ -211,7 +225,8 @@ TEST(Dilithium, Dilithium5KnownAnswerTests)
 
       auto msg1 = std::string_view(msg0);
       auto msg2 = msg1.substr(msg1.find("="sv) + 2, msg1.size());
-      auto msg = utils::from_hex(msg2); // Message to be signed
+      auto msg = utils::from_hex(msg2);
+      auto _msg = std::span(msg); // Message to be signed
 
       std::string sig0;
       std::getline(file, sig0);
@@ -220,14 +235,18 @@ TEST(Dilithium, Dilithium5KnownAnswerTests)
       auto sig2 = sig1.substr(sig1.find("="sv) + 2, sig1.size());
       auto sig = utils::from_hex(sig2); // Expected signature
 
-      std::vector<uint8_t> _pkey(dilithium5::PubKeyLen); // Computed public key
-      std::vector<uint8_t> _skey(dilithium5::SecKeyLen); // Computed secret key
-      std::vector<uint8_t> _sig(dilithium5::SigLen);     // Computed signature
+      std::vector<uint8_t> _pkey(dilithium5::PubKeyLen, 0);
+      std::vector<uint8_t> _skey(dilithium5::SecKeyLen, 0);
+      std::vector<uint8_t> _sig(dilithium5::SigLen, 0);
+
+      auto __pkey = std::span<uint8_t, dilithium5::PubKeyLen>(_pkey); // Computed public key
+      auto __skey = std::span<uint8_t, dilithium5::SecKeyLen>(_skey); // Computed secret key
+      auto __sig = std::span<uint8_t, dilithium5::SigLen>(_sig);      // Computed signature
 
       // Keygen -> Sign -> Verify
-      dilithium5::keygen(seed.data(), _pkey.data(), _skey.data());
-      dilithium5::sign(_skey.data(), msg.data(), mlen, _sig.data(), nullptr);
-      auto f = dilithium5::verify(_pkey.data(), msg.data(), mlen, _sig.data());
+      dilithium5::keygen(_seed, __pkey, __skey);
+      dilithium5::sign(__skey, _msg, __sig, {});
+      const auto f = dilithium5::verify(__pkey, _msg, __sig);
 
       // Check if computed public key, secret key and signature matches expected
       // ones, from KAT file.

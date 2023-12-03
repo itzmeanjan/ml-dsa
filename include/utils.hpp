@@ -16,7 +16,7 @@ namespace dilithium_utils {
 // See table 2 and section 5.4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t d>
-inline static constexpr size_t
+static inline constexpr size_t
 pub_key_len()
   requires(dilithium_params::check_d(d))
 {
@@ -31,7 +31,7 @@ pub_key_len()
 // See table 2 and section 5.4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t l, const uint32_t η, const size_t d>
-inline static constexpr size_t
+static inline constexpr size_t
 sec_key_len()
   requires(dilithium_params::check_d(d))
 {
@@ -46,7 +46,7 @@ sec_key_len()
 // See table 2 and section 5.4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<const size_t k, const size_t l, const uint32_t γ1, const size_t ω>
-inline static constexpr size_t
+static inline constexpr size_t
 sig_len()
 {
   constexpr size_t gamma1_bw = std::bit_width(γ1);
@@ -56,13 +56,13 @@ sig_len()
 
 // Given a bytearray of length N, this function converts it to human readable
 // hex string of length N << 1 | N >= 0
-inline const std::string
-to_hex(const uint8_t* const bytes, const size_t len)
+static inline const std::string
+to_hex(std::span<const uint8_t> bytes)
 {
   std::stringstream ss;
   ss << std::hex;
 
-  for (size_t i = 0; i < len; i++) {
+  for (size_t i = 0; i < bytes.size(); i++) {
     ss << std::setw(2) << std::setfill('0') << static_cast<uint32_t>(bytes[i]);
   }
 
@@ -71,7 +71,7 @@ to_hex(const uint8_t* const bytes, const size_t len)
 
 // Given a hex encoded string of length 2*L, this routine can be used for
 // parsing it as a byte array of length L.
-inline std::vector<uint8_t>
+static inline std::vector<uint8_t>
 from_hex(std::string_view hex)
 {
   const size_t hlen = hex.length();

@@ -1,23 +1,28 @@
 #include "sampling.hpp"
+#include <array>
 #include <gtest/gtest.h>
+#include <vector>
 
 // Check whether hashing to a ball routine works as expected or not.
 template<const uint32_t τ>
 static void
 test_sample_in_ball()
 {
-  uint8_t seed[32]{};
-  field::zq_t poly[ntt::N]{};
+  std::array<uint8_t, 32> seed{};
+  std::vector<field::zq_t> poly(ntt::N, 0);
+
+  auto _seed = std::span(seed);
+  auto _poly = std::span<field::zq_t, ntt::N>(poly);
 
   prng::prng_t prng;
 
-  prng.read(seed, sizeof(seed));
-  sampling::sample_in_ball<τ>(seed, poly);
+  prng.read(_seed);
+  sampling::sample_in_ball<τ>(_seed, _poly);
 
-  field::zq_t sqrd_norm{ 0u };
+  auto sqrd_norm = field::zq_t::zero();
 
-  for (size_t i = 0; i < ntt::N; i++) {
-    sqrd_norm = sqrd_norm + (poly[i] * poly[i]);
+  for (size_t i = 0; i < _poly.size(); i++) {
+    sqrd_norm += (_poly[i] * _poly[i]);
   }
 
   EXPECT_EQ(sqrd_norm, field::zq_t(τ));
