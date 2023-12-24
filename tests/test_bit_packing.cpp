@@ -60,12 +60,10 @@ template<const size_t k, const size_t ω>
 void
 generate_random_hint_bits(std::span<field::zq_t, k * ntt::N> poly)
 {
-  for (size_t i = 0; i < k * ntt::N; i++) {
-    poly[i] = field::zq_t::zero();
-  }
+  std::fill(poly.begin(), poly.end(), field::zq_t::zero());
 
   constexpr size_t frm = 0;
-  constexpr size_t to = k * ntt::N - 1;
+  constexpr size_t to = poly.size() - 1;
 
   std::random_device rd;
   std::mt19937_64 gen(rd());
@@ -73,7 +71,7 @@ generate_random_hint_bits(std::span<field::zq_t, k * ntt::N> poly)
 
   for (size_t i = 0; i < ω; i++) {
     const size_t idx = dis(gen);
-    poly[idx] = field::zq_t{ 1u };
+    poly[idx] = field::zq_t::one();
   }
 }
 

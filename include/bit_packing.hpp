@@ -346,7 +346,7 @@ encode_hint_bits(std::span<const field::zq_t, k * ntt::N> h, std::span<uint8_t, 
       const bool flg = h[off + j] != zero;
       const uint8_t br[]{ arr[idx], static_cast<uint8_t>(j) };
 
-      arr[idx] = br[flg];
+      arr[idx] = br[static_cast<size_t>(flg)];
       idx += 1ul * flg;
     }
 
@@ -365,11 +365,7 @@ template<const size_t k, const size_t ω>
 static inline constexpr bool
 decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<field::zq_t, k * ntt::N> h)
 {
-  // Instead of using std::memset, prefer following, to avoid compiler warnings.
-  // Compiler should ideally be able to use std::memset for executing following.
-  for (size_t i = 0; i < h.size(); i++) {
-    h[i] = field::zq_t::zero();
-  }
+  std::fill(h.begin(), h.end(), field::zq_t::zero());
 
   size_t idx = 0;
   bool failed = false;
@@ -384,7 +380,7 @@ decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<field::zq_t, k 
     failed |= flg2;
 
     const size_t till = arr[ω + i];
-    for (size_t j = idx; j < till; j++) {
+    for (size_t j = idx; !failed && (j < till); j++) {
       const bool flg0 = j > idx;
       const bool flg1 = flg0 & (arr[j] <= arr[j - flg0 * 1]);
 

@@ -46,11 +46,8 @@ public:
   // Modulo addition of two Zq elements.
   inline constexpr zq_t operator+(const zq_t rhs) const
   {
-    const uint32_t t0 = this->v + rhs.v;
-    const uint32_t mask = (-static_cast<uint32_t>(t0 >= Q));
-    const uint32_t t1 = t0 - (mask & Q);
-
-    return zq_t(t1);
+    const uint32_t t = reduce_once(this->v + rhs.v);
+    return zq_t(t);
   }
 
   // Compound modulo addition of two Zq elements.
@@ -132,9 +129,7 @@ public:
     const uint64_t t5 = res * static_cast<uint64_t>(Q);
     const uint32_t t6 = static_cast<uint32_t>(t2 - t5);
 
-    const uint32_t mask = (-static_cast<uint32_t>(t6 >= Q));
-    const uint32_t t7 = t6 - (mask & Q);
-
+    const uint32_t t7 = reduce_once(t6);
     return zq_t(t7);
   }
 
@@ -237,11 +232,20 @@ private:
     const uint32_t t3 = t1 + t2;
     const uint32_t t4 = t3 & mask23;
 
-    const bool flg1 = t4 >= Q;
-    const uint32_t t5 = (-static_cast<uint32_t>(flg1)) & Q;
-    const uint32_t t6 = t4 - t5;
+    const uint32_t t5 = reduce_once(t4);
+    return t5;
+  }
 
-    return t6;
+  // Given a 32 -bit unsigned integer `v` such that `v` ∈ [0, 2*Q), this routine can be invoked for reducing `v` modulo
+  // prime Q.
+  static inline constexpr uint32_t reduce_once(const uint32_t val)
+  {
+    const uint32_t t0 = val - Q;
+    const uint32_t t1 = -(t0 >> 31);
+    const uint32_t t2 = t1 & Q;
+    const uint32_t t3 = t0 + t2;
+
+    return t3;
   }
 };
 
