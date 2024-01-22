@@ -72,41 +72,21 @@ make ubsan_test -j # Run tests with UndefinedBehaviourSanitizer enabled
 ```
 
 ```bash
-Note: Randomizing tests' orders with a seed of 75840 .
-[==========] Running 13 tests from 1 test suite.
-[----------] Global test environment set-up.
-[----------] 13 tests from Dilithium
-[ RUN      ] Dilithium.HashingToABall
-[       OK ] Dilithium.HashingToABall (0 ms)
-[ RUN      ] Dilithium.Dilithium5KeygenSignVerifyFlow
-[       OK ] Dilithium.Dilithium5KeygenSignVerifyFlow (55 ms)
-[ RUN      ] Dilithium.HintBitPolynomialEncodingDecoding
-[       OK ] Dilithium.HintBitPolynomialEncodingDecoding (0 ms)
-[ RUN      ] Dilithium.Dilithium3KeygenSignVerifyFlow
-[       OK ] Dilithium.Dilithium3KeygenSignVerifyFlow (34 ms)
-[ RUN      ] Dilithium.MakingAndUsingOfHintBits
-[       OK ] Dilithium.MakingAndUsingOfHintBits (10 ms)
-[ RUN      ] Dilithium.Dilithium2KnownAnswerTests
-[       OK ] Dilithium.Dilithium2KnownAnswerTests (57 ms)
-[ RUN      ] Dilithium.NumberTheoreticTransform
-[       OK ] Dilithium.NumberTheoreticTransform (0 ms)
-[ RUN      ] Dilithium.Dilithium3KnownAnswerTests
-[       OK ] Dilithium.Dilithium3KnownAnswerTests (81 ms)
-[ RUN      ] Dilithium.Dilithium2KeygenSignVerifyFlow
-[       OK ] Dilithium.Dilithium2KeygenSignVerifyFlow (23 ms)
-[ RUN      ] Dilithium.Power2Round
-[       OK ] Dilithium.Power2Round (2 ms)
-[ RUN      ] Dilithium.Dilithium5KnownAnswerTests
-[       OK ] Dilithium.Dilithium5KnownAnswerTests (122 ms)
-[ RUN      ] Dilithium.ArithmeticOverZq
-[       OK ] Dilithium.ArithmeticOverZq (356 ms)
-[ RUN      ] Dilithium.PolynomialEncodingDecoding
-[       OK ] Dilithium.PolynomialEncodingDecoding (0 ms)
-[----------] 13 tests from Dilithium (743 ms total)
-
-[----------] Global test environment tear-down
-[==========] 13 tests from 1 test suite ran. (743 ms total)
-[  PASSED  ] 13 tests.
+[13/13] Dilithium.ArithmeticOverZq (365 ms)
+PASSED TESTS (13/13):
+       1 ms: build/test.out Dilithium.HintBitPolynomialEncodingDecoding
+       1 ms: build/test.out Dilithium.PolynomialEncodingDecoding
+       1 ms: build/test.out Dilithium.HashingToABall
+       1 ms: build/test.out Dilithium.NumberTheoreticTransform
+       6 ms: build/test.out Dilithium.Power2Round
+      16 ms: build/test.out Dilithium.MakingAndUsingOfHintBits
+      54 ms: build/test.out Dilithium.Dilithium3KeygenSignVerifyFlow
+      54 ms: build/test.out Dilithium.Dilithium2KeygenSignVerifyFlow
+      92 ms: build/test.out Dilithium.Dilithium3KnownAnswerTests
+      93 ms: build/test.out Dilithium.Dilithium5KeygenSignVerifyFlow
+     112 ms: build/test.out Dilithium.Dilithium2KnownAnswerTests
+     149 ms: build/test.out Dilithium.Dilithium5KnownAnswerTests
+     365 ms: build/test.out Dilithium.ArithmeticOverZq
 ```
 
 ## Benchmarking
@@ -133,7 +113,14 @@ make perf -j       # If you have built google-benchmark library with libPFM supp
 > [!NOTE]
 > `make perf` - was issued when collecting following benchmarks. Notice, *cycles* column, denoting cost of executing Dilithium signature scheme routines in terms of CPU cycles. Follow [this](https://github.com/google/benchmark/blob/main/docs/perf_counters.md) for more details.
 
-### On 12th Gen Intel(R) Core(TM) i7-1260P **[ Compiled with GCC-13.2.0 ]**
+### On 12th Gen Intel(R) Core(TM) i7-1260P
+
+Compiled with **gcc version 13.2.0 (Ubuntu 13.2.0-4ubuntu3)**.
+
+```bash
+$ uname -srm
+Linux 6.5.0-14-generic x86_64
+```
 
 ```bash
 2023-12-24T13:05:17+04:00
@@ -204,7 +191,14 @@ dilithium5_verify/32_min           167 us          167 us           32   778.381
 dilithium5_verify/32_max           182 us          182 us           32   782.668k       6.00273k/s
 ```
 
-### On ARM Cortex-A72 i.e. Raspberry Pi 4B ( compiled with GCC-13.2.0 )
+### On ARM Cortex-A72 i.e. Raspberry Pi 4B
+
+Compiled with **gcc version 13.2.0 (Ubuntu 13.2.0-4ubuntu3)**.
+
+```bash
+$ uname -srm
+Linux 6.5.0-1008-raspi aarch64
+```
 
 ```bash
 2023-12-24T15:13:38+05:30
@@ -272,6 +266,83 @@ dilithium2_sign/32_stddev         1738 us         1738 us           32   3.12125
 dilithium2_sign/32_cv            77.14 %         77.13 %            32     77.14%           57.86%
 dilithium2_sign/32_min             782 us          782 us           32   1.40548M        109.753/s
 dilithium2_sign/32_max            9114 us         9111 us           32   16.3662M       1.27835k/s
+```
+
+### On Apple M1 Max
+
+Compiled with **Apple clang version 15.0.0 (clang-1500.1.0.2.5)**.
+
+```bash
+$ uname -srm
+Darwin 23.2.0 arm64
+```
+
+```bash
+2024-01-22T19:57:30+04:00
+Running ./build/bench.out
+Run on (10 X 24 MHz CPU s)
+CPU Caches:
+  L1 Data 64 KiB
+  L1 Instruction 128 KiB
+  L2 Unified 4096 KiB (x10)
+Load Average: 1.61, 1.96, 2.34
+---------------------------------------------------------------------------------------
+Benchmark                            Time             CPU   Iterations items_per_second
+---------------------------------------------------------------------------------------
+dilithium5_verify/32_mean          182 us          182 us           32       5.48988k/s
+dilithium5_verify/32_median        182 us          182 us           32       5.49471k/s
+dilithium5_verify/32_stddev      0.790 us        0.792 us           32         23.356/s
+dilithium5_verify/32_cv           0.43 %          0.43 %            32            0.43%
+dilithium5_verify/32_min           182 us          182 us           32       5.36387k/s
+dilithium5_verify/32_max           187 us          186 us           32        5.5007k/s
+dilithium3_keygen_mean             103 us          102 us           32       9.75627k/s
+dilithium3_keygen_median           103 us          103 us           32       9.75592k/s
+dilithium3_keygen_stddev         0.113 us        0.113 us           32        10.7959/s
+dilithium3_keygen_cv              0.11 %          0.11 %            32            0.11%
+dilithium3_keygen_min              102 us          102 us           32       9.72649k/s
+dilithium3_keygen_max              103 us          103 us           32       9.77192k/s
+dilithium2_sign/32_mean            389 us          388 us           32       3.60304k/s
+dilithium2_sign/32_median          308 us          308 us           32       3.28064k/s
+dilithium2_sign/32_stddev          224 us          224 us           32       2.13469k/s
+dilithium2_sign/32_cv            57.71 %         57.71 %            32           59.25%
+dilithium2_sign/32_min             125 us          125 us           32       1.10009k/s
+dilithium2_sign/32_max             910 us          909 us           32       7.99269k/s
+dilithium3_verify/32_mean          113 us          112 us           32       8.89718k/s
+dilithium3_verify/32_median        113 us          112 us           32        8.8974k/s
+dilithium3_verify/32_stddev      0.062 us        0.044 us           32        3.48072/s
+dilithium3_verify/32_cv           0.06 %          0.04 %            32            0.04%
+dilithium3_verify/32_min           112 us          112 us           32       8.89127k/s
+dilithium3_verify/32_max           113 us          112 us           32       8.90303k/s
+dilithium2_verify/32_mean         69.5 us         69.4 us           32       14.4038k/s
+dilithium2_verify/32_median       69.5 us         69.4 us           32       14.4049k/s
+dilithium2_verify/32_stddev      0.055 us        0.026 us           32        5.49004/s
+dilithium2_verify/32_cv           0.08 %          0.04 %            32            0.04%
+dilithium2_verify/32_min          69.4 us         69.4 us           32       14.3902k/s
+dilithium2_verify/32_max          69.7 us         69.5 us           32       14.4125k/s
+dilithium2_keygen_mean            60.7 us         60.6 us           32       16.4974k/s
+dilithium2_keygen_median          60.7 us         60.6 us           32       16.5101k/s
+dilithium2_keygen_stddev         0.489 us        0.482 us           32        130.751/s
+dilithium2_keygen_cv              0.81 %          0.80 %            32            0.79%
+dilithium2_keygen_min             59.8 us         59.8 us           32       16.1638k/s
+dilithium2_keygen_max             61.9 us         61.9 us           32       16.7339k/s
+dilithium5_sign/32_mean            786 us          785 us           32       1.79488k/s
+dilithium5_sign/32_median          574 us          573 us           32       1.74461k/s
+dilithium5_sign/32_stddev          560 us          559 us           32        943.588/s
+dilithium5_sign/32_cv            71.24 %         71.24 %            32           52.57%
+dilithium5_sign/32_min             287 us          287 us           32        368.016/s
+dilithium5_sign/32_max            2721 us         2717 us           32       3.48385k/s
+dilithium3_sign/32_mean            498 us          497 us           32       3.06659k/s
+dilithium3_sign/32_median          393 us          392 us           32        2.5494k/s
+dilithium3_sign/32_stddev          366 us          365 us           32       1.76289k/s
+dilithium3_sign/32_cv            73.44 %         73.44 %            32           57.49%
+dilithium3_sign/32_min             190 us          189 us           32         621.66/s
+dilithium3_sign/32_max            1611 us         1609 us           32       5.27815k/s
+dilithium5_keygen_mean             168 us          167 us           32       5.97094k/s
+dilithium5_keygen_median           168 us          168 us           32       5.96961k/s
+dilithium5_keygen_stddev         0.495 us        0.469 us           32        16.7342/s
+dilithium5_keygen_cv              0.30 %          0.28 %            32            0.28%
+dilithium5_keygen_min              167 us          166 us           32       5.94183k/s
+dilithium5_keygen_max              169 us          168 us           32       6.01249k/s
 ```
 
 ## Usage
