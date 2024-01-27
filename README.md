@@ -1,5 +1,5 @@
 > [!CAUTION]
-> This Dilithium implementation is conformant with Dilithium [specification](https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf) and I also try to make it constant-time but be informed that it is not yet audited. **If you consider using it in production, be careful !**
+> This Dilithium implementation is conformant with Dilithium specification @ https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf. I also try to make it timing leakage free, using `dudect` (see https://github.com/oreparaz/dudect) -based tests, but be informed that this implementation is not yet audited. *If you consider using it in production, be careful !*
 
 # dilithium
 CRYSTALS-Dilithium: Post-Quantum Digital Signature Algorithm
@@ -87,6 +87,45 @@ PASSED TESTS (13/13):
      112 ms: build/test.out Dilithium.Dilithium2KnownAnswerTests
      149 ms: build/test.out Dilithium.Dilithium5KnownAnswerTests
      365 ms: build/test.out Dilithium.ArithmeticOverZq
+```
+
+You can run timing leakage tests, using `dudect`, execute following
+
+> [!NOTE]
+> `dudect` is integrated into this library implementation of Dilithium DSA to find any sort of timing leakages. It checks for constant-timeness of most of the vital internal functions. Though it doesn't check constant-timeness of functions which use uniform rejection sampling, such as expansion of public matrix `A` or sampling of the vectors `s1`, `s2` or hashing to a ball etc.
+
+```bash
+# Can only be built and run on x86_64 machine.
+make dudect_test_build -j
+
+# Before running the constant-time tests, it's a good idea to put all CPU cores on "performance" mode.
+# You may find the guide @ https://github.com/google/benchmark/blob/main/docs/reducing_variance.md helpful.
+
+timeout 10m taskset -c 0 ./build/dudect/test_dilithium2.out
+timeout 10m taskset -c 0 ./build/dudect/test_dilithium3.out
+timeout 10m taskset -c 0 ./build/dudect/test_dilithium5.out
+```
+
+> [!TIP]
+> `dudect` documentation says if `t` statistic is `< 10`, we're *probably* good, yes **probably**. You may want to read `dudect` documentation @ https://github.com/oreparaz/dudect. Also you might find the original paper @ https://ia.cr/2016/1123 interesting.
+
+```bash
+...
+meas:   48.38 M, max t:   +2.77, max tau: 3.99e-04, (5/tau)^2: 1.57e+08. For the moment, maybe constant time.
+meas:   48.48 M, max t:   +2.73, max tau: 3.93e-04, (5/tau)^2: 1.62e+08. For the moment, maybe constant time.
+meas:   48.57 M, max t:   +2.76, max tau: 3.96e-04, (5/tau)^2: 1.59e+08. For the moment, maybe constant time.
+meas:   48.67 M, max t:   +2.78, max tau: 3.99e-04, (5/tau)^2: 1.57e+08. For the moment, maybe constant time.
+meas:   48.76 M, max t:   +2.79, max tau: 3.99e-04, (5/tau)^2: 1.57e+08. For the moment, maybe constant time.
+meas:   48.85 M, max t:   +2.78, max tau: 3.97e-04, (5/tau)^2: 1.58e+08. For the moment, maybe constant time.
+meas:   48.95 M, max t:   +2.79, max tau: 3.98e-04, (5/tau)^2: 1.58e+08. For the moment, maybe constant time.
+meas:   49.05 M, max t:   +2.77, max tau: 3.95e-04, (5/tau)^2: 1.60e+08. For the moment, maybe constant time.
+meas:   49.14 M, max t:   +2.69, max tau: 3.84e-04, (5/tau)^2: 1.70e+08. For the moment, maybe constant time.
+meas:   49.24 M, max t:   +2.75, max tau: 3.92e-04, (5/tau)^2: 1.62e+08. For the moment, maybe constant time.
+meas:   49.33 M, max t:   +2.73, max tau: 3.89e-04, (5/tau)^2: 1.65e+08. For the moment, maybe constant time.
+meas:   49.43 M, max t:   +2.76, max tau: 3.93e-04, (5/tau)^2: 1.62e+08. For the moment, maybe constant time.
+meas:   49.52 M, max t:   +2.76, max tau: 3.92e-04, (5/tau)^2: 1.63e+08. For the moment, maybe constant time.
+meas:   49.62 M, max t:   +2.79, max tau: 3.97e-04, (5/tau)^2: 1.59e+08. For the moment, maybe constant time.
+meas:   49.71 M, max t:   +2.78, max tau: 3.94e-04, (5/tau)^2: 1.61e+08. For the moment, maybe constant time.
 ```
 
 ## Benchmarking
