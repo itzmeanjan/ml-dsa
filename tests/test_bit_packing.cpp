@@ -8,7 +8,7 @@
 //
 // - polynomial to byte array encoding
 // - decoding of polynomial from byte array
-template<const size_t sbw>
+template<size_t sbw>
 void
 test_encode_decode()
   requires(dilithium_params::check_sbw(sbw))
@@ -56,7 +56,7 @@ TEST(Dilithium, PolynomialEncodingDecoding)
 
 // Generates random hint bit polynomial vector of dimension k x 1, with <= ω
 // coefficients set to 1.
-template<const size_t k, const size_t ω>
+template<size_t k, size_t ω>
 void
 generate_random_hint_bits(std::span<field::zq_t, k * ntt::N> poly)
 {
@@ -77,7 +77,7 @@ generate_random_hint_bits(std::span<field::zq_t, k * ntt::N> poly)
 
 // Test functional correctness of encoding and decoding of hint bit polynomial
 // vector.
-template<const size_t k, const size_t ω>
+template<size_t k, size_t ω>
 void
 test_encode_decode_hint_bits()
 {

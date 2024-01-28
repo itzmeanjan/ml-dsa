@@ -15,7 +15,7 @@ namespace bit_packing {
 //
 // See section 5.2 ( which describes bit packing ) of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const size_t sbw>
+template<size_t sbw>
 static inline constexpr void
 encode(std::span<const field::zq_t, ntt::N> poly, std::span<uint8_t, ntt::N * sbw / 8> arr)
   requires(dilithium_params::check_sbw(sbw))
@@ -184,7 +184,7 @@ encode(std::span<const field::zq_t, ntt::N> poly, std::span<uint8_t, ntt::N * sb
 // This is just the opposite of above `encode` routine. You may want to see
 // Dilithium specification's section 5.2
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const size_t sbw>
+template<size_t sbw>
 static inline constexpr void
 decode(std::span<const uint8_t, ntt::N * sbw / 8> arr, std::span<field::zq_t, ntt::N> poly)
   requires(dilithium_params::check_sbw(sbw))
@@ -331,7 +331,7 @@ decode(std::span<const uint8_t, ntt::N * sbw / 8> arr, std::span<field::zq_t, nt
 // bits into (ω + k) -bytes, following the description in section 5.4 ( see
 // point `Signature` on page 21 ) of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const size_t k, const size_t ω>
+template<size_t k, size_t ω>
 static inline constexpr void
 encode_hint_bits(std::span<const field::zq_t, k * ntt::N> h, std::span<uint8_t, ω + k> arr)
 {
@@ -361,7 +361,7 @@ encode_hint_bits(std::span<const field::zq_t, k * ntt::N> h, std::span<uint8_t, 
 // Returns boolean result denoting status of decoding of byte serialized hint
 // bits. For example, say return value is true, it denotes that decoding has
 // failed.
-template<const size_t k, const size_t ω>
+template<size_t k, size_t ω>
 static inline constexpr bool
 decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<field::zq_t, k * ntt::N> h)
 {

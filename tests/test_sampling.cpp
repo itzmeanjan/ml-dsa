@@ -4,7 +4,7 @@
 #include <vector>
 
 // Check whether hashing to a ball routine works as expected or not.
-template<const uint32_t τ>
+template<uint32_t τ>
 static void
 test_sample_in_ball()
 {

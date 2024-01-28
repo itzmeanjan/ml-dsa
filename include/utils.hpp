@@ -15,7 +15,7 @@ namespace dilithium_utils {
 //
 // See table 2 and section 5.4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const size_t k, const size_t d>
+template<size_t k, size_t d>
 static inline constexpr size_t
 pub_key_len()
   requires(dilithium_params::check_d(d))
@@ -30,7 +30,7 @@ pub_key_len()
 //
 // See table 2 and section 5.4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const size_t k, const size_t l, const uint32_t η, const size_t d>
+template<size_t k, size_t l, uint32_t η, size_t d>
 static inline constexpr size_t
 sec_key_len()
   requires(dilithium_params::check_d(d))
@@ -45,7 +45,7 @@ sec_key_len()
 //
 // See table 2 and section 5.4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const size_t k, const size_t l, const uint32_t γ1, const size_t ω>
+template<size_t k, size_t l, uint32_t γ1, size_t ω>
 static inline constexpr size_t
 sig_len()
 {
