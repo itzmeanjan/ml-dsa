@@ -30,7 +30,7 @@ TEST(Dilithium, Power2Round)
 //
 // Read section 2.4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const uint32_t alpha, const uint32_t z, const size_t rounds = 65536ul>
+template<uint32_t alpha, uint32_t z, size_t rounds = 65536ul>
 static void
 test_decompose()
 {

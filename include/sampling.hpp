@@ -15,15 +15,14 @@ namespace sampling {
 
 using poly_t = std::span<field::zq_t, ntt::N>;
 
-// Given a 32 -bytes uniform seed ρ, a k x l matrix is deterministically
-// sampled, where each coefficient is a degree-255 polynomial ∈ R_q
-// | q = 2^23 - 2^13 + 1
+// Given a 32 -bytes uniform seed ρ, a k x l matrix is deterministically sampled ( using the method of rejection
+// sampling ), where each coefficient is a degree-255 polynomial ∈ R_q | q = 2^23 - 2^13 + 1
 //
 // Shake128 Xof is used for expanding 32 -bytes seed to matrix over R_q^(k x l).
 //
 // See `Expanding the Matrix A` point in section 5.3 of Dilithium specification,
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const size_t k, const size_t l>
+template<size_t k, size_t l>
 static inline constexpr void
 expand_a(std::span<const uint8_t, 32> rho, std::span<field::zq_t, k * l * ntt::N> mat)
 {
@@ -67,7 +66,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<field::zq_t, k * l * ntt::N
   }
 }
 
-// Uniform sampling k -many degree-255 polynomials s.t. each coefficient of
+// Uniform rejection sampling k -many degree-255 polynomials s.t. each coefficient of
 // those polynomials ∈ [-η, η].
 //
 // Sampling is performed deterministically, by seeding Shake256 Xof with
@@ -78,9 +77,8 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<field::zq_t, k * l * ntt::N
 // Note, sampled polynomial coefficients are kept in canonical form.
 //
 // See `Sampling the vectors s1 and s2` point in section 5.3 of Dilithium
-// specification
-// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const uint32_t η, const size_t k, const uint16_t nonce>
+// specification https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
+template<uint32_t η, size_t k, uint16_t nonce>
 static inline constexpr void
 expand_s(std::span<const uint8_t, 64> rho_prime, std::span<field::zq_t, k * ntt::N> vec)
   requires(dilithium_params::check_η(η) && dilithium_params::check_nonce(nonce))
@@ -152,7 +150,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<field::zq_t, k * ntt:
 // See `Sampling the vectors y` point in section 5.3 of Dilithium
 // specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const uint32_t γ1, const size_t l>
+template<uint32_t γ1, size_t l>
 static inline constexpr void
 expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<field::zq_t, l * ntt::N> vec)
   requires(dilithium_params::check_γ1(γ1))
@@ -190,7 +188,7 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<f
 // See hashing to a ball algorithm described in figure 2 and section 5.3 of
 // Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const uint32_t τ>
+template<uint32_t τ>
 static inline constexpr void
 sample_in_ball(std::span<const uint8_t, 32> seed, std::span<field::zq_t, ntt::N> poly)
   requires(dilithium_params::check_τ(τ))

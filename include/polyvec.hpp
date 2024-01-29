@@ -14,7 +14,7 @@ using const_poly_t = std::span<const field::zq_t, ntt::N>;
 using poly_t = std::span<field::zq_t, ntt::N>;
 
 // Applies NTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
-template<const size_t k>
+template<size_t k>
 static inline constexpr void
 ntt(std::span<field::zq_t, k * ntt::N> vec)
 {
@@ -25,7 +25,7 @@ ntt(std::span<field::zq_t, k * ntt::N> vec)
 }
 
 // Applies iNTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
-template<const size_t k>
+template<size_t k>
 static inline constexpr void
 intt(std::span<field::zq_t, k * ntt::N> vec)
 {
@@ -37,7 +37,7 @@ intt(std::span<field::zq_t, k * ntt::N> vec)
 
 // Compresses vector ( of dimension k x 1 ) of degree-255 polynomials by
 // extracting out high and low order bits
-template<const size_t k, const size_t d>
+template<size_t k, size_t d>
 static inline constexpr void
 power2round(std::span<const field::zq_t, k * ntt::N> poly,
             std::span<field::zq_t, k * ntt::N> poly_hi,
@@ -55,7 +55,7 @@ power2round(std::span<const field::zq_t, k * ntt::N> poly,
 // Given two matrices ( in NTT domain ) of compatible dimension, where each
 // matrix element is a degree-255 polynomial over Z_q | q = 2^23 -2^13 + 1, this
 // routine attempts to multiply and compute resulting matrix
-template<const size_t a_rows, const size_t a_cols, const size_t b_rows, const size_t b_cols>
+template<size_t a_rows, size_t a_cols, size_t b_rows, size_t b_cols>
 static inline constexpr void
 matrix_multiply(std::span<const field::zq_t, a_rows * a_cols * ntt::N> a,
                 std::span<const field::zq_t, b_rows * b_cols * ntt::N> b,
@@ -86,7 +86,7 @@ matrix_multiply(std::span<const field::zq_t, a_rows * a_cols * ntt::N> a,
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this
 // routine adds it to another polynomial vector of same dimension s.t.
 // destination vector is mutated.
-template<const size_t k>
+template<size_t k>
 static inline constexpr void
 add_to(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k * ntt::N> dst)
 {
@@ -101,7 +101,7 @@ add_to(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k * 
 
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this
 // routine negates each coefficient.
-template<const size_t k>
+template<size_t k>
 static inline constexpr void
 neg(std::span<field::zq_t, k * ntt::N> vec)
 {
@@ -117,7 +117,7 @@ neg(std::span<field::zq_t, k * ntt::N> vec)
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials s.t. each
 // coefficient ∈ [-x, x], this routine subtracts each coefficient from x so that
 // coefficients now stay in [0, 2x].
-template<const size_t k, const uint32_t x>
+template<size_t k, uint32_t x>
 static inline constexpr void
 sub_from_x(std::span<field::zq_t, k * ntt::N> vec)
 {
@@ -130,7 +130,7 @@ sub_from_x(std::span<field::zq_t, k * ntt::N> vec)
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
 // encodes each of those polynomials into 32 x sbw -bytes, writing to a
 // (k x 32 x sbw) -bytes destination array.
-template<const size_t k, const size_t sbw>
+template<size_t k, size_t sbw>
 static inline constexpr void
 encode(std::span<const field::zq_t, k * ntt::N> src, std::span<uint8_t, k * sbw * ntt::N / 8> dst)
 {
@@ -149,7 +149,7 @@ encode(std::span<const field::zq_t, k * ntt::N> src, std::span<uint8_t, k * sbw 
 // Given a byte array of length (k x 32 x sbw) -bytes, this routine decodes them
 // into k degree-255 polynomials, writing them to a column vector of dimension
 // k x 1.
-template<const size_t k, const size_t sbw>
+template<size_t k, size_t sbw>
 static inline constexpr void
 decode(std::span<const uint8_t, k * sbw * ntt::N / 8> src, std::span<field::zq_t, k * ntt::N> dst)
 {
@@ -167,7 +167,7 @@ decode(std::span<const uint8_t, k * sbw * ntt::N / 8> src, std::span<field::zq_t
 
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
 // extracts out high order bits from each coefficient
-template<const size_t k, const uint32_t alpha>
+template<size_t k, uint32_t alpha>
 static inline constexpr void
 highbits(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k * ntt::N> dst)
 {
@@ -179,7 +179,7 @@ highbits(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k 
 
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
 // extracts out low order bits from each coefficient, while not mutating operand
-template<const size_t k, const uint32_t alpha>
+template<size_t k, uint32_t alpha>
 static inline constexpr void
 lowbits(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k * ntt::N> dst)
 {
@@ -193,7 +193,7 @@ lowbits(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k *
 // multiplier polynomial, this routine performs k pointwise polynomial
 // multiplications when each of these polynomials are in their NTT
 // representation, while not mutating operand polynomials.
-template<const size_t k>
+template<size_t k>
 static inline constexpr void
 mul_by_poly(std::span<const field::zq_t, ntt::N> poly,
             std::span<const field::zq_t, k * ntt::N> src_vec,
@@ -210,7 +210,7 @@ mul_by_poly(std::span<const field::zq_t, ntt::N> poly,
 //
 // See point `Sizes of elements` in section 2.1 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const size_t k>
+template<size_t k>
 static inline constexpr field::zq_t
 infinity_norm(std::span<const field::zq_t, k * ntt::N> vec)
 {
@@ -226,7 +226,7 @@ infinity_norm(std::span<const field::zq_t, k * ntt::N> vec)
 
 // Given two vector ( of dimension k x 1 ) of degree-255 polynomials, this
 // routine computes hint bit for each coefficient, using `make_hint` routine.
-template<const size_t k, const uint32_t alpha>
+template<size_t k, uint32_t alpha>
 static inline constexpr void
 make_hint(std::span<const field::zq_t, k * ntt::N> polya,
           std::span<const field::zq_t, k * ntt::N> polyb,
@@ -243,7 +243,7 @@ make_hint(std::span<const field::zq_t, k * ntt::N> polya,
 // Recovers high order bits of a vector of degree-255 polynomials (  i.e. r + z
 // ) s.t. hint bits ( say h ) and another polynomial vector ( say r ) are
 // provided.
-template<const size_t k, const uint32_t alpha>
+template<size_t k, uint32_t alpha>
 static inline constexpr void
 use_hint(std::span<const field::zq_t, k * ntt::N> polyh,
          std::span<const field::zq_t, k * ntt::N> polyr,
@@ -259,7 +259,7 @@ use_hint(std::span<const field::zq_t, k * ntt::N> polyh,
 
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
 // counts number of coefficients having value 1.
-template<const size_t k>
+template<size_t k>
 static inline constexpr size_t
 count_1s(std::span<const field::zq_t, k * ntt::N> vec)
 {
@@ -275,7 +275,7 @@ count_1s(std::span<const field::zq_t, k * ntt::N> vec)
 
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine
 // shifts each coefficient leftwards by d bits
-template<const size_t k, const size_t d>
+template<size_t k, size_t d>
 static inline constexpr void
 shl(std::span<field::zq_t, k * ntt::N> vec)
 {

@@ -19,7 +19,7 @@ namespace reduction {
 //
 // This implementation collects some ideas from
 // https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23
-template<const size_t d>
+template<size_t d>
 static inline constexpr std::pair<field::zq_t, field::zq_t>
 power2round(const field::zq_t r)
   requires(dilithium_params::check_d(d))
@@ -45,7 +45,7 @@ power2round(const field::zq_t r)
 //
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const uint32_t alpha>
+template<uint32_t alpha>
 static inline constexpr std::pair<field::zq_t, field::zq_t>
 decompose(const field::zq_t r)
   requires(dilithium_params::check_γ2(alpha / 2))
@@ -74,7 +74,7 @@ decompose(const field::zq_t r)
 //
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const uint32_t alpha>
+template<uint32_t alpha>
 static inline constexpr field::zq_t
 highbits(const field::zq_t r)
 {
@@ -87,7 +87,7 @@ highbits(const field::zq_t r)
 //
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const uint32_t alpha>
+template<uint32_t alpha>
 static inline constexpr field::zq_t
 lowbits(const field::zq_t r)
 {
@@ -103,7 +103,7 @@ lowbits(const field::zq_t r)
 //
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const uint32_t alpha>
+template<uint32_t alpha>
 static inline constexpr field::zq_t
 make_hint(const field::zq_t z, const field::zq_t r)
 {
@@ -118,7 +118,7 @@ make_hint(const field::zq_t z, const field::zq_t r)
 //
 // See definition of this routine in figure 3 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const uint32_t alpha>
+template<uint32_t alpha>
 static inline constexpr field::zq_t
 use_hint(const field::zq_t h, const field::zq_t r)
 {

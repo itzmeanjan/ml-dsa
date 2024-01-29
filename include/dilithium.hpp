@@ -21,7 +21,7 @@ namespace dilithium {
 // Note, ebw = ceil(log2(2 * η + 1))
 //
 // See section 5.4 of specification for public key and secret key byte length.
-template<const size_t k, const size_t l, const size_t d, const uint32_t η>
+template<size_t k, size_t l, size_t d, uint32_t η>
 static inline void
 keygen(std::span<const uint8_t, 32> seed,
        std::span<uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
@@ -133,16 +133,16 @@ keygen(std::span<const uint8_t, 32> seed,
 //
 // See section 5.4 of specification for understanding how signature is byte
 // serialized.
-template<const size_t k,
-         const size_t l,
-         const size_t d,
-         const uint32_t η,
-         const uint32_t γ1,
-         const uint32_t γ2,
-         const uint32_t τ,
-         const uint32_t β,
-         const size_t ω,
-         const bool randomized = false>
+template<size_t k,
+         size_t l,
+         size_t d,
+         uint32_t η,
+         uint32_t γ1,
+         uint32_t γ2,
+         uint32_t τ,
+         uint32_t β,
+         size_t ω,
+         bool randomized = false>
 static inline void
 sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> seckey,
      std::span<const uint8_t> msg,
@@ -323,14 +323,7 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
 //
 // Verification algorithm is described in figure 4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<const size_t k,
-         const size_t l,
-         const size_t d,
-         const uint32_t γ1,
-         const uint32_t γ2,
-         const uint32_t τ,
-         const uint32_t β,
-         const size_t ω>
+template<size_t k, size_t l, size_t d, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω>
 static inline bool
 verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
        std::span<const uint8_t> msg,

@@ -25,7 +25,7 @@ constexpr auto INV_N = field::zq_t(N).inv();
 // See
 // https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L74-L93
 // for source of inspiration.
-template<const size_t mbw>
+template<size_t mbw>
 static inline constexpr size_t
 bit_rev(const size_t v)
   requires(mbw == LOG2N)

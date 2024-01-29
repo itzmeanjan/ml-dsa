@@ -29,11 +29,5 @@ TEST(Dilithium, NumberTheoreticTransform)
   ntt::ntt(_poly_b);
   ntt::intt(_poly_b);
 
-  bool flg = true;
-
-  for (size_t i = 0; i < ntt::N; i++) {
-    flg &= (_poly_a[i] == _poly_b[i]);
-  }
-
-  EXPECT_TRUE(flg);
+  EXPECT_EQ(poly_a, poly_b);
 }

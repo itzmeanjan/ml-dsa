@@ -11,7 +11,7 @@ namespace poly {
 
 // Given a degree-255 polynomial over Z_q | q = 2^23 - 2^13 + 1, this routine
 // attempts to extract out high and low order bits from each of 256 coefficients
-template<const size_t d>
+template<size_t d>
 static inline constexpr void
 power2round(std::span<const field::zq_t, ntt::N> poly,
             std::span<field::zq_t, ntt::N> poly_hi,
@@ -40,7 +40,7 @@ mul(std::span<const field::zq_t, ntt::N> polya,
 
 // Given a degree-255 polynomial, which has all of its coefficients in [-x, x],
 // this routine subtracts each coefficient from x, so that they stay in [0, 2x].
-template<const uint32_t x>
+template<uint32_t x>
 static inline constexpr void
 sub_from_x(std::span<field::zq_t, ntt::N> poly)
 {
@@ -53,7 +53,7 @@ sub_from_x(std::span<field::zq_t, ntt::N> poly)
 
 // Given a degree-255 polynomial, this routine extracts out high order bits (
 // using decompose routine ), while not mutating source polynomial
-template<const uint32_t alpha>
+template<uint32_t alpha>
 static inline constexpr void
 highbits(std::span<const field::zq_t, ntt::N> src, std::span<field::zq_t, ntt::N> dst)
 {
@@ -64,7 +64,7 @@ highbits(std::span<const field::zq_t, ntt::N> src, std::span<field::zq_t, ntt::N
 
 // Given a degree-255 polynomial, this routine extracts out low order bits (
 // using decompose routine ), while not mutating source polynomial
-template<const uint32_t alpha>
+template<uint32_t alpha>
 static inline constexpr void
 lowbits(std::span<const field::zq_t, ntt::N> src, std::span<field::zq_t, ntt::N> dst)
 {
@@ -95,7 +95,7 @@ infinity_norm(std::span<const field::zq_t, ntt::N> poly)
 
 // Given two degree-255 polynomials, this routine computes hint bit for each
 // coefficient, using `make_hint` routine.
-template<const uint32_t alpha>
+template<uint32_t alpha>
 static inline constexpr void
 make_hint(std::span<const field::zq_t, ntt::N> polya,
           std::span<const field::zq_t, ntt::N> polyb,
@@ -110,7 +110,7 @@ make_hint(std::span<const field::zq_t, ntt::N> polya,
 // polynomial r with arbitrary coefficients ∈ Z_q, this routine recovers high
 // order bits of r + z s.t. hint bit was computed using `make_hint` routine and
 // z is another degree-255 polynomial with small coefficients.
-template<const uint32_t alpha>
+template<uint32_t alpha>
 static inline constexpr void
 use_hint(std::span<const field::zq_t, ntt::N> polyh,
          std::span<const field::zq_t, ntt::N> polyr,
@@ -138,7 +138,7 @@ count_1s(std::span<const field::zq_t, ntt::N> poly)
 
 // Given a degree-255 polynomial, this routine shifts each coefficient
 // leftwards, by d bits
-template<const size_t d>
+template<size_t d>
 static inline constexpr void
 shl(std::span<field::zq_t, ntt::N> poly)
 {
