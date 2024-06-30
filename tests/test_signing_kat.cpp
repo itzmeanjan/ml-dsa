@@ -1,8 +1,8 @@
 #include "dilithium2.hpp"
 #include "dilithium3.hpp"
 #include "dilithium5.hpp"
-#include <array>
 #include <charconv>
+#include <cstdint>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <string>
@@ -59,6 +59,14 @@ TEST(Dilithium, Dilithium2KnownAnswerTests)
       auto msg = utils::from_hex(msg2);
       auto _msg = std::span(msg); // Message to be signed
 
+      std::string rnd0;
+      std::getline(file, rnd0);
+
+      auto rnd1 = std::string_view(rnd0);
+      auto rnd2 = rnd1.substr(rnd1.find("="sv) + 2, rnd1.size());
+      auto rnd = utils::from_hex(rnd2);
+      auto _rnd = std::span<uint8_t, 32>(rnd); // Randomness for "randomized" message signing
+
       std::string sig0;
       std::getline(file, sig0);
 
@@ -69,7 +77,6 @@ TEST(Dilithium, Dilithium2KnownAnswerTests)
       std::vector<uint8_t> _pkey(dilithium2::PubKeyLen, 0);
       std::vector<uint8_t> _skey(dilithium2::SecKeyLen, 0);
       std::vector<uint8_t> _sig(dilithium2::SigLen, 0);
-      std::array<uint8_t, 32> rnd{}; // Empty 32 -bytes randomness
 
       auto __pkey = std::span<uint8_t, dilithium2::PubKeyLen>(_pkey); // Computed public key
       auto __skey = std::span<uint8_t, dilithium2::SecKeyLen>(_skey); // Computed secret key
@@ -77,7 +84,7 @@ TEST(Dilithium, Dilithium2KnownAnswerTests)
 
       // Keygen -> Sign -> Verify
       dilithium2::keygen(_seed, __pkey, __skey);
-      dilithium2::sign(rnd, __skey, _msg, __sig);
+      dilithium2::sign(_rnd, __skey, _msg, __sig);
       const auto f = dilithium2::verify(__pkey, _msg, __sig);
 
       // Check if computed public key, secret key and signature matches expected
@@ -144,6 +151,14 @@ TEST(Dilithium, Dilithium3KnownAnswerTests)
       auto msg = utils::from_hex(msg2);
       auto _msg = std::span(msg); // Message to be signed
 
+      std::string rnd0;
+      std::getline(file, rnd0);
+
+      auto rnd1 = std::string_view(rnd0);
+      auto rnd2 = rnd1.substr(rnd1.find("="sv) + 2, rnd1.size());
+      auto rnd = utils::from_hex(rnd2);
+      auto _rnd = std::span<uint8_t, 32>(rnd); // Randomness for "randomized" message signing
+
       std::string sig0;
       std::getline(file, sig0);
 
@@ -158,11 +173,10 @@ TEST(Dilithium, Dilithium3KnownAnswerTests)
       auto __pkey = std::span<uint8_t, dilithium3::PubKeyLen>(_pkey); // Computed public key
       auto __skey = std::span<uint8_t, dilithium3::SecKeyLen>(_skey); // Computed secret key
       auto __sig = std::span<uint8_t, dilithium3::SigLen>(_sig);      // Computed signature
-      std::array<uint8_t, 32> rnd{};                                  // Empty 32 -bytes randomness
 
       // Keygen -> Sign -> Verify
       dilithium3::keygen(_seed, __pkey, __skey);
-      dilithium3::sign(rnd, __skey, _msg, __sig);
+      dilithium3::sign(_rnd, __skey, _msg, __sig);
       const auto f = dilithium3::verify(__pkey, _msg, __sig);
 
       // Check if computed public key, secret key and signature matches expected
@@ -229,6 +243,14 @@ TEST(Dilithium, Dilithium5KnownAnswerTests)
       auto msg = utils::from_hex(msg2);
       auto _msg = std::span(msg); // Message to be signed
 
+      std::string rnd0;
+      std::getline(file, rnd0);
+
+      auto rnd1 = std::string_view(rnd0);
+      auto rnd2 = rnd1.substr(rnd1.find("="sv) + 2, rnd1.size());
+      auto rnd = utils::from_hex(rnd2);
+      auto _rnd = std::span<uint8_t, 32>(rnd); // Randomness for "randomized" message signing
+
       std::string sig0;
       std::getline(file, sig0);
 
@@ -243,11 +265,10 @@ TEST(Dilithium, Dilithium5KnownAnswerTests)
       auto __pkey = std::span<uint8_t, dilithium5::PubKeyLen>(_pkey); // Computed public key
       auto __skey = std::span<uint8_t, dilithium5::SecKeyLen>(_skey); // Computed secret key
       auto __sig = std::span<uint8_t, dilithium5::SigLen>(_sig);      // Computed signature
-      std::array<uint8_t, 32> rnd{};                                  // Empty 32 -bytes randomness
 
       // Keygen -> Sign -> Verify
       dilithium5::keygen(_seed, __pkey, __skey);
-      dilithium5::sign(rnd, __skey, _msg, __sig);
+      dilithium5::sign(_rnd, __skey, _msg, __sig);
       const auto f = dilithium5::verify(__pkey, _msg, __sig);
 
       // Check if computed public key, secret key and signature matches expected
