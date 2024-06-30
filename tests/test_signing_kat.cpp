@@ -1,7 +1,6 @@
 #include "dilithium2.hpp"
 #include "dilithium3.hpp"
 #include "dilithium5.hpp"
-#include <algorithm>
 #include <array>
 #include <charconv>
 #include <fstream>
@@ -70,6 +69,7 @@ TEST(Dilithium, Dilithium2KnownAnswerTests)
       std::vector<uint8_t> _pkey(dilithium2::PubKeyLen, 0);
       std::vector<uint8_t> _skey(dilithium2::SecKeyLen, 0);
       std::vector<uint8_t> _sig(dilithium2::SigLen, 0);
+      std::array<uint8_t, 32> rnd{}; // Empty 32 -bytes randomness
 
       auto __pkey = std::span<uint8_t, dilithium2::PubKeyLen>(_pkey); // Computed public key
       auto __skey = std::span<uint8_t, dilithium2::SecKeyLen>(_skey); // Computed secret key
@@ -77,7 +77,7 @@ TEST(Dilithium, Dilithium2KnownAnswerTests)
 
       // Keygen -> Sign -> Verify
       dilithium2::keygen(_seed, __pkey, __skey);
-      dilithium2::sign(__skey, _msg, __sig, {});
+      dilithium2::sign(rnd, __skey, _msg, __sig);
       const auto f = dilithium2::verify(__pkey, _msg, __sig);
 
       // Check if computed public key, secret key and signature matches expected
@@ -158,10 +158,11 @@ TEST(Dilithium, Dilithium3KnownAnswerTests)
       auto __pkey = std::span<uint8_t, dilithium3::PubKeyLen>(_pkey); // Computed public key
       auto __skey = std::span<uint8_t, dilithium3::SecKeyLen>(_skey); // Computed secret key
       auto __sig = std::span<uint8_t, dilithium3::SigLen>(_sig);      // Computed signature
+      std::array<uint8_t, 32> rnd{};                                  // Empty 32 -bytes randomness
 
       // Keygen -> Sign -> Verify
       dilithium3::keygen(_seed, __pkey, __skey);
-      dilithium3::sign(__skey, _msg, __sig, {});
+      dilithium3::sign(rnd, __skey, _msg, __sig);
       const auto f = dilithium3::verify(__pkey, _msg, __sig);
 
       // Check if computed public key, secret key and signature matches expected
@@ -242,10 +243,11 @@ TEST(Dilithium, Dilithium5KnownAnswerTests)
       auto __pkey = std::span<uint8_t, dilithium5::PubKeyLen>(_pkey); // Computed public key
       auto __skey = std::span<uint8_t, dilithium5::SecKeyLen>(_skey); // Computed secret key
       auto __sig = std::span<uint8_t, dilithium5::SigLen>(_sig);      // Computed signature
+      std::array<uint8_t, 32> rnd{};                                  // Empty 32 -bytes randomness
 
       // Keygen -> Sign -> Verify
       dilithium5::keygen(_seed, __pkey, __skey);
-      dilithium5::sign(__skey, _msg, __sig, {});
+      dilithium5::sign(rnd, __skey, _msg, __sig);
       const auto f = dilithium5::verify(__pkey, _msg, __sig);
 
       // Check if computed public key, secret key and signature matches expected

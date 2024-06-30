@@ -47,6 +47,7 @@ test_dilithium2_signing(const size_t mlen)
   constexpr size_t siglen = dilithium2::SigLen;
 
   std::vector<uint8_t> seed(slen, 0);
+  std::vector<uint8_t> rnd(slen, 0);
   std::vector<uint8_t> pkey0(pklen, 0);
   std::vector<uint8_t> pkey1(pklen, 0);
   std::vector<uint8_t> skey(sklen, 0);
@@ -56,6 +57,7 @@ test_dilithium2_signing(const size_t mlen)
   std::vector<uint8_t> msg1(mlen, 0);
 
   auto _seed = std::span<uint8_t, slen>(seed);
+  auto _rnd = std::span<uint8_t, slen>(rnd);
   auto _pkey0 = std::span<uint8_t, pklen>(pkey0);
   auto _pkey1 = std::span<uint8_t, pklen>(pkey1);
   auto _skey = std::span<uint8_t, sklen>(skey);
@@ -68,11 +70,12 @@ test_dilithium2_signing(const size_t mlen)
 
   prng.read(_seed);
   prng.read(_msg0);
+  prng.read(_rnd);
 
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
   dilithium2::keygen(_seed, _pkey0, _skey);
-  dilithium2::sign(_skey, _msg0, _sig0, {});
+  dilithium2::sign(_rnd, _skey, _msg0, _sig0);
 
   std::copy(_sig0.begin(), _sig0.end(), _sig1.begin());
   std::copy(_pkey0.begin(), _pkey0.end(), _pkey1.begin());
@@ -115,6 +118,7 @@ test_dilithium3_signing(const size_t mlen)
   constexpr size_t siglen = dilithium3::SigLen;
 
   std::vector<uint8_t> seed(slen, 0);
+  std::vector<uint8_t> rnd(slen, 0);
   std::vector<uint8_t> pkey0(pklen, 0);
   std::vector<uint8_t> pkey1(pklen, 0);
   std::vector<uint8_t> skey(sklen, 0);
@@ -124,6 +128,7 @@ test_dilithium3_signing(const size_t mlen)
   std::vector<uint8_t> msg1(mlen, 0);
 
   auto _seed = std::span<uint8_t, slen>(seed);
+  auto _rnd = std::span<uint8_t, slen>(rnd);
   auto _pkey0 = std::span<uint8_t, pklen>(pkey0);
   auto _pkey1 = std::span<uint8_t, pklen>(pkey1);
   auto _skey = std::span<uint8_t, sklen>(skey);
@@ -136,11 +141,12 @@ test_dilithium3_signing(const size_t mlen)
 
   prng.read(_seed);
   prng.read(_msg0);
+  prng.read(_rnd);
 
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
   dilithium3::keygen(_seed, _pkey0, _skey);
-  dilithium3::sign(_skey, _msg0, _sig0, {});
+  dilithium3::sign(_rnd, _skey, _msg0, _sig0);
 
   std::copy(_sig0.begin(), _sig0.end(), _sig1.begin());
   std::copy(_pkey0.begin(), _pkey0.end(), _pkey1.begin());
@@ -183,6 +189,7 @@ test_dilithium5_signing(const size_t mlen)
   constexpr size_t siglen = dilithium5::SigLen;
 
   std::vector<uint8_t> seed(slen, 0);
+  std::vector<uint8_t> rnd(slen, 0);
   std::vector<uint8_t> pkey0(pklen, 0);
   std::vector<uint8_t> pkey1(pklen, 0);
   std::vector<uint8_t> skey(sklen, 0);
@@ -192,6 +199,7 @@ test_dilithium5_signing(const size_t mlen)
   std::vector<uint8_t> msg1(mlen, 0);
 
   auto _seed = std::span<uint8_t, slen>(seed);
+  auto _rnd = std::span<uint8_t, slen>(rnd);
   auto _pkey0 = std::span<uint8_t, pklen>(pkey0);
   auto _pkey1 = std::span<uint8_t, pklen>(pkey1);
   auto _skey = std::span<uint8_t, sklen>(skey);
@@ -204,11 +212,12 @@ test_dilithium5_signing(const size_t mlen)
 
   prng.read(_seed);
   prng.read(_msg0);
+  prng.read(_rnd);
 
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
   dilithium5::keygen(_seed, _pkey0, _skey);
-  dilithium5::sign(_skey, _msg0, _sig0, {});
+  dilithium5::sign(_rnd, _skey, _msg0, _sig0);
 
   std::copy(_sig0.begin(), _sig0.end(), _sig1.begin());
   std::copy(_pkey0.begin(), _pkey0.end(), _pkey1.begin());
