@@ -3,6 +3,7 @@
 #include "polyvec.hpp"
 #include "sampling.hpp"
 #include "utils.hpp"
+#include <limits>
 #include <span>
 
 // Dilithium Post-Quantum Digital Signature Algorithm
@@ -66,7 +67,7 @@ keygen(std::span<const uint8_t, 32> seed,
   polyvec::power2round<k, d>(t, t1, t0);
 
   constexpr size_t t1_bw = std::bit_width(field::Q) - d;
-  std::array<uint8_t, 32> tr{};
+  std::array<uint8_t, 64> tr{};
 
   // Prepare public key
   constexpr size_t pkoff0 = 0;
@@ -133,23 +134,13 @@ keygen(std::span<const uint8_t, 32> seed,
 //
 // See section 5.4 of specification for understanding how signature is byte
 // serialized.
-template<size_t k,
-         size_t l,
-         size_t d,
-         uint32_t η,
-         uint32_t γ1,
-         uint32_t γ2,
-         uint32_t τ,
-         uint32_t β,
-         size_t ω,
-         bool randomized = false>
+template<size_t k, size_t l, size_t d, uint32_t η, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω, size_t λ>
 static inline void
-sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> seckey,
+sign(std::span<const uint8_t, 32> rnd,
+     std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> seckey,
      std::span<const uint8_t> msg,
-     std::span<uint8_t, dilithium_utils::sig_len<k, l, γ1, ω>()> sig,
-     std::span<const uint8_t, 64 * randomized> seed // 64 -bytes seed, *only* for randomized signing
-     )
-  requires(dilithium_params::check_signing_params(k, l, d, η, γ1, γ2, τ, β, ω))
+     std::span<uint8_t, dilithium_utils::sig_len<k, l, γ1, ω, λ>()> sig)
+  requires(dilithium_params::check_signing_params(k, l, d, η, γ1, γ2, τ, β, ω, λ))
 {
   constexpr uint32_t t0_rng = 1u << (d - 1);
 
@@ -160,7 +151,7 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
   constexpr size_t skoff0 = 0;
   constexpr size_t skoff1 = skoff0 + 32;
   constexpr size_t skoff2 = skoff1 + 32;
-  constexpr size_t skoff3 = skoff2 + 32;
+  constexpr size_t skoff3 = skoff2 + 64;
   constexpr size_t skoff4 = skoff3 + s1_len;
   constexpr size_t skoff5 = skoff4 + s2_len;
 
@@ -181,22 +172,13 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
   hasher.squeeze(_mu);
 
   std::array<uint8_t, 64> rho_prime{};
-  auto _rho_prime = std::span(rho_prime);
 
-  if constexpr (randomized) {
-    std::copy(seed.begin(), seed.end(), _rho_prime.begin());
-  } else {
-    std::array<uint8_t, key.size() + _mu.size()> crh_in{};
-    auto _crh_in = std::span(crh_in);
-
-    std::memcpy(_crh_in.template subspan<0, key.size()>().data(), key.data(), key.size());
-    std::memcpy(_crh_in.template subspan<key.size(), _mu.size()>().data(), _mu.data(), _mu.size());
-
-    hasher.reset();
-    hasher.absorb(_crh_in);
-    hasher.finalize();
-    hasher.squeeze(_rho_prime);
-  }
+  hasher.reset();
+  hasher.absorb(key);
+  hasher.absorb(rnd);
+  hasher.absorb(_mu);
+  hasher.finalize();
+  hasher.squeeze(rho_prime);
 
   std::array<field::zq_t, l * ntt::N> s1{};
   std::array<field::zq_t, k * ntt::N> s2{};
@@ -219,14 +201,18 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
 
   std::array<field::zq_t, l * ntt::N> z{};
   std::array<field::zq_t, k * ntt::N> h{};
-  std::array<uint8_t, 32> hash_out{};
+
+  std::array<uint8_t, (2 * λ) / std::numeric_limits<uint8_t>::digits> c_tilda{};
+  auto c_tilda_span = std::span(c_tilda);
+  auto c1_tilda = c_tilda_span.template first<32>();
+  auto c2_tilda = c_tilda_span.template last<32>();
 
   while (!has_signed) {
     std::array<field::zq_t, l * ntt::N> y{};
     std::array<field::zq_t, l * ntt::N> y_prime{};
     std::array<field::zq_t, k * ntt::N> w{};
 
-    sampling::expand_mask<γ1, l>(_rho_prime, kappa, y);
+    sampling::expand_mask<γ1, l>(rho_prime, kappa, y);
 
     std::copy(y.begin(), y.end(), y_prime.begin());
 
@@ -251,9 +237,9 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
     hasher.reset();
     hasher.absorb(_hash_in);
     hasher.finalize();
-    hasher.squeeze(hash_out);
+    hasher.squeeze(c_tilda);
 
-    sampling::sample_in_ball<τ>(hash_out, c);
+    sampling::sample_in_ball<τ>(c1_tilda, c);
     ntt::ntt(c);
 
     polyvec::mul_by_poly<l>(c, s1, z);
@@ -306,11 +292,11 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
 
   constexpr size_t gamma1_bw = std::bit_width(γ1);
   constexpr size_t sigoff0 = 0;
-  constexpr size_t sigoff1 = sigoff0 + hash_out.size();
+  constexpr size_t sigoff1 = sigoff0 + c_tilda.size();
   constexpr size_t sigoff2 = sigoff1 + (32 * l * gamma1_bw);
   constexpr size_t sigoff3 = sig.size();
 
-  std::memcpy(sig.template subspan<sigoff0, sigoff1 - sigoff0>().data(), hash_out.data(), hash_out.size());
+  std::memcpy(sig.template subspan<sigoff0, sigoff1 - sigoff0>().data(), c_tilda.data(), c_tilda.size());
   polyvec::sub_from_x<l, γ1>(z);
   polyvec::encode<l, gamma1_bw>(z, sig.template subspan<sigoff1, sigoff2 - sigoff1>());
   bit_packing::encode_hint_bits<k, ω>(h, sig.template subspan<sigoff2, sigoff3 - sigoff2>());
@@ -323,12 +309,12 @@ sign(std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> secke
 //
 // Verification algorithm is described in figure 4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<size_t k, size_t l, size_t d, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω>
+template<size_t k, size_t l, size_t d, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω, size_t λ>
 static inline bool
 verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
        std::span<const uint8_t> msg,
-       std::span<const uint8_t, dilithium_utils::sig_len<k, l, γ1, ω>()> sig)
-  requires(dilithium_params::check_verify_params(k, l, d, γ1, γ2, τ, β, ω))
+       std::span<const uint8_t, dilithium_utils::sig_len<k, l, γ1, ω, λ>()> sig)
+  requires(dilithium_params::check_verify_params(k, l, d, γ1, γ2, τ, β, ω, λ))
 {
   constexpr size_t t1_bw = std::bit_width(field::Q) - d;
 
@@ -338,7 +324,7 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
 
   constexpr size_t gamma1_bw = std::bit_width(γ1);
   constexpr size_t sigoff0 = 0;
-  constexpr size_t sigoff1 = sigoff0 + 32;
+  constexpr size_t sigoff1 = sigoff0 + (2 * λ) / std::numeric_limits<uint8_t>::digits;
   constexpr size_t sigoff2 = sigoff1 + (32 * l * gamma1_bw);
   constexpr size_t sigoff3 = sig.size();
 
@@ -348,23 +334,26 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
   sampling::expand_a<k, l>(pubkey.template subspan<pkoff0, pkoff1 - pkoff0>(), A);
   polyvec::decode<k, t1_bw>(pubkey.template subspan<pkoff1, pkoff2 - pkoff1>(), t1);
 
-  std::array<uint8_t, 32> crh_in{};
+  std::array<uint8_t, 64> tr{};
   std::array<uint8_t, 64> mu{};
 
   shake256::shake256_t hasher;
   hasher.absorb(pubkey);
   hasher.finalize();
-  hasher.squeeze(crh_in);
+  hasher.squeeze(tr);
 
   hasher.reset();
-  hasher.absorb(crh_in);
+  hasher.absorb(tr);
   hasher.absorb(msg);
   hasher.finalize();
   hasher.squeeze(mu);
 
   std::array<field::zq_t, ntt::N> c{};
+  auto c_tilda = sig.template first<sigoff1 - sigoff0>();
+  auto c1_tilda = c_tilda.template first<32>();
+  auto c2_tilda = c_tilda.template last<32>();
 
-  sampling::sample_in_ball<τ>(sig.template subspan<sigoff0, sigoff1 - sigoff0>(), c);
+  sampling::sample_in_ball<τ>(c1_tilda, c);
   ntt::ntt(c);
 
   std::array<field::zq_t, l * ntt::N> z{};
@@ -399,7 +388,7 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
   polyvec::use_hint<k, α>(h, w2, w1);
 
   std::array<uint8_t, mu.size() + (k * w1bw * 32)> hash_in{};
-  std::array<uint8_t, 32> hash_out{};
+  std::array<uint8_t, (2 * λ) / std::numeric_limits<uint8_t>::digits> c_tilda_prime{};
 
   auto _hash_in = std::span(hash_in);
 
@@ -409,7 +398,7 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
   hasher.reset();
   hasher.absorb(_hash_in);
   hasher.finalize();
-  hasher.squeeze(hash_out);
+  hasher.squeeze(c_tilda_prime);
 
   constexpr field::zq_t bound0(γ1 - β);
 
@@ -417,8 +406,8 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
   bool flg1 = false;
   const bool flg2 = count_1 <= ω;
 
-  for (size_t i = 0; i < hash_out.size(); i++) {
-    flg1 |= static_cast<bool>(sig[sigoff0 + i] ^ hash_out[i]);
+  for (size_t i = 0; i < c_tilda_prime.size(); i++) {
+    flg1 |= static_cast<bool>(sig[sigoff0 + i] ^ c_tilda_prime[i]);
   }
 
   const bool flg3 = flg0 & !flg1 & flg2;

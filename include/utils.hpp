@@ -1,9 +1,10 @@
 #pragma once
 #include "params.hpp"
-#include "reduction.hpp"
 #include <cassert>
 #include <charconv>
+#include <cstdint>
 #include <iomanip>
+#include <limits>
 #include <sstream>
 #include <vector>
 
@@ -36,7 +37,7 @@ sec_key_len()
   requires(dilithium_params::check_d(d))
 {
   constexpr size_t eta_bw = std::bit_width(2 * η);
-  constexpr size_t sklen = 32 + 32 + 32 + 32 * (eta_bw * (k + l) + k * d);
+  constexpr size_t sklen = 32 + 32 + 64 + 32 * (eta_bw * (k + l) + k * d);
   return sklen;
 }
 
@@ -45,12 +46,12 @@ sec_key_len()
 //
 // See table 2 and section 5.4 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-template<size_t k, size_t l, uint32_t γ1, size_t ω>
+template<size_t k, size_t l, uint32_t γ1, size_t ω, size_t λ>
 static inline constexpr size_t
 sig_len()
 {
   constexpr size_t gamma1_bw = std::bit_width(γ1);
-  constexpr size_t siglen = 32 + (32 * l * gamma1_bw) + (ω + k);
+  constexpr size_t siglen = ((2 * λ) / std::numeric_limits<uint8_t>::digits) + (32 * l * gamma1_bw) + (ω + k);
   return siglen;
 }
 
