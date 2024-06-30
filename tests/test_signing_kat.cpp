@@ -17,7 +17,7 @@ namespace utils = dilithium_utils;
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf.
 TEST(Dilithium, Dilithium2KnownAnswerTests)
 {
-  const std::string kat_file = "./kats/dilithium2.kat";
+  const std::string kat_file = "./kats/ml_dsa_44.kat";
   std::fstream file(kat_file);
 
   while (true) {
@@ -102,7 +102,7 @@ TEST(Dilithium, Dilithium2KnownAnswerTests)
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf.
 TEST(Dilithium, Dilithium3KnownAnswerTests)
 {
-  const std::string kat_file = "./kats/dilithium3.kat";
+  const std::string kat_file = "./kats/ml_dsa_65.kat";
   std::fstream file(kat_file);
 
   while (true) {
@@ -187,7 +187,7 @@ TEST(Dilithium, Dilithium3KnownAnswerTests)
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf.
 TEST(Dilithium, Dilithium5KnownAnswerTests)
 {
-  const std::string kat_file = "./kats/dilithium5.kat";
+  const std::string kat_file = "./kats/ml_dsa_87.kat";
   std::fstream file(kat_file);
 
   while (true) {
