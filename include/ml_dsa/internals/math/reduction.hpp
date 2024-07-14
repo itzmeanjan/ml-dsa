@@ -1,6 +1,6 @@
 #pragma once
 #include "field.hpp"
-#include "params.hpp"
+#include "ml_dsa/internals/utility/params.hpp"
 #include <utility>
 
 // Utility functions used for extracting out high/ low order bits and making/

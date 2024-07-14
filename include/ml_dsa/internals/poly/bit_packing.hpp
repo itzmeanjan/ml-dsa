@@ -1,7 +1,7 @@
 #pragma once
-#include "field.hpp"
+#include "ml_dsa/internals/math/field.hpp"
+#include "ml_dsa/internals/utility/params.hpp"
 #include "ntt.hpp"
-#include "params.hpp"
 #include <algorithm>
 #include <cstring>
 

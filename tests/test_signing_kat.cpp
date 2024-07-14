@@ -1,6 +1,6 @@
-#include "dilithium2.hpp"
-#include "dilithium3.hpp"
-#include "dilithium5.hpp"
+#include "ml_dsa/dilithium2.hpp"
+#include "ml_dsa/dilithium3.hpp"
+#include "ml_dsa/dilithium5.hpp"
 #include <charconv>
 #include <cstdint>
 #include <fstream>

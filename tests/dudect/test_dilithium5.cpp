@@ -1,4 +1,4 @@
-#include "dilithium5.hpp"
+#include "ml_dsa/dilithium5.hpp"
 #include <cstdio>
 
 #define DUDECT_IMPLEMENTATION

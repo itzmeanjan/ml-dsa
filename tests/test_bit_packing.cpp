@@ -1,6 +1,5 @@
-#include "bit_packing.hpp"
-#include "field.hpp"
-#include <cstdint>
+#include "ml_dsa/internals/math/field.hpp"
+#include "ml_dsa/internals/poly/bit_packing.hpp"
 #include <gtest/gtest.h>
 #include <vector>
 

@@ -1,4 +1,4 @@
-#include "reduction.hpp"
+#include "ml_dsa/internals/math/reduction.hpp"
 #include <gtest/gtest.h>
 
 // Given a random element ∈ Z_q | q = 2^23 - 2^13 + 1, this routine tests

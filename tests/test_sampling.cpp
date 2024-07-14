@@ -1,4 +1,4 @@
-#include "sampling.hpp"
+#include "ml_dsa/internals/poly/sampling.hpp"
 #include <array>
 #include <gtest/gtest.h>
 #include <vector>

@@ -1,5 +1,5 @@
 #pragma once
-#include "prng.hpp"
+#include "ml_dsa/internals/rng/prng.hpp"
 #include <bit>
 #include <cstddef>
 #include <cstdint>

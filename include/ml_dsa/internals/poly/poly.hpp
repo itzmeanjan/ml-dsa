@@ -1,8 +1,8 @@
 #pragma once
-#include "field.hpp"
+#include "ml_dsa/internals/math/field.hpp"
+#include "ml_dsa/internals/math/reduction.hpp"
+#include "ml_dsa/internals/utility/params.hpp"
 #include "ntt.hpp"
-#include "params.hpp"
-#include "reduction.hpp"
 #include <algorithm>
 
 // Degree-255 polynomial utility functions for Dilithium Post-Quantum Digital

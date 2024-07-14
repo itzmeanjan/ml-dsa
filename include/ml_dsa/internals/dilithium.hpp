@@ -1,8 +1,8 @@
 #pragma once
-#include "params.hpp"
-#include "polyvec.hpp"
-#include "sampling.hpp"
-#include "utils.hpp"
+#include "ml_dsa/internals/poly/polyvec.hpp"
+#include "ml_dsa/internals/poly/sampling.hpp"
+#include "ml_dsa/internals/utility/params.hpp"
+#include "ml_dsa/internals/utility/utils.hpp"
 #include <limits>
 #include <span>
 
