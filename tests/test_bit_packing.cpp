@@ -15,18 +15,18 @@ test_encode_decode()
   // Encoded byte length of the polynomial
   constexpr size_t enc_len = (sbw * ntt::N) / 8;
 
-  std::vector<field::zq_t> polya(ntt::N, 0);
-  std::vector<field::zq_t> polyb(ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> polya(ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> polyb(ntt::N, 0);
   std::vector<uint8_t> arr(enc_len, 0);
 
-  auto _polya = std::span<field::zq_t, ntt::N>(polya);
-  auto _polyb = std::span<field::zq_t, ntt::N>(polyb);
+  auto _polya = std::span<ml_dsa_field::zq_t, ntt::N>(polya);
+  auto _polyb = std::span<ml_dsa_field::zq_t, ntt::N>(polyb);
   auto _arr = std::span<uint8_t, enc_len>(arr);
 
   prng::prng_t prng;
 
   for (size_t i = 0; i < ntt::N; i++) {
-    _polya[i] = field::zq_t::random(prng);
+    _polya[i] = ml_dsa_field::zq_t::random(prng);
   }
 
   bit_packing::encode<sbw>(_polya, _arr);
@@ -57,9 +57,9 @@ TEST(Dilithium, PolynomialEncodingDecoding)
 // coefficients set to 1.
 template<size_t k, size_t ω>
 void
-generate_random_hint_bits(std::span<field::zq_t, k * ntt::N> poly)
+generate_random_hint_bits(std::span<ml_dsa_field::zq_t, k * ntt::N> poly)
 {
-  std::fill(poly.begin(), poly.end(), field::zq_t::zero());
+  std::fill(poly.begin(), poly.end(), ml_dsa_field::zq_t::zero());
 
   constexpr size_t frm = 0;
   constexpr size_t to = poly.size() - 1;
@@ -70,7 +70,7 @@ generate_random_hint_bits(std::span<field::zq_t, k * ntt::N> poly)
 
   for (size_t i = 0; i < ω; i++) {
     const size_t idx = dis(gen);
-    poly[idx] = field::zq_t::one();
+    poly[idx] = ml_dsa_field::zq_t::one();
   }
 }
 
@@ -83,15 +83,15 @@ test_encode_decode_hint_bits()
   // Encoded byte length of the hint polynomial
   constexpr size_t enc_len = ω + k;
 
-  std::vector<field::zq_t> h0(k * ntt::N, 0);
-  std::vector<field::zq_t> h1(k * ntt::N, 0);
-  std::vector<field::zq_t> h2(k * ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> h0(k * ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> h1(k * ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> h2(k * ntt::N, 0);
   std::vector<uint8_t> arr0(enc_len, 0);
   std::vector<uint8_t> arr1(enc_len, 0);
 
-  auto _h0 = std::span<field::zq_t, k * ntt::N>(h0);
-  auto _h1 = std::span<field::zq_t, k * ntt::N>(h1);
-  auto _h2 = std::span<field::zq_t, k * ntt::N>(h2);
+  auto _h0 = std::span<ml_dsa_field::zq_t, k * ntt::N>(h0);
+  auto _h1 = std::span<ml_dsa_field::zq_t, k * ntt::N>(h1);
+  auto _h2 = std::span<ml_dsa_field::zq_t, k * ntt::N>(h2);
   auto _arr0 = std::span<uint8_t, enc_len>(arr0);
   auto _arr1 = std::span<uint8_t, enc_len>(arr1);
 

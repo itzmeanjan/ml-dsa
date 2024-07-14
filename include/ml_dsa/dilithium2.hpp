@@ -10,7 +10,7 @@ namespace dilithium2 {
 constexpr size_t d = 13;
 constexpr uint32_t τ = 39;
 constexpr uint32_t γ1 = 1u << 17;
-constexpr uint32_t γ2 = (field::Q - 1) / 88;
+constexpr uint32_t γ2 = (ml_dsa_field::Q - 1) / 88;
 constexpr size_t k = 4;
 constexpr size_t l = 4;
 constexpr uint32_t η = 2;

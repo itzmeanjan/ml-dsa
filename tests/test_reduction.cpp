@@ -9,15 +9,15 @@ TEST(Dilithium, Power2Round)
   constexpr size_t itr_cnt = 1ul << 16;
 
   constexpr size_t d = 13;
-  constexpr field::zq_t t0(1u << d);
+  constexpr ml_dsa_field::zq_t t0(1u << d);
 
   prng::prng_t prng;
 
   for (size_t i = 0; i < itr_cnt; i++) {
-    const field::zq_t r = field::zq_t::random(prng);
+    const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(prng);
 
     const auto t1 = reduction::power2round<d>(r);
-    const field::zq_t t2 = t1.first * t0 + t1.second;
+    const ml_dsa_field::zq_t t2 = t1.first * t0 + t1.second;
 
     EXPECT_EQ(r, t2);
   }
@@ -37,13 +37,13 @@ test_decompose()
   prng::prng_t prng;
 
   for (size_t i = 0; i < rounds; i++) {
-    const field::zq_t r = field::zq_t::random(prng);
-    constexpr field::zq_t z_{ z };
+    const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(prng);
+    constexpr ml_dsa_field::zq_t z_{ z };
 
-    const field::zq_t h = reduction::make_hint<alpha>(z_, r);
-    const field::zq_t rz = reduction::use_hint<alpha>(h, r);
+    const ml_dsa_field::zq_t h = reduction::make_hint<alpha>(z_, r);
+    const ml_dsa_field::zq_t rz = reduction::use_hint<alpha>(h, r);
 
-    const field::zq_t rz_ = reduction::highbits<alpha>(r + z_);
+    const ml_dsa_field::zq_t rz_ = reduction::highbits<alpha>(r + z_);
 
     EXPECT_EQ(rz, rz_);
   }
@@ -51,8 +51,8 @@ test_decompose()
 
 TEST(Dilithium, MakingAndUsingOfHintBits)
 {
-  test_decompose<((field::Q - 1u) / 88u) << 1, 77u>();
-  test_decompose<((field::Q - 1u) / 88u) << 1, 1321u>();
-  test_decompose<((field::Q - 1u) / 32u) << 1, 997u>();
-  test_decompose<((field::Q - 1u) / 32u) << 1, 1981u>();
+  test_decompose<((ml_dsa_field::Q - 1u) / 88u) << 1, 77u>();
+  test_decompose<((ml_dsa_field::Q - 1u) / 88u) << 1, 1321u>();
+  test_decompose<((ml_dsa_field::Q - 1u) / 32u) << 1, 997u>();
+  test_decompose<((ml_dsa_field::Q - 1u) / 32u) << 1, 1981u>();
 }

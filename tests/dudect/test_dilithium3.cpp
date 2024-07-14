@@ -11,20 +11,20 @@ uint8_t
 do_one_computation(uint8_t* const data)
 {
   constexpr uint32_t α = dilithium3::γ2 << 1;
-  constexpr uint32_t m = (field::Q - 1u) / α;
+  constexpr uint32_t m = (ml_dsa_field::Q - 1u) / α;
   constexpr size_t w1bw = std::bit_width(m - 1u);
 
   constexpr size_t doff0 = 0;
   constexpr size_t doff1 = doff0 + 2 * SEED_LEN;
 
-  std::array<field::zq_t, dilithium3::l * ntt::N> vec{};
-  std::array<field::zq_t, vec.size()> vec_high{};
-  std::array<field::zq_t, vec.size()> vec_low{};
-  std::array<field::zq_t, vec_high.size()> vec_hint{};
+  std::array<ml_dsa_field::zq_t, dilithium3::l * ntt::N> vec{};
+  std::array<ml_dsa_field::zq_t, vec.size()> vec_high{};
+  std::array<ml_dsa_field::zq_t, vec.size()> vec_low{};
+  std::array<ml_dsa_field::zq_t, vec_high.size()> vec_hint{};
   std::array<uint8_t, (vec_high.size() * w1bw) / 8> encoded{};
-  std::array<field::zq_t, vec_high.size()> decoded{};
+  std::array<ml_dsa_field::zq_t, vec_high.size()> decoded{};
   std::array<uint8_t, dilithium3::ω + dilithium3::l> encoded_hints{};
-  std::array<field::zq_t, vec.size()> decoded_hints{};
+  std::array<ml_dsa_field::zq_t, vec.size()> decoded_hints{};
 
   auto seed = std::span<const uint8_t, 2 * SEED_LEN>(data + doff0, doff1 - doff0);
   const uint16_t kappa = (static_cast<uint16_t>(data[doff1 + 1]) << 8) | (static_cast<uint16_t>(data[doff1 + 0]) << 0);

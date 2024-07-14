@@ -17,7 +17,7 @@ namespace bit_packing {
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<size_t sbw>
 static inline constexpr void
-encode(std::span<const field::zq_t, ntt::N> poly, std::span<uint8_t, ntt::N * sbw / 8> arr)
+encode(std::span<const ml_dsa_field::zq_t, ntt::N> poly, std::span<uint8_t, ntt::N * sbw / 8> arr)
   requires(dilithium_params::check_sbw(sbw))
 {
   std::memset(arr.data(), 0, arr.size());
@@ -186,12 +186,12 @@ encode(std::span<const field::zq_t, ntt::N> poly, std::span<uint8_t, ntt::N * sb
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<size_t sbw>
 static inline constexpr void
-decode(std::span<const uint8_t, ntt::N * sbw / 8> arr, std::span<field::zq_t, ntt::N> poly)
+decode(std::span<const uint8_t, ntt::N * sbw / 8> arr, std::span<ml_dsa_field::zq_t, ntt::N> poly)
   requires(dilithium_params::check_sbw(sbw))
 {
   // Instead of std::memset use following loop to avoid compiler warnings.
   for (size_t i = 0; i < poly.size(); i++) {
-    poly[i] = field::zq_t::zero();
+    poly[i] = ml_dsa_field::zq_t::zero();
   }
 
   if constexpr (sbw == 3) {
@@ -333,9 +333,9 @@ decode(std::span<const uint8_t, ntt::N * sbw / 8> arr, std::span<field::zq_t, nt
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<size_t k, size_t ω>
 static inline constexpr void
-encode_hint_bits(std::span<const field::zq_t, k * ntt::N> h, std::span<uint8_t, ω + k> arr)
+encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ntt::N> h, std::span<uint8_t, ω + k> arr)
 {
-  constexpr auto zero = field::zq_t::zero();
+  constexpr auto zero = ml_dsa_field::zq_t::zero();
   std::memset(arr.data(), 0, arr.size());
 
   size_t idx = 0;
@@ -363,9 +363,9 @@ encode_hint_bits(std::span<const field::zq_t, k * ntt::N> h, std::span<uint8_t, 
 // failed.
 template<size_t k, size_t ω>
 static inline constexpr bool
-decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<field::zq_t, k * ntt::N> h)
+decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<ml_dsa_field::zq_t, k * ntt::N> h)
 {
-  std::fill(h.begin(), h.end(), field::zq_t::zero());
+  std::fill(h.begin(), h.end(), ml_dsa_field::zq_t::zero());
 
   size_t idx = 0;
   bool failed = false;
@@ -386,7 +386,7 @@ decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<field::zq_t, k 
 
       failed |= flg1;
 
-      h[off + arr[j]] = field::zq_t::one();
+      h[off + arr[j]] = ml_dsa_field::zq_t::one();
     }
 
     idx = arr[ω + i];

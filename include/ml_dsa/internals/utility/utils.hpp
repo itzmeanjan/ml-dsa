@@ -21,7 +21,7 @@ static inline constexpr size_t
 pub_key_len()
   requires(dilithium_params::check_d(d))
 {
-  constexpr size_t t1_bw = std::bit_width(field::Q) - d;
+  constexpr size_t t1_bw = std::bit_width(ml_dsa_field::Q) - d;
   constexpr size_t pklen = 32 + k * 32 * t1_bw;
   return pklen;
 }

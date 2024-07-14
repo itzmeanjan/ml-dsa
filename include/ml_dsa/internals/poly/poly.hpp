@@ -13,9 +13,9 @@ namespace poly {
 // attempts to extract out high and low order bits from each of 256 coefficients
 template<size_t d>
 static inline constexpr void
-power2round(std::span<const field::zq_t, ntt::N> poly,
-            std::span<field::zq_t, ntt::N> poly_hi,
-            std::span<field::zq_t, ntt::N> poly_lo)
+power2round(std::span<const ml_dsa_field::zq_t, ntt::N> poly,
+            std::span<ml_dsa_field::zq_t, ntt::N> poly_hi,
+            std::span<ml_dsa_field::zq_t, ntt::N> poly_lo)
   requires(dilithium_params::check_d(d))
 {
   for (size_t i = 0; i < poly.size(); i++) {
@@ -29,9 +29,9 @@ power2round(std::span<const field::zq_t, ntt::N> poly,
 // Given two degree-255 polynomials in NTT representation, this routine performs
 // element-wise multiplication over Z_q | q = 2^23 - 2^13 + 1
 static inline constexpr void
-mul(std::span<const field::zq_t, ntt::N> polya,
-    std::span<const field::zq_t, ntt::N> polyb,
-    std::span<field::zq_t, ntt::N> polyc)
+mul(std::span<const ml_dsa_field::zq_t, ntt::N> polya,
+    std::span<const ml_dsa_field::zq_t, ntt::N> polyb,
+    std::span<ml_dsa_field::zq_t, ntt::N> polyc)
 {
   for (size_t i = 0; i < polya.size(); i++) {
     polyc[i] = polya[i] * polyb[i];
@@ -42,9 +42,9 @@ mul(std::span<const field::zq_t, ntt::N> polya,
 // this routine subtracts each coefficient from x, so that they stay in [0, 2x].
 template<uint32_t x>
 static inline constexpr void
-sub_from_x(std::span<field::zq_t, ntt::N> poly)
+sub_from_x(std::span<ml_dsa_field::zq_t, ntt::N> poly)
 {
-  constexpr field::zq_t x_cap(x);
+  constexpr ml_dsa_field::zq_t x_cap(x);
 
   for (size_t i = 0; i < poly.size(); i++) {
     poly[i] = x_cap - poly[i];
@@ -55,7 +55,7 @@ sub_from_x(std::span<field::zq_t, ntt::N> poly)
 // using decompose routine ), while not mutating source polynomial
 template<uint32_t alpha>
 static inline constexpr void
-highbits(std::span<const field::zq_t, ntt::N> src, std::span<field::zq_t, ntt::N> dst)
+highbits(std::span<const ml_dsa_field::zq_t, ntt::N> src, std::span<ml_dsa_field::zq_t, ntt::N> dst)
 {
   for (size_t i = 0; i < src.size(); i++) {
     dst[i] = reduction::highbits<alpha>(src[i]);
@@ -66,7 +66,7 @@ highbits(std::span<const field::zq_t, ntt::N> src, std::span<field::zq_t, ntt::N
 // using decompose routine ), while not mutating source polynomial
 template<uint32_t alpha>
 static inline constexpr void
-lowbits(std::span<const field::zq_t, ntt::N> src, std::span<field::zq_t, ntt::N> dst)
+lowbits(std::span<const ml_dsa_field::zq_t, ntt::N> src, std::span<ml_dsa_field::zq_t, ntt::N> dst)
 {
   for (size_t i = 0; i < src.size(); i++) {
     dst[i] = reduction::lowbits<alpha>(src[i]);
@@ -77,15 +77,15 @@ lowbits(std::span<const field::zq_t, ntt::N> src, std::span<field::zq_t, ntt::N>
 //
 // See point `Sizes of elements` in section 2.1 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-static inline constexpr field::zq_t
-infinity_norm(std::span<const field::zq_t, ntt::N> poly)
+static inline constexpr ml_dsa_field::zq_t
+infinity_norm(std::span<const ml_dsa_field::zq_t, ntt::N> poly)
 {
-  constexpr field::zq_t qby2(field::Q / 2);
-  auto res = field::zq_t::zero();
+  constexpr ml_dsa_field::zq_t qby2(ml_dsa_field::Q / 2);
+  auto res = ml_dsa_field::zq_t::zero();
 
   for (size_t i = 0; i < poly.size(); i++) {
     const bool flg = poly[i] > qby2;
-    const field::zq_t br[]{ poly[i], -poly[i] };
+    const ml_dsa_field::zq_t br[]{ poly[i], -poly[i] };
 
     res = std::max(res, br[flg]);
   }
@@ -97,9 +97,9 @@ infinity_norm(std::span<const field::zq_t, ntt::N> poly)
 // coefficient, using `make_hint` routine.
 template<uint32_t alpha>
 static inline constexpr void
-make_hint(std::span<const field::zq_t, ntt::N> polya,
-          std::span<const field::zq_t, ntt::N> polyb,
-          std::span<field::zq_t, ntt::N> polyc)
+make_hint(std::span<const ml_dsa_field::zq_t, ntt::N> polya,
+          std::span<const ml_dsa_field::zq_t, ntt::N> polyb,
+          std::span<ml_dsa_field::zq_t, ntt::N> polyc)
 {
   for (size_t i = 0; i < polya.size(); i++) {
     polyc[i] = reduction::make_hint<alpha>(polya[i], polyb[i]);
@@ -112,9 +112,9 @@ make_hint(std::span<const field::zq_t, ntt::N> polya,
 // z is another degree-255 polynomial with small coefficients.
 template<uint32_t alpha>
 static inline constexpr void
-use_hint(std::span<const field::zq_t, ntt::N> polyh,
-         std::span<const field::zq_t, ntt::N> polyr,
-         std::span<field::zq_t, ntt::N> polyrz)
+use_hint(std::span<const ml_dsa_field::zq_t, ntt::N> polyh,
+         std::span<const ml_dsa_field::zq_t, ntt::N> polyr,
+         std::span<ml_dsa_field::zq_t, ntt::N> polyrz)
 {
   for (size_t i = 0; i < polyh.size(); i++) {
     polyrz[i] = reduction::use_hint<alpha>(polyh[i], polyr[i]);
@@ -124,9 +124,9 @@ use_hint(std::span<const field::zq_t, ntt::N> polyh,
 // Given a degree-255 polynomial, this routine counts number of coefficients
 // having value 1.
 static inline constexpr size_t
-count_1s(std::span<const field::zq_t, ntt::N> poly)
+count_1s(std::span<const ml_dsa_field::zq_t, ntt::N> poly)
 {
-  constexpr auto one = field::zq_t::one();
+  constexpr auto one = ml_dsa_field::zq_t::one();
   size_t cnt = 0;
 
   for (size_t i = 0; i < poly.size(); i++) {
@@ -140,7 +140,7 @@ count_1s(std::span<const field::zq_t, ntt::N> poly)
 // leftwards, by d bits
 template<size_t d>
 static inline constexpr void
-shl(std::span<field::zq_t, ntt::N> poly)
+shl(std::span<ml_dsa_field::zq_t, ntt::N> poly)
 {
   for (size_t i = 0; i < poly.size(); i++) {
     poly[i] = poly[i] << d;

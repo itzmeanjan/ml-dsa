@@ -10,13 +10,13 @@
 // Utility functions applied on vector of degree-255 polynomials
 namespace polyvec {
 
-using const_poly_t = std::span<const field::zq_t, ntt::N>;
-using poly_t = std::span<field::zq_t, ntt::N>;
+using const_poly_t = std::span<const ml_dsa_field::zq_t, ntt::N>;
+using poly_t = std::span<ml_dsa_field::zq_t, ntt::N>;
 
 // Applies NTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
 template<size_t k>
 static inline constexpr void
-ntt(std::span<field::zq_t, k * ntt::N> vec)
+ntt(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -27,7 +27,7 @@ ntt(std::span<field::zq_t, k * ntt::N> vec)
 // Applies iNTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
 template<size_t k>
 static inline constexpr void
-intt(std::span<field::zq_t, k * ntt::N> vec)
+intt(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -39,9 +39,9 @@ intt(std::span<field::zq_t, k * ntt::N> vec)
 // extracting out high and low order bits
 template<size_t k, size_t d>
 static inline constexpr void
-power2round(std::span<const field::zq_t, k * ntt::N> poly,
-            std::span<field::zq_t, k * ntt::N> poly_hi,
-            std::span<field::zq_t, k * ntt::N> poly_lo)
+power2round(std::span<const ml_dsa_field::zq_t, k * ntt::N> poly,
+            std::span<ml_dsa_field::zq_t, k * ntt::N> poly_hi,
+            std::span<ml_dsa_field::zq_t, k * ntt::N> poly_lo)
   requires(dilithium_params::check_d(d))
 {
   for (size_t i = 0; i < k; i++) {
@@ -57,12 +57,12 @@ power2round(std::span<const field::zq_t, k * ntt::N> poly,
 // routine attempts to multiply and compute resulting matrix
 template<size_t a_rows, size_t a_cols, size_t b_rows, size_t b_cols>
 static inline constexpr void
-matrix_multiply(std::span<const field::zq_t, a_rows * a_cols * ntt::N> a,
-                std::span<const field::zq_t, b_rows * b_cols * ntt::N> b,
-                std::span<field::zq_t, a_rows * b_cols * ntt::N> c)
+matrix_multiply(std::span<const ml_dsa_field::zq_t, a_rows * a_cols * ntt::N> a,
+                std::span<const ml_dsa_field::zq_t, b_rows * b_cols * ntt::N> b,
+                std::span<ml_dsa_field::zq_t, a_rows * b_cols * ntt::N> c)
   requires(dilithium_params::check_matrix_dim(a_cols, b_rows))
 {
-  std::array<field::zq_t, ntt::N> tmp{};
+  std::array<ml_dsa_field::zq_t, ntt::N> tmp{};
   auto _tmp = std::span(tmp);
 
   for (size_t i = 0; i < a_rows; i++) {
@@ -88,7 +88,7 @@ matrix_multiply(std::span<const field::zq_t, a_rows * a_cols * ntt::N> a,
 // destination vector is mutated.
 template<size_t k>
 static inline constexpr void
-add_to(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k * ntt::N> dst)
+add_to(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<ml_dsa_field::zq_t, k * ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -103,7 +103,7 @@ add_to(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k * 
 // routine negates each coefficient.
 template<size_t k>
 static inline constexpr void
-neg(std::span<field::zq_t, k * ntt::N> vec)
+neg(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -119,7 +119,7 @@ neg(std::span<field::zq_t, k * ntt::N> vec)
 // coefficients now stay in [0, 2x].
 template<size_t k, uint32_t x>
 static inline constexpr void
-sub_from_x(std::span<field::zq_t, k * ntt::N> vec)
+sub_from_x(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -132,7 +132,7 @@ sub_from_x(std::span<field::zq_t, k * ntt::N> vec)
 // (k x 32 x sbw) -bytes destination array.
 template<size_t k, size_t sbw>
 static inline constexpr void
-encode(std::span<const field::zq_t, k * ntt::N> src, std::span<uint8_t, k * sbw * ntt::N / 8> dst)
+encode(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<uint8_t, k * sbw * ntt::N / 8> dst)
 {
   // Byte length of degree-255 polynomial after serialization
   constexpr size_t poly_blen = sbw * ntt::N / 8;
@@ -151,7 +151,7 @@ encode(std::span<const field::zq_t, k * ntt::N> src, std::span<uint8_t, k * sbw 
 // k x 1.
 template<size_t k, size_t sbw>
 static inline constexpr void
-decode(std::span<const uint8_t, k * sbw * ntt::N / 8> src, std::span<field::zq_t, k * ntt::N> dst)
+decode(std::span<const uint8_t, k * sbw * ntt::N / 8> src, std::span<ml_dsa_field::zq_t, k * ntt::N> dst)
 {
   // Byte length of degree-255 polynomial after serialization
   constexpr size_t poly_blen = sbw * ntt::N / 8;
@@ -169,7 +169,7 @@ decode(std::span<const uint8_t, k * sbw * ntt::N / 8> src, std::span<field::zq_t
 // extracts out high order bits from each coefficient
 template<size_t k, uint32_t alpha>
 static inline constexpr void
-highbits(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k * ntt::N> dst)
+highbits(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<ml_dsa_field::zq_t, k * ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -181,7 +181,7 @@ highbits(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k 
 // extracts out low order bits from each coefficient, while not mutating operand
 template<size_t k, uint32_t alpha>
 static inline constexpr void
-lowbits(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k * ntt::N> dst)
+lowbits(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<ml_dsa_field::zq_t, k * ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -195,9 +195,9 @@ lowbits(std::span<const field::zq_t, k * ntt::N> src, std::span<field::zq_t, k *
 // representation, while not mutating operand polynomials.
 template<size_t k>
 static inline constexpr void
-mul_by_poly(std::span<const field::zq_t, ntt::N> poly,
-            std::span<const field::zq_t, k * ntt::N> src_vec,
-            std::span<field::zq_t, k * ntt::N> dst_vec)
+mul_by_poly(std::span<const ml_dsa_field::zq_t, ntt::N> poly,
+            std::span<const ml_dsa_field::zq_t, k * ntt::N> src_vec,
+            std::span<ml_dsa_field::zq_t, k * ntt::N> dst_vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -211,10 +211,10 @@ mul_by_poly(std::span<const field::zq_t, ntt::N> poly,
 // See point `Sizes of elements` in section 2.1 of Dilithium specification
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<size_t k>
-static inline constexpr field::zq_t
-infinity_norm(std::span<const field::zq_t, k * ntt::N> vec)
+static inline constexpr ml_dsa_field::zq_t
+infinity_norm(std::span<const ml_dsa_field::zq_t, k * ntt::N> vec)
 {
-  auto res = field::zq_t::zero();
+  auto res = ml_dsa_field::zq_t::zero();
 
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -228,9 +228,9 @@ infinity_norm(std::span<const field::zq_t, k * ntt::N> vec)
 // routine computes hint bit for each coefficient, using `make_hint` routine.
 template<size_t k, uint32_t alpha>
 static inline constexpr void
-make_hint(std::span<const field::zq_t, k * ntt::N> polya,
-          std::span<const field::zq_t, k * ntt::N> polyb,
-          std::span<field::zq_t, k * ntt::N> polyc)
+make_hint(std::span<const ml_dsa_field::zq_t, k * ntt::N> polya,
+          std::span<const ml_dsa_field::zq_t, k * ntt::N> polyb,
+          std::span<ml_dsa_field::zq_t, k * ntt::N> polyc)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -245,9 +245,9 @@ make_hint(std::span<const field::zq_t, k * ntt::N> polya,
 // provided.
 template<size_t k, uint32_t alpha>
 static inline constexpr void
-use_hint(std::span<const field::zq_t, k * ntt::N> polyh,
-         std::span<const field::zq_t, k * ntt::N> polyr,
-         std::span<field::zq_t, k * ntt::N> polyrz)
+use_hint(std::span<const ml_dsa_field::zq_t, k * ntt::N> polyh,
+         std::span<const ml_dsa_field::zq_t, k * ntt::N> polyr,
+         std::span<ml_dsa_field::zq_t, k * ntt::N> polyrz)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -261,7 +261,7 @@ use_hint(std::span<const field::zq_t, k * ntt::N> polyh,
 // counts number of coefficients having value 1.
 template<size_t k>
 static inline constexpr size_t
-count_1s(std::span<const field::zq_t, k * ntt::N> vec)
+count_1s(std::span<const ml_dsa_field::zq_t, k * ntt::N> vec)
 {
   size_t cnt = 0;
 
@@ -277,7 +277,7 @@ count_1s(std::span<const field::zq_t, k * ntt::N> vec)
 // shifts each coefficient leftwards by d bits
 template<size_t k, size_t d>
 static inline constexpr void
-shl(std::span<field::zq_t, k * ntt::N> vec)
+shl(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;

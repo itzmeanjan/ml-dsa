@@ -13,7 +13,7 @@
 // Sampling polynomials/ vector of polynomials related routines
 namespace sampling {
 
-using poly_t = std::span<field::zq_t, ntt::N>;
+using poly_t = std::span<ml_dsa_field::zq_t, ntt::N>;
 
 // Given a 32 -bytes uniform seed ρ, a k x l matrix is deterministically sampled ( using the method of rejection
 // sampling ), where each coefficient is a degree-255 polynomial ∈ R_q | q = 2^23 - 2^13 + 1
@@ -24,7 +24,7 @@ using poly_t = std::span<field::zq_t, ntt::N>;
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<size_t k, size_t l>
 static inline constexpr void
-expand_a(std::span<const uint8_t, 32> rho, std::span<field::zq_t, k * l * ntt::N> mat)
+expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l * ntt::N> mat)
 {
   std::array<uint8_t, rho.size() + 2> msg{};
   auto _msg = std::span(msg);
@@ -56,8 +56,8 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<field::zq_t, k * l * ntt::N
           const uint32_t t2 = static_cast<uint32_t>(_buf[boff + 0]);
 
           const uint32_t t3 = (t0 << 16) ^ (t1 << 8) ^ (t2 << 0);
-          if (t3 < field::Q) {
-            mat[off + n] = field::zq_t(t3);
+          if (t3 < ml_dsa_field::Q) {
+            mat[off + n] = ml_dsa_field::zq_t(t3);
             n++;
           }
         }
@@ -80,10 +80,10 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<field::zq_t, k * l * ntt::N
 // specification https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<uint32_t η, size_t k, uint16_t nonce>
 static inline constexpr void
-expand_s(std::span<const uint8_t, 64> rho_prime, std::span<field::zq_t, k * ntt::N> vec)
+expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
   requires(dilithium_params::check_η(η) && dilithium_params::check_nonce(nonce))
 {
-  constexpr auto eta_ = field::zq_t(η);
+  constexpr auto eta_ = ml_dsa_field::zq_t(η);
 
   std::array<uint8_t, rho_prime.size() + 2> msg{};
   auto _msg = std::span(msg);
@@ -116,24 +116,24 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<field::zq_t, k * ntt:
           const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
           const bool flg0 = t0 < 15;
 
-          vec[off + n] = eta_ - field::zq_t(t2);
+          vec[off + n] = eta_ - ml_dsa_field::zq_t(t2);
           n += flg0 * 1;
 
           const uint32_t t3 = static_cast<uint32_t>(t1 % 5);
           const bool flg1 = (t1 < 15) & (n < ntt::N);
-          const field::zq_t br[]{ vec[off], eta_ - field::zq_t(t3) };
+          const ml_dsa_field::zq_t br[]{ vec[off], eta_ - ml_dsa_field::zq_t(t3) };
 
           vec[off + flg1 * n] = br[flg1];
           n += flg1 * 1;
         } else {
           const bool flg0 = t0 < 9;
 
-          vec[off + n] = eta_ - field::zq_t(static_cast<uint32_t>(t0));
+          vec[off + n] = eta_ - ml_dsa_field::zq_t(static_cast<uint32_t>(t0));
           n += flg0 * 1;
 
           const bool flg1 = (t1 < 9) & (n < ntt::N);
-          const auto t2 = eta_ - field::zq_t(static_cast<uint32_t>(t1));
-          const field::zq_t br[]{ vec[off], t2 };
+          const auto t2 = eta_ - ml_dsa_field::zq_t(static_cast<uint32_t>(t1));
+          const ml_dsa_field::zq_t br[]{ vec[off], t2 };
 
           vec[off + flg1 * n] = br[flg1];
           n += flg1 * 1;
@@ -152,7 +152,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<field::zq_t, k * ntt:
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<uint32_t γ1, size_t l>
 static inline constexpr void
-expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<field::zq_t, l * ntt::N> vec)
+expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<ml_dsa_field::zq_t, l * ntt::N> vec)
   requires(dilithium_params::check_γ1(γ1))
 {
   constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);
@@ -190,7 +190,7 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<f
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<uint32_t τ>
 static inline constexpr void
-sample_in_ball(std::span<const uint8_t, 32> seed, std::span<field::zq_t, ntt::N> poly)
+sample_in_ball(std::span<const uint8_t, 32> seed, std::span<ml_dsa_field::zq_t, ntt::N> poly)
   requires(dilithium_params::check_τ(τ))
 {
   std::array<uint8_t, 8> tau_bits{};
@@ -222,8 +222,8 @@ sample_in_ball(std::span<const uint8_t, 32> seed, std::span<field::zq_t, ntt::N>
       const auto tmp = _buf[off];
       const bool flg = tmp <= static_cast<uint8_t>(i);
 
-      const field::zq_t br0[]{ poly[i], poly[tmp] };
-      const field::zq_t br1[]{ poly[tmp], field::zq_t::one() - field::zq_t(2u * s_) };
+      const ml_dsa_field::zq_t br0[]{ poly[i], poly[tmp] };
+      const ml_dsa_field::zq_t br1[]{ poly[tmp], ml_dsa_field::zq_t::one() - ml_dsa_field::zq_t(2u * s_) };
 
       poly[i] = br0[flg];
       poly[tmp] = br1[flg];

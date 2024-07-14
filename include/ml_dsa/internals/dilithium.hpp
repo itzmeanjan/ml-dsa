@@ -41,32 +41,32 @@ keygen(std::span<const uint8_t, 32> seed,
   auto rho_prime = _seed_hash.template subspan<rho.size(), 64>();
   auto key = _seed_hash.template subspan<rho.size() + rho_prime.size(), 32>();
 
-  std::array<field::zq_t, k * l * ntt::N> A{};
+  std::array<ml_dsa_field::zq_t, k * l * ntt::N> A{};
   sampling::expand_a<k, l>(rho, A);
 
-  std::array<field::zq_t, l * ntt::N> s1{};
-  std::array<field::zq_t, k * ntt::N> s2{};
+  std::array<ml_dsa_field::zq_t, l * ntt::N> s1{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> s2{};
 
   sampling::expand_s<η, l, 0>(rho_prime, s1);
   sampling::expand_s<η, k, l>(rho_prime, s2);
 
-  std::array<field::zq_t, l * ntt::N> s1_prime{};
+  std::array<ml_dsa_field::zq_t, l * ntt::N> s1_prime{};
 
   std::copy(s1.begin(), s1.end(), s1_prime.begin());
   polyvec::ntt<l>(s1_prime);
 
-  std::array<field::zq_t, k * ntt::N> t{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> t{};
 
   polyvec::matrix_multiply<k, l, l, 1>(A, s1_prime, t);
   polyvec::intt<k>(t);
   polyvec::add_to<k>(s2, t);
 
-  std::array<field::zq_t, k * ntt::N> t1{};
-  std::array<field::zq_t, k * ntt::N> t0{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> t1{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> t0{};
 
   polyvec::power2round<k, d>(t, t1, t0);
 
-  constexpr size_t t1_bw = std::bit_width(field::Q) - d;
+  constexpr size_t t1_bw = std::bit_width(ml_dsa_field::Q) - d;
   std::array<uint8_t, 64> tr{};
 
   // Prepare public key
@@ -159,7 +159,7 @@ sign(std::span<const uint8_t, 32> rnd,
   auto key = seckey.template subspan<skoff1, skoff2 - skoff1>();
   auto tr = seckey.template subspan<skoff2, skoff3 - skoff2>();
 
-  std::array<field::zq_t, k * l * ntt::N> A{};
+  std::array<ml_dsa_field::zq_t, k * l * ntt::N> A{};
   sampling::expand_a<k, l>(rho, A);
 
   std::array<uint8_t, 64> mu{};
@@ -180,9 +180,9 @@ sign(std::span<const uint8_t, 32> rnd,
   hasher.finalize();
   hasher.squeeze(rho_prime);
 
-  std::array<field::zq_t, l * ntt::N> s1{};
-  std::array<field::zq_t, k * ntt::N> s2{};
-  std::array<field::zq_t, k * ntt::N> t0{};
+  std::array<ml_dsa_field::zq_t, l * ntt::N> s1{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> s2{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> t0{};
 
   polyvec::decode<l, eta_bw>(seckey.template subspan<skoff3, skoff4 - skoff3>(), s1);
   polyvec::decode<k, eta_bw>(seckey.template subspan<skoff4, skoff5 - skoff4>(), s2);
@@ -199,8 +199,8 @@ sign(std::span<const uint8_t, 32> rnd,
   bool has_signed = false;
   uint16_t kappa = 0;
 
-  std::array<field::zq_t, l * ntt::N> z{};
-  std::array<field::zq_t, k * ntt::N> h{};
+  std::array<ml_dsa_field::zq_t, l * ntt::N> z{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> h{};
 
   std::array<uint8_t, (2 * λ) / std::numeric_limits<uint8_t>::digits> c_tilda{};
   auto c_tilda_span = std::span(c_tilda);
@@ -208,9 +208,9 @@ sign(std::span<const uint8_t, 32> rnd,
   auto c2_tilda = c_tilda_span.template last<32>();
 
   while (!has_signed) {
-    std::array<field::zq_t, l * ntt::N> y{};
-    std::array<field::zq_t, l * ntt::N> y_prime{};
-    std::array<field::zq_t, k * ntt::N> w{};
+    std::array<ml_dsa_field::zq_t, l * ntt::N> y{};
+    std::array<ml_dsa_field::zq_t, l * ntt::N> y_prime{};
+    std::array<ml_dsa_field::zq_t, k * ntt::N> w{};
 
     sampling::expand_mask<γ1, l>(rho_prime, kappa, y);
 
@@ -221,13 +221,13 @@ sign(std::span<const uint8_t, 32> rnd,
     polyvec::intt<k>(w);
 
     constexpr uint32_t α = γ2 << 1;
-    constexpr uint32_t m = (field::Q - 1u) / α;
+    constexpr uint32_t m = (ml_dsa_field::Q - 1u) / α;
     constexpr size_t w1bw = std::bit_width(m - 1u);
 
-    std::array<field::zq_t, k * ntt::N> w1{};
+    std::array<ml_dsa_field::zq_t, k * ntt::N> w1{};
     std::array<uint8_t, _mu.size() + (k * w1bw * 32)> hash_in{};
     auto _hash_in = std::span(hash_in);
-    std::array<field::zq_t, ntt::N> c{};
+    std::array<ml_dsa_field::zq_t, ntt::N> c{};
 
     polyvec::highbits<k, α>(w, w1);
 
@@ -246,8 +246,8 @@ sign(std::span<const uint8_t, 32> rnd,
     polyvec::intt<l>(z);
     polyvec::add_to<l>(y, z);
 
-    std::array<field::zq_t, k * ntt::N> r0{};
-    std::array<field::zq_t, k * ntt::N> r1{};
+    std::array<ml_dsa_field::zq_t, k * ntt::N> r0{};
+    std::array<ml_dsa_field::zq_t, k * ntt::N> r1{};
 
     polyvec::mul_by_poly<k>(c, s2, r1);
     polyvec::intt<k>(r1);
@@ -255,11 +255,11 @@ sign(std::span<const uint8_t, 32> rnd,
     polyvec::add_to<k>(w, r1);
     polyvec::lowbits<k, α>(r1, r0);
 
-    const field::zq_t z_norm = polyvec::infinity_norm<l>(z);
-    const field::zq_t r0_norm = polyvec::infinity_norm<k>(r0);
+    const ml_dsa_field::zq_t z_norm = polyvec::infinity_norm<l>(z);
+    const ml_dsa_field::zq_t r0_norm = polyvec::infinity_norm<k>(r0);
 
-    constexpr field::zq_t bound0(γ1 - β);
-    constexpr field::zq_t bound1(γ2 - β);
+    constexpr ml_dsa_field::zq_t bound0(γ1 - β);
+    constexpr ml_dsa_field::zq_t bound1(γ2 - β);
 
     const bool flg0 = z_norm >= bound0;
     const bool flg1 = r0_norm >= bound1;
@@ -267,8 +267,8 @@ sign(std::span<const uint8_t, 32> rnd,
 
     has_signed = !flg2;
 
-    std::array<field::zq_t, k * ntt::N> h0{};
-    std::array<field::zq_t, k * ntt::N> h1{};
+    std::array<ml_dsa_field::zq_t, k * ntt::N> h0{};
+    std::array<ml_dsa_field::zq_t, k * ntt::N> h1{};
 
     polyvec::mul_by_poly<k>(c, t0, h0);
     polyvec::intt<k>(h0);
@@ -277,10 +277,10 @@ sign(std::span<const uint8_t, 32> rnd,
     polyvec::add_to<k>(h1, r1);
     polyvec::make_hint<k, α>(h0, r1, h);
 
-    const field::zq_t ct0_norm = polyvec::infinity_norm<k>(h1);
+    const ml_dsa_field::zq_t ct0_norm = polyvec::infinity_norm<k>(h1);
     const size_t count_1 = polyvec::count_1s<k>(h);
 
-    constexpr field::zq_t bound2(γ2);
+    constexpr ml_dsa_field::zq_t bound2(γ2);
 
     const bool flg3 = ct0_norm >= bound2;
     const bool flg4 = count_1 > ω;
@@ -316,7 +316,7 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
        std::span<const uint8_t, dilithium_utils::sig_len<k, l, γ1, ω, λ>()> sig)
   requires(dilithium_params::check_verify_params(k, l, d, γ1, γ2, τ, β, ω, λ))
 {
-  constexpr size_t t1_bw = std::bit_width(field::Q) - d;
+  constexpr size_t t1_bw = std::bit_width(ml_dsa_field::Q) - d;
 
   constexpr size_t pkoff0 = 0;
   constexpr size_t pkoff1 = pkoff0 + 32;
@@ -328,8 +328,8 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
   constexpr size_t sigoff2 = sigoff1 + (32 * l * gamma1_bw);
   constexpr size_t sigoff3 = sig.size();
 
-  std::array<field::zq_t, k * l * ntt::N> A{};
-  std::array<field::zq_t, k * ntt::N> t1{};
+  std::array<ml_dsa_field::zq_t, k * l * ntt::N> A{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> t1{};
 
   sampling::expand_a<k, l>(pubkey.template subspan<pkoff0, pkoff1 - pkoff0>(), A);
   polyvec::decode<k, t1_bw>(pubkey.template subspan<pkoff1, pkoff2 - pkoff1>(), t1);
@@ -348,7 +348,7 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
   hasher.finalize();
   hasher.squeeze(mu);
 
-  std::array<field::zq_t, ntt::N> c{};
+  std::array<ml_dsa_field::zq_t, ntt::N> c{};
   auto c_tilda = sig.template first<sigoff1 - sigoff0>();
   auto c1_tilda = c_tilda.template first<32>();
   auto c2_tilda = c_tilda.template last<32>();
@@ -356,18 +356,18 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
   sampling::sample_in_ball<τ>(c1_tilda, c);
   ntt::ntt(c);
 
-  std::array<field::zq_t, l * ntt::N> z{};
-  std::array<field::zq_t, k * ntt::N> h{};
+  std::array<ml_dsa_field::zq_t, l * ntt::N> z{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> h{};
 
   polyvec::decode<l, gamma1_bw>(sig.template subspan<sigoff1, sigoff2 - sigoff1>(), z);
   polyvec::sub_from_x<l, γ1>(z);
   const bool failed = bit_packing::decode_hint_bits<k, ω>(sig.template subspan<sigoff2, sigoff3 - sigoff2>(), h);
 
-  std::array<field::zq_t, k * ntt::N> w0{};
-  std::array<field::zq_t, k * ntt::N> w1{};
-  std::array<field::zq_t, k * ntt::N> w2{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> w0{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> w1{};
+  std::array<ml_dsa_field::zq_t, k * ntt::N> w2{};
 
-  const field::zq_t z_norm = polyvec::infinity_norm<l>(z);
+  const ml_dsa_field::zq_t z_norm = polyvec::infinity_norm<l>(z);
   const size_t count_1 = polyvec::count_1s<k>(h);
 
   polyvec::ntt<l>(z);
@@ -382,7 +382,7 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
   polyvec::intt<k>(w2);
 
   constexpr uint32_t α = γ2 << 1;
-  constexpr uint32_t m = (field::Q - 1u) / α;
+  constexpr uint32_t m = (ml_dsa_field::Q - 1u) / α;
   constexpr size_t w1bw = std::bit_width(m - 1u);
 
   polyvec::use_hint<k, α>(h, w2, w1);
@@ -400,7 +400,7 @@ verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
   hasher.finalize();
   hasher.squeeze(c_tilda_prime);
 
-  constexpr field::zq_t bound0(γ1 - β);
+  constexpr ml_dsa_field::zq_t bound0(γ1 - β);
 
   const bool flg0 = z_norm < bound0;
   bool flg1 = false;
