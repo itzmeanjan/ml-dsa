@@ -16,7 +16,7 @@ TEST(Dilithium, Power2Round)
   for (size_t i = 0; i < itr_cnt; i++) {
     const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(prng);
 
-    const auto t1 = reduction::power2round<d>(r);
+    const auto t1 = ml_dsa_reduction::power2round<d>(r);
     const ml_dsa_field::zq_t t2 = t1.first * t0 + t1.second;
 
     EXPECT_EQ(r, t2);
@@ -40,10 +40,10 @@ test_decompose()
     const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(prng);
     constexpr ml_dsa_field::zq_t z_{ z };
 
-    const ml_dsa_field::zq_t h = reduction::make_hint<alpha>(z_, r);
-    const ml_dsa_field::zq_t rz = reduction::use_hint<alpha>(h, r);
+    const ml_dsa_field::zq_t h = ml_dsa_reduction::make_hint<alpha>(z_, r);
+    const ml_dsa_field::zq_t rz = ml_dsa_reduction::use_hint<alpha>(h, r);
 
-    const ml_dsa_field::zq_t rz_ = reduction::highbits<alpha>(r + z_);
+    const ml_dsa_field::zq_t rz_ = ml_dsa_reduction::highbits<alpha>(r + z_);
 
     EXPECT_EQ(rz, rz_);
   }

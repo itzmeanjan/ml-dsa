@@ -1,28 +1,22 @@
 #pragma once
 #include "field.hpp"
-#include "ml_dsa/internals/utility/params.hpp"
 #include <utility>
 
-// Utility functions used for extracting out high/ low order bits and making/
-// using hint bits
-namespace reduction {
+// Auxiliary functions used for extracting out high/ low order bits and making/ using hint bits.
+namespace ml_dsa_reduction {
 
-// Given an element of Z_q | q = 2^23 - 2^13 + 1, this routine extracts out high
-// and low order bits s.t.
+// Given an element of Z_q, this routine extracts out high and low order bits s.t.
 //
-// r mod^+ q = hi * 2^D + lo | -2^{D-1} < lo <= 2^{D-1}
+// `r = hi * 2^D + lo (mod q)`
 //
-// so that public key can be compressed.
+// This routine is used for compressing public key.
 //
-// See definition of this routine in figure 3 of Dilithium specification
-// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
-//
+// See algorithm 29 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.ipd.
 // This implementation collects some ideas from
-// https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23
+// https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23.
 template<size_t d>
 static inline constexpr std::pair<ml_dsa_field::zq_t, ml_dsa_field::zq_t>
 power2round(const ml_dsa_field::zq_t r)
-  requires(dilithium_params::check_d(d))
 {
   constexpr uint32_t max = 1u << (d - 1);
 
@@ -36,19 +30,16 @@ power2round(const ml_dsa_field::zq_t r)
   return std::make_pair(hi, lo);
 }
 
-// Given an element of Z_q | q = 2^23 - 2^13 + 1, this routine computes high and
-// low order bits s.t.
+// Given an element of Z_q, this routine computes high and low order bits s.t.
 //
-// r mod^+ q = r1 * α + r0 | -α/2 < r0 <= α/2
+// `r mod^+ q = r1 * α + r0 | -α/2 < r0 <= α/2`
 //
 // If r1 = (q - 1)/ α then r1 = 0; r0 = r0 - 1
 //
-// See definition of this routine in figure 3 of Dilithium specification
-// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
+// See algorithm 30 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<uint32_t alpha>
 static inline constexpr std::pair<ml_dsa_field::zq_t, ml_dsa_field::zq_t>
 decompose(const ml_dsa_field::zq_t r)
-  requires(dilithium_params::check_γ2(alpha / 2))
 {
   constexpr uint32_t t0 = alpha >> 1;
   constexpr uint32_t t1 = ml_dsa_field::Q - 1u;
@@ -69,11 +60,8 @@ decompose(const ml_dsa_field::zq_t r)
   return std::make_pair(r1, r0_);
 }
 
-// Given an element ∈ Z_q, this routine uses decompose routine ( defined above )
-// to extract out high order bits of r.
-//
-// See definition of this routine in figure 3 of Dilithium specification
-// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
+// Given an element ∈ Z_q, this routine extracts out high order bits of r.
+// See algorithm 31 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<uint32_t alpha>
 static inline constexpr ml_dsa_field::zq_t
 highbits(const ml_dsa_field::zq_t r)
@@ -82,11 +70,8 @@ highbits(const ml_dsa_field::zq_t r)
   return s.first;
 }
 
-// Given an element ∈ Z_q, this routine uses decompose routine ( defined above )
-// to extract out low order bits of r.
-//
-// See definition of this routine in figure 3 of Dilithium specification
-// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
+// Given an element ∈ Z_q, this routine extracts out low order bits of r.
+// See algorithm 32 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<uint32_t alpha>
 static inline constexpr ml_dsa_field::zq_t
 lowbits(const ml_dsa_field::zq_t r)
@@ -95,14 +80,11 @@ lowbits(const ml_dsa_field::zq_t r)
   return s.second;
 }
 
-// This algorithm takes r, z ∈ Z_q, producing a 1 -bit hint h such that
-// it allows one to compute the higher order bits of r + z just using r and h.
+// This algorithm takes `r`, `z` ∈ Z_q, producing a 1 -bit hint `h` such that it allows one to compute the higher order
+// bits of `r + z` just using `r` and `h`.
 //
-// This hint is essentially the “carry” caused by z in the addition.
-// Note, z is small.
-//
-// See definition of this routine in figure 3 of Dilithium specification
-// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
+// This hint is essentially the “carry” caused by `z` in the addition. Note, `z` is small.
+// See algorithm 33 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<uint32_t alpha>
 static inline constexpr ml_dsa_field::zq_t
 make_hint(const ml_dsa_field::zq_t z, const ml_dsa_field::zq_t r)
@@ -113,11 +95,8 @@ make_hint(const ml_dsa_field::zq_t z, const ml_dsa_field::zq_t r)
   return ml_dsa_field::zq_t{ static_cast<uint32_t>(r1 != v1) };
 }
 
-// 1 -bit hint ( read h ) is used to recover higher order bits of r + z s.t.
-// hint bit was computed using make_hint routine ( defined above ).
-//
-// See definition of this routine in figure 3 of Dilithium specification
-// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
+// 1 -bit hint ( read `h` ) is used to recover higher order bits of `r + z`.
+// See algorithm 34 of ML-DSA algorithm https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<uint32_t alpha>
 static inline constexpr ml_dsa_field::zq_t
 use_hint(const ml_dsa_field::zq_t h, const ml_dsa_field::zq_t r)
@@ -125,18 +104,18 @@ use_hint(const ml_dsa_field::zq_t h, const ml_dsa_field::zq_t r)
   constexpr uint32_t m = (ml_dsa_field::Q - 1) / alpha;
   constexpr ml_dsa_field::zq_t t0{ alpha >> 1 };
   constexpr ml_dsa_field::zq_t t1 = ml_dsa_field::zq_t{ ml_dsa_field::Q } - t0;
-  constexpr ml_dsa_field::zq_t t2{ 1u };
+  constexpr auto one = ml_dsa_field::zq_t::one();
 
   const auto s = decompose<alpha>(r);
 
-  if ((h == t2) && ((s.second > ml_dsa_field::zq_t::zero()) && (s.second < t1))) {
+  if ((h == one) && ((s.second > ml_dsa_field::zq_t::zero()) && (s.second < t1))) {
     const bool flg = s.first == ml_dsa_field::zq_t{ m - 1u };
-    const ml_dsa_field::zq_t br[]{ s.first + t2, ml_dsa_field::zq_t{ 0u } };
+    const ml_dsa_field::zq_t br[]{ s.first + one, ml_dsa_field::zq_t{ 0u } };
 
     return br[flg];
-  } else if ((h == t2) && (s.second >= t1)) {
+  } else if ((h == one) && (s.second >= t1)) {
     const bool flg = s.first == ml_dsa_field::zq_t{ 0u };
-    const ml_dsa_field::zq_t br[]{ s.first - t2, ml_dsa_field::zq_t{ m - 1 } };
+    const ml_dsa_field::zq_t br[]{ s.first - one, ml_dsa_field::zq_t{ m - 1 } };
 
     return br[flg];
   } else {

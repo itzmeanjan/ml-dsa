@@ -19,7 +19,7 @@ power2round(std::span<const ml_dsa_field::zq_t, ntt::N> poly,
   requires(dilithium_params::check_d(d))
 {
   for (size_t i = 0; i < poly.size(); i++) {
-    const auto ext = reduction::power2round<d>(poly[i]);
+    const auto ext = ml_dsa_reduction::power2round<d>(poly[i]);
 
     poly_hi[i] = ext.first;
     poly_lo[i] = ext.second;
@@ -58,7 +58,7 @@ static inline constexpr void
 highbits(std::span<const ml_dsa_field::zq_t, ntt::N> src, std::span<ml_dsa_field::zq_t, ntt::N> dst)
 {
   for (size_t i = 0; i < src.size(); i++) {
-    dst[i] = reduction::highbits<alpha>(src[i]);
+    dst[i] = ml_dsa_reduction::highbits<alpha>(src[i]);
   }
 }
 
@@ -69,7 +69,7 @@ static inline constexpr void
 lowbits(std::span<const ml_dsa_field::zq_t, ntt::N> src, std::span<ml_dsa_field::zq_t, ntt::N> dst)
 {
   for (size_t i = 0; i < src.size(); i++) {
-    dst[i] = reduction::lowbits<alpha>(src[i]);
+    dst[i] = ml_dsa_reduction::lowbits<alpha>(src[i]);
   }
 }
 
@@ -102,7 +102,7 @@ make_hint(std::span<const ml_dsa_field::zq_t, ntt::N> polya,
           std::span<ml_dsa_field::zq_t, ntt::N> polyc)
 {
   for (size_t i = 0; i < polya.size(); i++) {
-    polyc[i] = reduction::make_hint<alpha>(polya[i], polyb[i]);
+    polyc[i] = ml_dsa_reduction::make_hint<alpha>(polya[i], polyb[i]);
   }
 }
 
@@ -117,7 +117,7 @@ use_hint(std::span<const ml_dsa_field::zq_t, ntt::N> polyh,
          std::span<ml_dsa_field::zq_t, ntt::N> polyrz)
 {
   for (size_t i = 0; i < polyh.size(); i++) {
-    polyrz[i] = reduction::use_hint<alpha>(polyh[i], polyr[i]);
+    polyrz[i] = ml_dsa_reduction::use_hint<alpha>(polyh[i], polyr[i]);
   }
 }
 
