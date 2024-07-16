@@ -19,13 +19,13 @@ constexpr size_t ω = 55;
 constexpr size_t λ = 192;
 
 // = 1952 -bytes Dilithium3 public key
-constexpr size_t PubKeyLen = dilithium_utils::pub_key_len<k, d>();
+constexpr size_t PubKeyLen = ml_dsa_utils::pub_key_len(k, d);
 
 // = 4032 -bytes Dilithium3 secret key
-constexpr size_t SecKeyLen = dilithium_utils::sec_key_len<k, l, η, d>();
+constexpr size_t SecKeyLen = ml_dsa_utils::sec_key_len(k, l, η, d);
 
 // = 3309 -bytes Dilithium3 signature
-constexpr size_t SigLen = dilithium_utils::sig_len<k, l, γ1, ω, λ>();
+constexpr size_t SigLen = ml_dsa_utils::sig_len(k, l, γ1, ω, λ);
 
 // Given a 32 -bytes seed, this routine can be used for generating a fresh
 // Dilithium3 keypair.
