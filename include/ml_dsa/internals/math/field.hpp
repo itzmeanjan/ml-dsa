@@ -8,10 +8,10 @@
 namespace ml_dsa_field {
 
 // ML-DSA Prime Field Modulus
-constexpr uint32_t Q = (1u << 23) - (1u << 13) + 1u;
+static constexpr uint32_t Q = (1u << 23) - (1u << 13) + 1u;
 
-// Bit width of Kyber Prime Field Modulus ( = 12 )
-constexpr size_t RADIX_BIT_WIDTH = std::bit_width(Q);
+// Bit width of ML-DSA Prime Field Modulus ( = 23 )
+static constexpr size_t Q_BIT_WIDTH = std::bit_width(Q);
 
 // Precomputed Barrett Reduction Constant
 //
@@ -21,7 +21,7 @@ constexpr size_t RADIX_BIT_WIDTH = std::bit_width(Q);
 // r = floor((1 << 2k) / Q) = 8396807
 //
 // See https://www.nayuki.io/page/barrett-reduction-algorithm for more.
-constexpr uint32_t R = (1ul << (2 * RADIX_BIT_WIDTH)) / Q;
+static constexpr uint32_t R = (1ul << (2 * Q_BIT_WIDTH)) / Q;
 
 // ML-DSA Prime Field element e ∈ [0, Q), with arithmetic operations defined & implemented over it.
 struct zq_t
