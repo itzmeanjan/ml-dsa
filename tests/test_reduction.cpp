@@ -11,7 +11,7 @@ TEST(Dilithium, Power2Round)
   constexpr size_t d = 13;
   constexpr ml_dsa_field::zq_t t0(1u << d);
 
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<256> prng;
 
   for (size_t i = 0; i < itr_cnt; i++) {
     const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(prng);
@@ -34,7 +34,7 @@ template<uint32_t alpha, uint32_t z, size_t rounds = 65536ul>
 static void
 test_decompose()
 {
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<256> prng;
 
   for (size_t i = 0; i < rounds; i++) {
     const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(prng);

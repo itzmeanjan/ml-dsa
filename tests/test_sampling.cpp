@@ -14,7 +14,7 @@ test_sample_in_ball()
   auto _seed = std::span(seed);
   auto _poly = std::span<ml_dsa_field::zq_t, ntt::N>(poly);
 
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<256> prng;
 
   prng.read(_seed);
   sampling::sample_in_ball<τ>(_seed, _poly);

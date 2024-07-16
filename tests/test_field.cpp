@@ -7,7 +7,7 @@
 TEST(Dilithium, ArithmeticOverZq)
 {
   constexpr size_t itr_cnt = 1ul << 20;
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<256> prng;
 
   for (size_t i = 0; i < itr_cnt; i++) {
     const auto a = ml_dsa_field::zq_t::random(prng);

@@ -66,7 +66,7 @@ test_dilithium2_signing(const size_t mlen)
   auto _msg0 = std::span(msg0);
   auto _msg1 = std::span(msg1);
 
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<128> prng;
 
   prng.read(_seed);
   prng.read(_msg0);
@@ -137,7 +137,7 @@ test_dilithium3_signing(const size_t mlen)
   auto _msg0 = std::span(msg0);
   auto _msg1 = std::span(msg1);
 
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<192> prng;
 
   prng.read(_seed);
   prng.read(_msg0);
@@ -208,7 +208,7 @@ test_dilithium5_signing(const size_t mlen)
   auto _msg0 = std::span(msg0);
   auto _msg1 = std::span(msg1);
 
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<256> prng;
 
   prng.read(_seed);
   prng.read(_msg0);

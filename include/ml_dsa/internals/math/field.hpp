@@ -139,7 +139,8 @@ public:
   inline constexpr zq_t operator<<(const size_t l) const { return zq_t(this->v << l); }
 
   // Generate a random field element
-  static inline zq_t random(prng::prng_t& prng)
+  template<size_t bit_security_level>
+  static inline zq_t random(ml_dsa_prng::prng_t<bit_security_level>& prng)
   {
     uint32_t res = 0;
     prng.read(std::span(reinterpret_cast<uint8_t*>(&res), sizeof(res)));

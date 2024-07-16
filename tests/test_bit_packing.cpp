@@ -23,7 +23,7 @@ test_encode_decode()
   auto _polyb = std::span<ml_dsa_field::zq_t, ntt::N>(polyb);
   auto _arr = std::span<uint8_t, enc_len>(arr);
 
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<256> prng;
 
   for (size_t i = 0; i < ntt::N; i++) {
     _polya[i] = ml_dsa_field::zq_t::random(prng);

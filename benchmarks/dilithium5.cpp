@@ -1,4 +1,4 @@
-#include "dilithium5.hpp"
+#include "ml_dsa/dilithium5.hpp"
 #include "bench_helper.hpp"
 #include <benchmark/benchmark.h>
 
@@ -18,7 +18,7 @@ dilithium5_keygen(benchmark::State& state)
   auto _pubkey = std::span<uint8_t, pklen>(pubkey);
   auto _seckey = std::span<uint8_t, sklen>(seckey);
 
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<256> prng;
   prng.read(_seed);
 
   for (auto _ : state) {
@@ -55,7 +55,7 @@ dilithium5_sign(benchmark::State& state)
   auto _sig = std::span<uint8_t, siglen>(sig);
   auto _msg = std::span(msg);
 
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<256> prng;
   prng.read(_seed);
   prng.read(_msg);
 
@@ -96,7 +96,7 @@ dilithium5_verify(benchmark::State& state)
   auto _sig = std::span<uint8_t, siglen>(sig);
   auto _msg = std::span(msg);
 
-  prng::prng_t prng;
+  ml_dsa_prng::prng_t<256> prng;
   prng.read(_seed);
   prng.read(_msg);
 

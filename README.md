@@ -434,7 +434,7 @@ int main() {
     //
     // Be careful, read API documentation in include/prng.hpp
     // before you consider using it in production.
-    prng::prng_t prng;
+    ml_dsa_prng::prng_t<128> prng;
     prng.read(seed);
 
     dilithium2::keygen(seed, pubkey, seckey);

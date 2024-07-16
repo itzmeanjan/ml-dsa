@@ -42,10 +42,11 @@ main()
   auto _seckey = std::span<uint8_t, dilithium2::SecKeyLen>(seckey);
   auto _sig = std::span<uint8_t, dilithium2::SigLen>(sig);
 
-  // generate random 32 -bytes seed & N -bytes message ( to be signed )
-  prng::prng_t prng;
+  // Generate random 32 -bytes seed, 32 -bytes randomness (for signing) and N -bytes message ( to be signed )
+  ml_dsa_prng::prng_t<128> prng;
 
   prng.read(_seed);
+  prng.read(_rnd);
   prng.read(_msg);
 
   // Key generation -> signing -> verification
