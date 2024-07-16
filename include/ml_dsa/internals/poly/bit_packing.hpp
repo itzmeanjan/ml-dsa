@@ -18,7 +18,7 @@ namespace bit_packing {
 template<size_t sbw>
 static inline constexpr void
 encode(std::span<const ml_dsa_field::zq_t, ntt::N> poly, std::span<uint8_t, ntt::N * sbw / 8> arr)
-  requires(dilithium_params::check_sbw(sbw))
+  requires(ml_dsa_params::check_sbw(sbw))
 {
   std::memset(arr.data(), 0, arr.size());
 
@@ -187,7 +187,7 @@ encode(std::span<const ml_dsa_field::zq_t, ntt::N> poly, std::span<uint8_t, ntt:
 template<size_t sbw>
 static inline constexpr void
 decode(std::span<const uint8_t, ntt::N * sbw / 8> arr, std::span<ml_dsa_field::zq_t, ntt::N> poly)
-  requires(dilithium_params::check_sbw(sbw))
+  requires(ml_dsa_params::check_sbw(sbw))
 {
   // Instead of std::memset use following loop to avoid compiler warnings.
   for (size_t i = 0; i < poly.size(); i++) {

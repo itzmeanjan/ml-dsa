@@ -42,7 +42,7 @@ static inline constexpr void
 power2round(std::span<const ml_dsa_field::zq_t, k * ntt::N> poly,
             std::span<ml_dsa_field::zq_t, k * ntt::N> poly_hi,
             std::span<ml_dsa_field::zq_t, k * ntt::N> poly_lo)
-  requires(dilithium_params::check_d(d))
+  requires(ml_dsa_params::check_d(d))
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ntt::N;
@@ -60,7 +60,7 @@ static inline constexpr void
 matrix_multiply(std::span<const ml_dsa_field::zq_t, a_rows * a_cols * ntt::N> a,
                 std::span<const ml_dsa_field::zq_t, b_rows * b_cols * ntt::N> b,
                 std::span<ml_dsa_field::zq_t, a_rows * b_cols * ntt::N> c)
-  requires(dilithium_params::check_matrix_dim(a_cols, b_rows))
+  requires(ml_dsa_params::check_matrix_dim(a_cols, b_rows))
 {
   std::array<ml_dsa_field::zq_t, ntt::N> tmp{};
   auto _tmp = std::span(tmp);

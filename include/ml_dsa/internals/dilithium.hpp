@@ -27,7 +27,7 @@ static inline void
 keygen(std::span<const uint8_t, 32> seed,
        std::span<uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
        std::span<uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> seckey)
-  requires(dilithium_params::check_keygen_params(k, l, d, η))
+  requires(ml_dsa_params::check_keygen_params(k, l, d, η))
 {
   std::array<uint8_t, 32 + 64 + 32> seed_hash{};
   auto _seed_hash = std::span(seed_hash);
@@ -140,7 +140,7 @@ sign(std::span<const uint8_t, 32> rnd,
      std::span<const uint8_t, dilithium_utils::sec_key_len<k, l, η, d>()> seckey,
      std::span<const uint8_t> msg,
      std::span<uint8_t, dilithium_utils::sig_len<k, l, γ1, ω, λ>()> sig)
-  requires(dilithium_params::check_signing_params(k, l, d, η, γ1, γ2, τ, β, ω, λ))
+  requires(ml_dsa_params::check_signing_params(k, l, d, η, γ1, γ2, τ, β, ω, λ))
 {
   constexpr uint32_t t0_rng = 1u << (d - 1);
 
@@ -314,7 +314,7 @@ static inline bool
 verify(std::span<const uint8_t, dilithium_utils::pub_key_len<k, d>()> pubkey,
        std::span<const uint8_t> msg,
        std::span<const uint8_t, dilithium_utils::sig_len<k, l, γ1, ω, λ>()> sig)
-  requires(dilithium_params::check_verify_params(k, l, d, γ1, γ2, τ, β, ω, λ))
+  requires(ml_dsa_params::check_verify_params(k, l, d, γ1, γ2, τ, β, ω, λ))
 {
   constexpr size_t t1_bw = std::bit_width(ml_dsa_field::Q) - d;
 

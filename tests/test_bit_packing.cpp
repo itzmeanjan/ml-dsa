@@ -10,7 +10,7 @@
 template<size_t sbw>
 void
 test_encode_decode()
-  requires(dilithium_params::check_sbw(sbw))
+  requires(ml_dsa_params::check_sbw(sbw))
 {
   // Encoded byte length of the polynomial
   constexpr size_t enc_len = (sbw * ntt::N) / 8;

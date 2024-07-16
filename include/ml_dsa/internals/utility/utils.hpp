@@ -19,7 +19,7 @@ namespace dilithium_utils {
 template<size_t k, size_t d>
 static inline constexpr size_t
 pub_key_len()
-  requires(dilithium_params::check_d(d))
+  requires(ml_dsa_params::check_d(d))
 {
   constexpr size_t t1_bw = std::bit_width(ml_dsa_field::Q) - d;
   constexpr size_t pklen = 32 + k * 32 * t1_bw;
@@ -34,7 +34,7 @@ pub_key_len()
 template<size_t k, size_t l, uint32_t η, size_t d>
 static inline constexpr size_t
 sec_key_len()
-  requires(dilithium_params::check_d(d))
+  requires(ml_dsa_params::check_d(d))
 {
   constexpr size_t eta_bw = std::bit_width(2 * η);
   constexpr size_t sklen = 32 + 32 + 64 + 32 * (eta_bw * (k + l) + k * d);

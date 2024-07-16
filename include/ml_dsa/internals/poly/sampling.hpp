@@ -81,7 +81,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
 template<uint32_t η, size_t k, uint16_t nonce>
 static inline constexpr void
 expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
-  requires(dilithium_params::check_η(η) && dilithium_params::check_nonce(nonce))
+  requires(ml_dsa_params::check_η(η) && ml_dsa_params::check_nonce(nonce))
 {
   constexpr auto eta_ = ml_dsa_field::zq_t(η);
 
@@ -153,7 +153,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
 template<uint32_t γ1, size_t l>
 static inline constexpr void
 expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<ml_dsa_field::zq_t, l * ntt::N> vec)
-  requires(dilithium_params::check_γ1(γ1))
+  requires(ml_dsa_params::check_γ1(γ1))
 {
   constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);
 
@@ -191,7 +191,7 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
 template<uint32_t τ>
 static inline constexpr void
 sample_in_ball(std::span<const uint8_t, 32> seed, std::span<ml_dsa_field::zq_t, ntt::N> poly)
-  requires(dilithium_params::check_τ(τ))
+  requires(ml_dsa_params::check_τ(τ))
 {
   std::array<uint8_t, 8> tau_bits{};
   std::array<uint8_t, shake256::RATE / 8> buf{};

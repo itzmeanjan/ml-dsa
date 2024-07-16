@@ -16,7 +16,7 @@ static inline constexpr void
 power2round(std::span<const ml_dsa_field::zq_t, ntt::N> poly,
             std::span<ml_dsa_field::zq_t, ntt::N> poly_hi,
             std::span<ml_dsa_field::zq_t, ntt::N> poly_lo)
-  requires(dilithium_params::check_d(d))
+  requires(ml_dsa_params::check_d(d))
 {
   for (size_t i = 0; i < poly.size(); i++) {
     const auto ext = ml_dsa_reduction::power2round<d>(poly[i]);
