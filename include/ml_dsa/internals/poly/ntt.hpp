@@ -3,28 +3,23 @@
 #include <array>
 #include <span>
 
-// (inverse) Number Theoretic Transform for degree-255 polynomial, over
-// Dilithium Prime Field Z_q | q = 2^23 - 2^13 + 1
-namespace ntt {
+// Number Theoretic Transform for degree-255 polynomial
+namespace ml_dsa_ntt {
 
-constexpr size_t LOG2N = 8;
-constexpr size_t N = 1 << LOG2N;
+static constexpr size_t LOG2N = 8;
+static constexpr size_t N = 1 << LOG2N;
 
-// First primitive 512 -th root of unity modulo q | q = 2^23 - 2^13 + 1
+// First primitive 512 -th root of unity modulo q
+static constexpr ml_dsa_field::zq_t ζ(1753);
+static_assert((ζ ^ 512) == ml_dsa_field::zq_t::one(), "ζ must be 512th root of unity modulo Q");
+
+// Multiplicative inverse of N over Z_q
+static constexpr auto INV_N = ml_dsa_field::zq_t(N).inv();
+
+// Given a 64 -bit unsigned integer, this routine extracts specified many contiguous bits from LSB ( least significant
+// bits ) side & reverses their bit order, returning bit reversed `mbw` -bit wide number.
 //
-// Meaning, 1753 ** 512 == 1 mod q
-constexpr ml_dsa_field::zq_t ζ(1753);
-
-// Multiplicative inverse of N over Z_q | q = 2^23 - 2^13 + 1, N = 256
-constexpr auto INV_N = ml_dsa_field::zq_t(N).inv();
-
-// Given a 64 -bit unsigned integer, this routine extracts specified many
-// contiguous bits from LSB ( least significant bits ) side & reverses their bit
-// order, returning bit reversed `mbw` -bit wide number.
-//
-// See
-// https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L74-L93
-// for source of inspiration.
+// See https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L74-L93 for source of inspiration.
 template<size_t mbw>
 static inline constexpr size_t
 bit_rev(const size_t v)
@@ -40,11 +35,8 @@ bit_rev(const size_t v)
   return v_rev;
 }
 
-// Compile-time compute table holding powers of ζ, which is used for computing
-// NTT over degree-255 polynomial s.t. coefficients ∈ Zq.
-static consteval std::array<ml_dsa_field::zq_t, N>
-compute_powers_of_ζ()
-{
+// Precomputed table of powers of ζ, used during polynomial evaluation.
+static constexpr auto ζ_EXP = []() {
   std::array<ml_dsa_field::zq_t, N> res;
 
   for (size_t i = 0; i < N; i++) {
@@ -52,16 +44,10 @@ compute_powers_of_ζ()
   }
 
   return res;
-}
+}();
 
-// Precomputed table of powers of ζ, used when computing NTT.
-constexpr auto ζ_EXP = compute_powers_of_ζ();
-
-// Compile-time compute table holding negated powers of ζ, which is used for
-// computing iNTT over degree-255 polynomial s.t. coefficients ∈ Zq.
-static consteval std::array<ml_dsa_field::zq_t, N>
-compute_neg_powers_of_ζ()
-{
+// Precomputed table of negated powers of ζ, used during polynomial interpolation.
+static constexpr auto ζ_NEG_EXP = []() {
   std::array<ml_dsa_field::zq_t, N> res;
 
   for (size_t i = 0; i < N; i++) {
@@ -69,20 +55,15 @@ compute_neg_powers_of_ζ()
   }
 
   return res;
-}
+}();
 
-// Precomputed table of negated powers of ζ, used when computing iNTT.
-constexpr auto ζ_NEG_EXP = compute_neg_powers_of_ζ();
-
-// Given a polynomial f with 256 coefficients over Z_q | q = 2^23 - 2^13 + 1,
-// this routine computes number theoretic transform using Cooley-Tukey
-// algorithm, producing polynomial f' s.t. its coefficients are placed in
-// bit-reversed order
+// Given a polynomial f with 256 coefficients over Z_q, this routine computes number theoretic transform using
+// Cooley-Tukey algorithm, producing polynomial f' s.t. its coefficients are placed in bit-reversed order.
 //
 // Note, this routine mutates input i.e. it's an in-place NTT implementation.
 //
-// Implementation inspired from
-// https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L95-L129
+// Implementation inspired from https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L95-L129.
+// See algorithm 35 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
 static inline constexpr void
 ntt(std::span<ml_dsa_field::zq_t, N> poly)
 {
@@ -105,15 +86,14 @@ ntt(std::span<ml_dsa_field::zq_t, N> poly)
   }
 }
 
-// Given a polynomial f with 256 coefficients over Z_q | q = 2^23 - 2^13 + 1,
-// s.t. its coefficients are placed in bit-reversed order, this routine computes
-// inverse number theoretic transform using Gentleman-Sande algorithm, producing
-// polynomial f' s.t. its coefficients are placed in standard order
+// Given a polynomial f with 256 coefficients over Z_q, s.t. its coefficients are placed in bit-reversed order, this
+// routine computes inverse number theoretic transform using Gentleman-Sande algorithm, producing polynomial f' s.t. its
+// coefficients are placed in standard order.
 //
 // Note, this routine mutates input i.e. it's an in-place iNTT implementation.
 //
-// Implementation inspired from
-// https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L131-L172
+// Implementation inspired from https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L131-L172.
+// See algorithm 36 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
 static inline constexpr void
 intt(std::span<ml_dsa_field::zq_t, N> poly)
 {

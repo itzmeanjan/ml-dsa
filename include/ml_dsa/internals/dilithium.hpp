@@ -41,28 +41,28 @@ keygen(std::span<const uint8_t, 32> seed,
   auto rho_prime = _seed_hash.template subspan<rho.size(), 64>();
   auto key = _seed_hash.template subspan<rho.size() + rho_prime.size(), 32>();
 
-  std::array<ml_dsa_field::zq_t, k * l * ntt::N> A{};
+  std::array<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> A{};
   sampling::expand_a<k, l>(rho, A);
 
-  std::array<ml_dsa_field::zq_t, l * ntt::N> s1{};
-  std::array<ml_dsa_field::zq_t, k * ntt::N> s2{};
+  std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> s1{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> s2{};
 
   sampling::expand_s<η, l, 0>(rho_prime, s1);
   sampling::expand_s<η, k, l>(rho_prime, s2);
 
-  std::array<ml_dsa_field::zq_t, l * ntt::N> s1_prime{};
+  std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> s1_prime{};
 
   std::copy(s1.begin(), s1.end(), s1_prime.begin());
   polyvec::ntt<l>(s1_prime);
 
-  std::array<ml_dsa_field::zq_t, k * ntt::N> t{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t{};
 
   polyvec::matrix_multiply<k, l, l, 1>(A, s1_prime, t);
   polyvec::intt<k>(t);
   polyvec::add_to<k>(s2, t);
 
-  std::array<ml_dsa_field::zq_t, k * ntt::N> t1{};
-  std::array<ml_dsa_field::zq_t, k * ntt::N> t0{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t1{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t0{};
 
   polyvec::power2round<k, d>(t, t1, t0);
 
@@ -159,7 +159,7 @@ sign(std::span<const uint8_t, 32> rnd,
   auto key = seckey.template subspan<skoff1, skoff2 - skoff1>();
   auto tr = seckey.template subspan<skoff2, skoff3 - skoff2>();
 
-  std::array<ml_dsa_field::zq_t, k * l * ntt::N> A{};
+  std::array<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> A{};
   sampling::expand_a<k, l>(rho, A);
 
   std::array<uint8_t, 64> mu{};
@@ -180,9 +180,9 @@ sign(std::span<const uint8_t, 32> rnd,
   hasher.finalize();
   hasher.squeeze(rho_prime);
 
-  std::array<ml_dsa_field::zq_t, l * ntt::N> s1{};
-  std::array<ml_dsa_field::zq_t, k * ntt::N> s2{};
-  std::array<ml_dsa_field::zq_t, k * ntt::N> t0{};
+  std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> s1{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> s2{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t0{};
 
   polyvec::decode<l, eta_bw>(seckey.template subspan<skoff3, skoff4 - skoff3>(), s1);
   polyvec::decode<k, eta_bw>(seckey.template subspan<skoff4, skoff5 - skoff4>(), s2);
@@ -199,8 +199,8 @@ sign(std::span<const uint8_t, 32> rnd,
   bool has_signed = false;
   uint16_t kappa = 0;
 
-  std::array<ml_dsa_field::zq_t, l * ntt::N> z{};
-  std::array<ml_dsa_field::zq_t, k * ntt::N> h{};
+  std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> z{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h{};
 
   std::array<uint8_t, (2 * λ) / std::numeric_limits<uint8_t>::digits> c_tilda{};
   auto c_tilda_span = std::span(c_tilda);
@@ -208,9 +208,9 @@ sign(std::span<const uint8_t, 32> rnd,
   auto c2_tilda = c_tilda_span.template last<32>();
 
   while (!has_signed) {
-    std::array<ml_dsa_field::zq_t, l * ntt::N> y{};
-    std::array<ml_dsa_field::zq_t, l * ntt::N> y_prime{};
-    std::array<ml_dsa_field::zq_t, k * ntt::N> w{};
+    std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> y{};
+    std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> y_prime{};
+    std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w{};
 
     sampling::expand_mask<γ1, l>(rho_prime, kappa, y);
 
@@ -224,10 +224,10 @@ sign(std::span<const uint8_t, 32> rnd,
     constexpr uint32_t m = (ml_dsa_field::Q - 1u) / α;
     constexpr size_t w1bw = std::bit_width(m - 1u);
 
-    std::array<ml_dsa_field::zq_t, k * ntt::N> w1{};
+    std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w1{};
     std::array<uint8_t, _mu.size() + (k * w1bw * 32)> hash_in{};
     auto _hash_in = std::span(hash_in);
-    std::array<ml_dsa_field::zq_t, ntt::N> c{};
+    std::array<ml_dsa_field::zq_t, ml_dsa_ntt::N> c{};
 
     polyvec::highbits<k, α>(w, w1);
 
@@ -240,14 +240,14 @@ sign(std::span<const uint8_t, 32> rnd,
     hasher.squeeze(c_tilda);
 
     sampling::sample_in_ball<τ>(c1_tilda, c);
-    ntt::ntt(c);
+    ml_dsa_ntt::ntt(c);
 
     polyvec::mul_by_poly<l>(c, s1, z);
     polyvec::intt<l>(z);
     polyvec::add_to<l>(y, z);
 
-    std::array<ml_dsa_field::zq_t, k * ntt::N> r0{};
-    std::array<ml_dsa_field::zq_t, k * ntt::N> r1{};
+    std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> r0{};
+    std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> r1{};
 
     polyvec::mul_by_poly<k>(c, s2, r1);
     polyvec::intt<k>(r1);
@@ -267,8 +267,8 @@ sign(std::span<const uint8_t, 32> rnd,
 
     has_signed = !flg2;
 
-    std::array<ml_dsa_field::zq_t, k * ntt::N> h0{};
-    std::array<ml_dsa_field::zq_t, k * ntt::N> h1{};
+    std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h0{};
+    std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h1{};
 
     polyvec::mul_by_poly<k>(c, t0, h0);
     polyvec::intt<k>(h0);
@@ -328,8 +328,8 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
   constexpr size_t sigoff2 = sigoff1 + (32 * l * gamma1_bw);
   constexpr size_t sigoff3 = sig.size();
 
-  std::array<ml_dsa_field::zq_t, k * l * ntt::N> A{};
-  std::array<ml_dsa_field::zq_t, k * ntt::N> t1{};
+  std::array<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> A{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t1{};
 
   sampling::expand_a<k, l>(pubkey.template subspan<pkoff0, pkoff1 - pkoff0>(), A);
   polyvec::decode<k, t1_bw>(pubkey.template subspan<pkoff1, pkoff2 - pkoff1>(), t1);
@@ -348,24 +348,24 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
   hasher.finalize();
   hasher.squeeze(mu);
 
-  std::array<ml_dsa_field::zq_t, ntt::N> c{};
+  std::array<ml_dsa_field::zq_t, ml_dsa_ntt::N> c{};
   auto c_tilda = sig.template first<sigoff1 - sigoff0>();
   auto c1_tilda = c_tilda.template first<32>();
   auto c2_tilda = c_tilda.template last<32>();
 
   sampling::sample_in_ball<τ>(c1_tilda, c);
-  ntt::ntt(c);
+  ml_dsa_ntt::ntt(c);
 
-  std::array<ml_dsa_field::zq_t, l * ntt::N> z{};
-  std::array<ml_dsa_field::zq_t, k * ntt::N> h{};
+  std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> z{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h{};
 
   polyvec::decode<l, gamma1_bw>(sig.template subspan<sigoff1, sigoff2 - sigoff1>(), z);
   polyvec::sub_from_x<l, γ1>(z);
   const bool failed = bit_packing::decode_hint_bits<k, ω>(sig.template subspan<sigoff2, sigoff3 - sigoff2>(), h);
 
-  std::array<ml_dsa_field::zq_t, k * ntt::N> w0{};
-  std::array<ml_dsa_field::zq_t, k * ntt::N> w1{};
-  std::array<ml_dsa_field::zq_t, k * ntt::N> w2{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w0{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w1{};
+  std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w2{};
 
   const ml_dsa_field::zq_t z_norm = polyvec::infinity_norm<l>(z);
   const size_t count_1 = polyvec::count_1s<k>(h);

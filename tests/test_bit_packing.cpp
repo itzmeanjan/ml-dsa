@@ -13,19 +13,19 @@ test_encode_decode()
   requires(ml_dsa_params::check_sbw(sbw))
 {
   // Encoded byte length of the polynomial
-  constexpr size_t enc_len = (sbw * ntt::N) / 8;
+  constexpr size_t enc_len = (sbw * ml_dsa_ntt::N) / 8;
 
-  std::vector<ml_dsa_field::zq_t> polya(ntt::N, 0);
-  std::vector<ml_dsa_field::zq_t> polyb(ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> polya(ml_dsa_ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> polyb(ml_dsa_ntt::N, 0);
   std::vector<uint8_t> arr(enc_len, 0);
 
-  auto _polya = std::span<ml_dsa_field::zq_t, ntt::N>(polya);
-  auto _polyb = std::span<ml_dsa_field::zq_t, ntt::N>(polyb);
+  auto _polya = std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N>(polya);
+  auto _polyb = std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N>(polyb);
   auto _arr = std::span<uint8_t, enc_len>(arr);
 
   ml_dsa_prng::prng_t<256> prng;
 
-  for (size_t i = 0; i < ntt::N; i++) {
+  for (size_t i = 0; i < ml_dsa_ntt::N; i++) {
     _polya[i] = ml_dsa_field::zq_t::random(prng);
   }
 
@@ -35,7 +35,7 @@ test_encode_decode()
   constexpr size_t mask = (1u << sbw) - 1u;
   bool flg = false;
 
-  for (size_t i = 0; i < ntt::N; i++) {
+  for (size_t i = 0; i < ml_dsa_ntt::N; i++) {
     flg |= static_cast<bool>((_polya[i].raw() & mask) ^ _polyb[i].raw());
   }
 
@@ -57,7 +57,7 @@ TEST(Dilithium, PolynomialEncodingDecoding)
 // coefficients set to 1.
 template<size_t k, size_t ω>
 void
-generate_random_hint_bits(std::span<ml_dsa_field::zq_t, k * ntt::N> poly)
+generate_random_hint_bits(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly)
 {
   std::fill(poly.begin(), poly.end(), ml_dsa_field::zq_t::zero());
 
@@ -83,15 +83,15 @@ test_encode_decode_hint_bits()
   // Encoded byte length of the hint polynomial
   constexpr size_t enc_len = ω + k;
 
-  std::vector<ml_dsa_field::zq_t> h0(k * ntt::N, 0);
-  std::vector<ml_dsa_field::zq_t> h1(k * ntt::N, 0);
-  std::vector<ml_dsa_field::zq_t> h2(k * ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> h0(k * ml_dsa_ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> h1(k * ml_dsa_ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> h2(k * ml_dsa_ntt::N, 0);
   std::vector<uint8_t> arr0(enc_len, 0);
   std::vector<uint8_t> arr1(enc_len, 0);
 
-  auto _h0 = std::span<ml_dsa_field::zq_t, k * ntt::N>(h0);
-  auto _h1 = std::span<ml_dsa_field::zq_t, k * ntt::N>(h1);
-  auto _h2 = std::span<ml_dsa_field::zq_t, k * ntt::N>(h2);
+  auto _h0 = std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N>(h0);
+  auto _h1 = std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N>(h1);
+  auto _h2 = std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N>(h2);
   auto _arr0 = std::span<uint8_t, enc_len>(arr0);
   auto _arr1 = std::span<uint8_t, enc_len>(arr1);
 
@@ -106,7 +106,7 @@ test_encode_decode_hint_bits()
 
   bool flg = true;
 
-  for (size_t i = 0; i < k * ntt::N; i++) {
+  for (size_t i = 0; i < k * ml_dsa_ntt::N; i++) {
     flg &= (_h0[i] == _h1[i]);
   }
 

@@ -17,7 +17,7 @@ namespace bit_packing {
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<size_t sbw>
 static inline constexpr void
-encode(std::span<const ml_dsa_field::zq_t, ntt::N> poly, std::span<uint8_t, ntt::N * sbw / 8> arr)
+encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_t, ml_dsa_ntt::N * sbw / 8> arr)
   requires(ml_dsa_params::check_sbw(sbw))
 {
   std::memset(arr.data(), 0, arr.size());
@@ -186,7 +186,7 @@ encode(std::span<const ml_dsa_field::zq_t, ntt::N> poly, std::span<uint8_t, ntt:
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<size_t sbw>
 static inline constexpr void
-decode(std::span<const uint8_t, ntt::N * sbw / 8> arr, std::span<ml_dsa_field::zq_t, ntt::N> poly)
+decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
   requires(ml_dsa_params::check_sbw(sbw))
 {
   // Instead of std::memset use following loop to avoid compiler warnings.
@@ -333,16 +333,16 @@ decode(std::span<const uint8_t, ntt::N * sbw / 8> arr, std::span<ml_dsa_field::z
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<size_t k, size_t ω>
 static inline constexpr void
-encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ntt::N> h, std::span<uint8_t, ω + k> arr)
+encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::span<uint8_t, ω + k> arr)
 {
   constexpr auto zero = ml_dsa_field::zq_t::zero();
   std::memset(arr.data(), 0, arr.size());
 
   size_t idx = 0;
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
+    const size_t off = i * ml_dsa_ntt::N;
 
-    for (size_t j = 0; j < ntt::N; j++) {
+    for (size_t j = 0; j < ml_dsa_ntt::N; j++) {
       const bool flg = h[off + j] != zero;
       const uint8_t br[]{ arr[idx], static_cast<uint8_t>(j) };
 
@@ -363,7 +363,7 @@ encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ntt::N> h, std::span<ui
 // failed.
 template<size_t k, size_t ω>
 static inline constexpr bool
-decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<ml_dsa_field::zq_t, k * ntt::N> h)
+decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h)
 {
   std::fill(h.begin(), h.end(), ml_dsa_field::zq_t::zero());
 
@@ -371,7 +371,7 @@ decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<ml_dsa_field::z
   bool failed = false;
 
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
+    const size_t off = i * ml_dsa_ntt::N;
 
     const bool flg0 = arr[ω + i] < idx;
     const bool flg1 = arr[ω + i] > ω;

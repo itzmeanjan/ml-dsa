@@ -17,7 +17,7 @@ do_one_computation(uint8_t* const data)
   constexpr size_t doff0 = 0;
   constexpr size_t doff1 = doff0 + 2 * SEED_LEN;
 
-  std::array<ml_dsa_field::zq_t, dilithium5::l * ntt::N> vec{};
+  std::array<ml_dsa_field::zq_t, dilithium5::l * ml_dsa_ntt::N> vec{};
   std::array<ml_dsa_field::zq_t, vec.size()> vec_high{};
   std::array<ml_dsa_field::zq_t, vec.size()> vec_low{};
   std::array<ml_dsa_field::zq_t, vec_high.size()> vec_hint{};

@@ -9,10 +9,10 @@ static void
 test_sample_in_ball()
 {
   std::array<uint8_t, 32> seed{};
-  std::vector<ml_dsa_field::zq_t> poly(ntt::N, 0);
+  std::vector<ml_dsa_field::zq_t> poly(ml_dsa_ntt::N, 0);
 
   auto _seed = std::span(seed);
-  auto _poly = std::span<ml_dsa_field::zq_t, ntt::N>(poly);
+  auto _poly = std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N>(poly);
 
   ml_dsa_prng::prng_t<256> prng;
 

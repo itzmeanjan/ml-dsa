@@ -10,28 +10,28 @@
 // Utility functions applied on vector of degree-255 polynomials
 namespace polyvec {
 
-using const_poly_t = std::span<const ml_dsa_field::zq_t, ntt::N>;
-using poly_t = std::span<ml_dsa_field::zq_t, ntt::N>;
+using const_poly_t = std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N>;
+using poly_t = std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N>;
 
 // Applies NTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
 template<size_t k>
 static inline constexpr void
-ntt(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
+ntt(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    ntt::ntt(poly_t(vec.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    ml_dsa_ntt::ntt(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
 // Applies iNTT on a vector ( of dimension k x 1 ) of degree-255 polynomials
 template<size_t k>
 static inline constexpr void
-intt(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
+intt(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    ntt::intt(poly_t(vec.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    ml_dsa_ntt::intt(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -39,16 +39,16 @@ intt(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
 // extracting out high and low order bits
 template<size_t k, size_t d>
 static inline constexpr void
-power2round(std::span<const ml_dsa_field::zq_t, k * ntt::N> poly,
-            std::span<ml_dsa_field::zq_t, k * ntt::N> poly_hi,
-            std::span<ml_dsa_field::zq_t, k * ntt::N> poly_lo)
+power2round(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly,
+            std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly_hi,
+            std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly_lo)
   requires(ml_dsa_params::check_d(d))
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    poly::power2round<d>(const_poly_t(poly.subspan(off, ntt::N)),
-                         poly_t(poly_hi.subspan(off, ntt::N)),
-                         poly_t(poly_lo.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    poly::power2round<d>(const_poly_t(poly.subspan(off, ml_dsa_ntt::N)),
+                         poly_t(poly_hi.subspan(off, ml_dsa_ntt::N)),
+                         poly_t(poly_lo.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -57,23 +57,23 @@ power2round(std::span<const ml_dsa_field::zq_t, k * ntt::N> poly,
 // routine attempts to multiply and compute resulting matrix
 template<size_t a_rows, size_t a_cols, size_t b_rows, size_t b_cols>
 static inline constexpr void
-matrix_multiply(std::span<const ml_dsa_field::zq_t, a_rows * a_cols * ntt::N> a,
-                std::span<const ml_dsa_field::zq_t, b_rows * b_cols * ntt::N> b,
-                std::span<ml_dsa_field::zq_t, a_rows * b_cols * ntt::N> c)
+matrix_multiply(std::span<const ml_dsa_field::zq_t, a_rows * a_cols * ml_dsa_ntt::N> a,
+                std::span<const ml_dsa_field::zq_t, b_rows * b_cols * ml_dsa_ntt::N> b,
+                std::span<ml_dsa_field::zq_t, a_rows * b_cols * ml_dsa_ntt::N> c)
   requires(ml_dsa_params::check_matrix_dim(a_cols, b_rows))
 {
-  std::array<ml_dsa_field::zq_t, ntt::N> tmp{};
+  std::array<ml_dsa_field::zq_t, ml_dsa_ntt::N> tmp{};
   auto _tmp = std::span(tmp);
 
   for (size_t i = 0; i < a_rows; i++) {
     for (size_t j = 0; j < b_cols; j++) {
-      const size_t coff = (i * b_cols + j) * ntt::N;
+      const size_t coff = (i * b_cols + j) * ml_dsa_ntt::N;
 
       for (size_t k = 0; k < a_cols; k++) {
-        const size_t aoff = (i * a_cols + k) * ntt::N;
-        const size_t boff = (k * b_cols + j) * ntt::N;
+        const size_t aoff = (i * a_cols + k) * ml_dsa_ntt::N;
+        const size_t boff = (k * b_cols + j) * ml_dsa_ntt::N;
 
-        poly::mul(const_poly_t(a.subspan(aoff, ntt::N)), const_poly_t(b.subspan(boff, ntt::N)), _tmp);
+        poly::mul(const_poly_t(a.subspan(aoff, ml_dsa_ntt::N)), const_poly_t(b.subspan(boff, ml_dsa_ntt::N)), _tmp);
 
         for (size_t l = 0; l < _tmp.size(); l++) {
           c[coff + l] += _tmp[l];
@@ -88,12 +88,12 @@ matrix_multiply(std::span<const ml_dsa_field::zq_t, a_rows * a_cols * ntt::N> a,
 // destination vector is mutated.
 template<size_t k>
 static inline constexpr void
-add_to(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<ml_dsa_field::zq_t, k * ntt::N> dst)
+add_to(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
+    const size_t off = i * ml_dsa_ntt::N;
 
-    for (size_t l = 0; l < ntt::N; l++) {
+    for (size_t l = 0; l < ml_dsa_ntt::N; l++) {
       dst[off + l] += src[off + l];
     }
   }
@@ -103,12 +103,12 @@ add_to(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<ml_dsa_fie
 // routine negates each coefficient.
 template<size_t k>
 static inline constexpr void
-neg(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
+neg(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
+    const size_t off = i * ml_dsa_ntt::N;
 
-    for (size_t l = 0; l < ntt::N; l++) {
+    for (size_t l = 0; l < ml_dsa_ntt::N; l++) {
       vec[off + l] = -vec[off + l];
     }
   }
@@ -119,11 +119,11 @@ neg(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
 // coefficients now stay in [0, 2x].
 template<size_t k, uint32_t x>
 static inline constexpr void
-sub_from_x(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
+sub_from_x(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    poly::sub_from_x<x>(poly_t(vec.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    poly::sub_from_x<x>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -132,16 +132,16 @@ sub_from_x(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
 // (k x 32 x sbw) -bytes destination array.
 template<size_t k, size_t sbw>
 static inline constexpr void
-encode(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<uint8_t, k * sbw * ntt::N / 8> dst)
+encode(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<uint8_t, k * sbw * ml_dsa_ntt::N / 8> dst)
 {
   // Byte length of degree-255 polynomial after serialization
-  constexpr size_t poly_blen = sbw * ntt::N / 8;
+  constexpr size_t poly_blen = sbw * ml_dsa_ntt::N / 8;
 
   for (size_t i = 0; i < k; i++) {
-    const size_t off0 = i * ntt::N;
+    const size_t off0 = i * ml_dsa_ntt::N;
     const size_t off1 = i * poly_blen;
 
-    bit_packing::encode<sbw>(const_poly_t(src.subspan(off0, ntt::N)),
+    bit_packing::encode<sbw>(const_poly_t(src.subspan(off0, ml_dsa_ntt::N)),
                              std::span<uint8_t, poly_blen>(dst.subspan(off1, poly_blen)));
   }
 }
@@ -151,17 +151,17 @@ encode(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<uint8_t, k
 // k x 1.
 template<size_t k, size_t sbw>
 static inline constexpr void
-decode(std::span<const uint8_t, k * sbw * ntt::N / 8> src, std::span<ml_dsa_field::zq_t, k * ntt::N> dst)
+decode(std::span<const uint8_t, k * sbw * ml_dsa_ntt::N / 8> src, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   // Byte length of degree-255 polynomial after serialization
-  constexpr size_t poly_blen = sbw * ntt::N / 8;
+  constexpr size_t poly_blen = sbw * ml_dsa_ntt::N / 8;
 
   for (size_t i = 0; i < k; i++) {
     const size_t off0 = i * poly_blen;
-    const size_t off1 = i * ntt::N;
+    const size_t off1 = i * ml_dsa_ntt::N;
 
     bit_packing::decode<sbw>(std::span<const uint8_t, poly_blen>(src.subspan(off0, poly_blen)),
-                             poly_t(dst.subspan(off1, ntt::N)));
+                             poly_t(dst.subspan(off1, ml_dsa_ntt::N)));
   }
 }
 
@@ -169,11 +169,12 @@ decode(std::span<const uint8_t, k * sbw * ntt::N / 8> src, std::span<ml_dsa_fiel
 // extracts out high order bits from each coefficient
 template<size_t k, uint32_t alpha>
 static inline constexpr void
-highbits(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<ml_dsa_field::zq_t, k * ntt::N> dst)
+highbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src,
+         std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    poly::highbits<alpha>(const_poly_t(src.subspan(off, ntt::N)), poly_t(dst.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    poly::highbits<alpha>(const_poly_t(src.subspan(off, ml_dsa_ntt::N)), poly_t(dst.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -181,11 +182,12 @@ highbits(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<ml_dsa_f
 // extracts out low order bits from each coefficient, while not mutating operand
 template<size_t k, uint32_t alpha>
 static inline constexpr void
-lowbits(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<ml_dsa_field::zq_t, k * ntt::N> dst)
+lowbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src,
+        std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    poly::lowbits<alpha>(const_poly_t(src.subspan(off, ntt::N)), poly_t(dst.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    poly::lowbits<alpha>(const_poly_t(src.subspan(off, ml_dsa_ntt::N)), poly_t(dst.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -195,13 +197,13 @@ lowbits(std::span<const ml_dsa_field::zq_t, k * ntt::N> src, std::span<ml_dsa_fi
 // representation, while not mutating operand polynomials.
 template<size_t k>
 static inline constexpr void
-mul_by_poly(std::span<const ml_dsa_field::zq_t, ntt::N> poly,
-            std::span<const ml_dsa_field::zq_t, k * ntt::N> src_vec,
-            std::span<ml_dsa_field::zq_t, k * ntt::N> dst_vec)
+mul_by_poly(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
+            std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src_vec,
+            std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst_vec)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    poly::mul(poly, const_poly_t(src_vec.subspan(off, ntt::N)), poly_t(dst_vec.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    poly::mul(poly, const_poly_t(src_vec.subspan(off, ml_dsa_ntt::N)), poly_t(dst_vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -212,13 +214,13 @@ mul_by_poly(std::span<const ml_dsa_field::zq_t, ntt::N> poly,
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<size_t k>
 static inline constexpr ml_dsa_field::zq_t
-infinity_norm(std::span<const ml_dsa_field::zq_t, k * ntt::N> vec)
+infinity_norm(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   auto res = ml_dsa_field::zq_t::zero();
 
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    res = std::max(res, poly::infinity_norm(const_poly_t(vec.subspan(off, ntt::N))));
+    const size_t off = i * ml_dsa_ntt::N;
+    res = std::max(res, poly::infinity_norm(const_poly_t(vec.subspan(off, ml_dsa_ntt::N))));
   }
 
   return res;
@@ -228,15 +230,15 @@ infinity_norm(std::span<const ml_dsa_field::zq_t, k * ntt::N> vec)
 // routine computes hint bit for each coefficient, using `make_hint` routine.
 template<size_t k, uint32_t alpha>
 static inline constexpr void
-make_hint(std::span<const ml_dsa_field::zq_t, k * ntt::N> polya,
-          std::span<const ml_dsa_field::zq_t, k * ntt::N> polyb,
-          std::span<ml_dsa_field::zq_t, k * ntt::N> polyc)
+make_hint(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polya,
+          std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyb,
+          std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyc)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    poly::make_hint<alpha>(const_poly_t(polya.subspan(off, ntt::N)),
-                           const_poly_t(polyb.subspan(off, ntt::N)),
-                           poly_t(polyc.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    poly::make_hint<alpha>(const_poly_t(polya.subspan(off, ml_dsa_ntt::N)),
+                           const_poly_t(polyb.subspan(off, ml_dsa_ntt::N)),
+                           poly_t(polyc.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -245,15 +247,15 @@ make_hint(std::span<const ml_dsa_field::zq_t, k * ntt::N> polya,
 // provided.
 template<size_t k, uint32_t alpha>
 static inline constexpr void
-use_hint(std::span<const ml_dsa_field::zq_t, k * ntt::N> polyh,
-         std::span<const ml_dsa_field::zq_t, k * ntt::N> polyr,
-         std::span<ml_dsa_field::zq_t, k * ntt::N> polyrz)
+use_hint(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyh,
+         std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyr,
+         std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyrz)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    poly::use_hint<alpha>(const_poly_t(polyh.subspan(off, ntt::N)),
-                          const_poly_t(polyr.subspan(off, ntt::N)),
-                          poly_t(polyrz.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    poly::use_hint<alpha>(const_poly_t(polyh.subspan(off, ml_dsa_ntt::N)),
+                          const_poly_t(polyr.subspan(off, ml_dsa_ntt::N)),
+                          poly_t(polyrz.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -261,13 +263,13 @@ use_hint(std::span<const ml_dsa_field::zq_t, k * ntt::N> polyh,
 // counts number of coefficients having value 1.
 template<size_t k>
 static inline constexpr size_t
-count_1s(std::span<const ml_dsa_field::zq_t, k * ntt::N> vec)
+count_1s(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   size_t cnt = 0;
 
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    cnt += poly::count_1s(const_poly_t(vec.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    cnt += poly::count_1s(const_poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 
   return cnt;
@@ -277,11 +279,11 @@ count_1s(std::span<const ml_dsa_field::zq_t, k * ntt::N> vec)
 // shifts each coefficient leftwards by d bits
 template<size_t k, size_t d>
 static inline constexpr void
-shl(std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
+shl(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
-    poly::shl<d>(poly_t(vec.subspan(off, ntt::N)));
+    const size_t off = i * ml_dsa_ntt::N;
+    poly::shl<d>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 

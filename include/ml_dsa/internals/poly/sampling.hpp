@@ -13,7 +13,7 @@
 // Sampling polynomials/ vector of polynomials related routines
 namespace sampling {
 
-using poly_t = std::span<ml_dsa_field::zq_t, ntt::N>;
+using poly_t = std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N>;
 
 // Given a 32 -bytes uniform seed ρ, a k x l matrix is deterministically sampled ( using the method of rejection
 // sampling ), where each coefficient is a degree-255 polynomial ∈ R_q | q = 2^23 - 2^13 + 1
@@ -24,7 +24,7 @@ using poly_t = std::span<ml_dsa_field::zq_t, ntt::N>;
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<size_t k, size_t l>
 static inline constexpr void
-expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l * ntt::N> mat)
+expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> mat)
 {
   std::array<uint8_t, rho.size() + 2> msg{};
   auto _msg = std::span(msg);
@@ -33,7 +33,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
 
   for (size_t i = 0; i < k; i++) {
     for (size_t j = 0; j < l; j++) {
-      const size_t off = (i * l + j) * ntt::N;
+      const size_t off = (i * l + j) * ml_dsa_ntt::N;
       const uint16_t nonce = static_cast<uint16_t>(i * 256ul + j);
 
       msg[32] = static_cast<uint8_t>(nonce >> 0);
@@ -47,10 +47,10 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
       auto _buf = std::span(buf);
 
       size_t n = 0;
-      while (n < ntt::N) {
+      while (n < ml_dsa_ntt::N) {
         hasher.squeeze(_buf);
 
-        for (size_t boff = 0; (boff < _buf.size()) && (n < ntt::N); boff += 3) {
+        for (size_t boff = 0; (boff < _buf.size()) && (n < ml_dsa_ntt::N); boff += 3) {
           const uint32_t t0 = static_cast<uint32_t>(_buf[boff + 2] & 0b01111111);
           const uint32_t t1 = static_cast<uint32_t>(_buf[boff + 1]);
           const uint32_t t2 = static_cast<uint32_t>(_buf[boff + 0]);
@@ -80,7 +80,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
 // specification https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<uint32_t η, size_t k, uint16_t nonce>
 static inline constexpr void
-expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k * ntt::N> vec)
+expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_η(η) && ml_dsa_params::check_nonce(nonce))
 {
   constexpr auto eta_ = ml_dsa_field::zq_t(η);
@@ -91,7 +91,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
   std::memcpy(_msg.template subspan<0, rho_prime.size()>().data(), rho_prime.data(), rho_prime.size());
 
   for (size_t i = 0; i < k; i++) {
-    const size_t off = i * ntt::N;
+    const size_t off = i * ml_dsa_ntt::N;
     const uint16_t nonce_ = nonce + static_cast<uint16_t>(i);
 
     msg[64] = static_cast<uint8_t>(nonce_ >> 0);
@@ -105,10 +105,10 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
     auto _buf = std::span(buf);
 
     size_t n = 0;
-    while (n < ntt::N) {
+    while (n < ml_dsa_ntt::N) {
       hasher.squeeze(_buf);
 
-      for (size_t boff = 0; (boff < _buf.size()) && (n < ntt::N); boff++) {
+      for (size_t boff = 0; (boff < _buf.size()) && (n < ml_dsa_ntt::N); boff++) {
         const uint8_t t0 = _buf[boff] & 0x0f;
         const uint8_t t1 = _buf[boff] >> 4;
 
@@ -120,7 +120,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
           n += flg0 * 1;
 
           const uint32_t t3 = static_cast<uint32_t>(t1 % 5);
-          const bool flg1 = (t1 < 15) & (n < ntt::N);
+          const bool flg1 = (t1 < 15) & (n < ml_dsa_ntt::N);
           const ml_dsa_field::zq_t br[]{ vec[off], eta_ - ml_dsa_field::zq_t(t3) };
 
           vec[off + flg1 * n] = br[flg1];
@@ -131,7 +131,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
           vec[off + n] = eta_ - ml_dsa_field::zq_t(static_cast<uint32_t>(t0));
           n += flg0 * 1;
 
-          const bool flg1 = (t1 < 9) & (n < ntt::N);
+          const bool flg1 = (t1 < 9) & (n < ml_dsa_ntt::N);
           const auto t2 = eta_ - ml_dsa_field::zq_t(static_cast<uint32_t>(t1));
           const ml_dsa_field::zq_t br[]{ vec[off], t2 };
 
@@ -152,13 +152,15 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<uint32_t γ1, size_t l>
 static inline constexpr void
-expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<ml_dsa_field::zq_t, l * ntt::N> vec)
+expand_mask(std::span<const uint8_t, 64> seed,
+            const uint16_t nonce,
+            std::span<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_γ1(γ1))
 {
   constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);
 
   std::array<uint8_t, seed.size() + 2> msg{};
-  std::array<uint8_t, ntt::N * gbw / 8> buf{};
+  std::array<uint8_t, ml_dsa_ntt::N * gbw / 8> buf{};
 
   auto _msg = std::span(msg);
   auto _buf = std::span(buf);
@@ -166,7 +168,7 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
   std::memcpy(_msg.template subspan<0, seed.size()>().data(), seed.data(), seed.size());
 
   for (size_t i = 0; i < l; i++) {
-    const size_t off = i * ntt::N;
+    const size_t off = i * ml_dsa_ntt::N;
     const uint16_t nonce_ = nonce + static_cast<uint16_t>(i);
 
     msg[64] = static_cast<uint8_t>(nonce_ >> 0);
@@ -177,8 +179,8 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
     hasher.finalize();
     hasher.squeeze(_buf);
 
-    bit_packing::decode<gbw>(buf, poly_t(vec.subspan(off, ntt::N)));
-    poly::sub_from_x<γ1>(poly_t(vec.subspan(off, ntt::N)));
+    bit_packing::decode<gbw>(buf, poly_t(vec.subspan(off, ml_dsa_ntt::N)));
+    poly::sub_from_x<γ1>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -190,7 +192,7 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
 // https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
 template<uint32_t τ>
 static inline constexpr void
-sample_in_ball(std::span<const uint8_t, 32> seed, std::span<ml_dsa_field::zq_t, ntt::N> poly)
+sample_in_ball(std::span<const uint8_t, 32> seed, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
   requires(ml_dsa_params::check_τ(τ))
 {
   std::array<uint8_t, 8> tau_bits{};
@@ -204,13 +206,13 @@ sample_in_ball(std::span<const uint8_t, 32> seed, std::span<ml_dsa_field::zq_t, 
   hasher.finalize();
   hasher.squeeze(_tau_bits);
 
-  constexpr size_t frm = ntt::N - τ;
+  constexpr size_t frm = ml_dsa_ntt::N - τ;
   size_t i = frm;
 
-  while (i < ntt::N) {
+  while (i < ml_dsa_ntt::N) {
     hasher.squeeze(_buf);
 
-    for (size_t off = 0; (off < _buf.size()) && (i < ntt::N); off++) {
+    for (size_t off = 0; (off < _buf.size()) && (i < ml_dsa_ntt::N); off++) {
       const size_t tau_bit = i - frm;
 
       const size_t tau_byte_off = tau_bit >> 3;
