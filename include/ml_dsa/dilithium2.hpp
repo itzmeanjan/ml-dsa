@@ -1,5 +1,5 @@
 #pragma once
-#include "ml_dsa/internals/dilithium.hpp"
+#include "ml_dsa/internals/ml_dsa.hpp"
 
 // Dilithium Post-Quantum Digital Signature Algorithm instantiated with NIST
 // security level 2 parameters, as suggested in table 2 of
@@ -32,7 +32,7 @@ constexpr size_t SigLen = ml_dsa_utils::sig_len(k, l, γ1, ω, λ);
 inline void
 keygen(std::span<const uint8_t, 32> seed, std::span<uint8_t, PubKeyLen> pubkey, std::span<uint8_t, SecKeyLen> seckey)
 {
-  dilithium::keygen<k, l, d, η>(seed, pubkey, seckey);
+  ml_dsa::keygen<k, l, d, η>(seed, pubkey, seckey);
 }
 
 // Given a Dilithium2 secret key and a non-empty message M, this routine can be
@@ -49,7 +49,7 @@ sign(std::span<const uint8_t, 32> rnd,
      std::span<const uint8_t> msg,
      std::span<uint8_t, SigLen> sig)
 {
-  dilithium::sign<k, l, d, η, γ1, γ2, τ, β, ω, λ>(rnd, seckey, msg, sig);
+  ml_dsa::sign<k, l, d, η, γ1, γ2, τ, β, ω, λ>(rnd, seckey, msg, sig);
 }
 
 // Given a Dilithium2 public key, a message M and a signature S, this routine
@@ -59,7 +59,7 @@ sign(std::span<const uint8_t, 32> rnd,
 inline bool
 verify(std::span<const uint8_t, PubKeyLen> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t, SigLen> sig)
 {
-  return dilithium::verify<k, l, d, γ1, γ2, τ, β, ω, λ>(pubkey, msg, sig);
+  return ml_dsa::verify<k, l, d, γ1, γ2, τ, β, ω, λ>(pubkey, msg, sig);
 }
 
 }
