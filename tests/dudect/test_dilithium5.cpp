@@ -61,10 +61,10 @@ do_one_computation(uint8_t* const data)
   const auto count_1 = polyvec::count_1s<dilithium5::l>(vec_hint);
   ret_val ^= static_cast<uint8_t>(count_1);
 
-  bit_packing::encode_hint_bits<dilithium5::l, dilithium5::ω>(vec_hint, encoded_hints);
+  ml_dsa_bit_packing::encode_hint_bits<dilithium5::l, dilithium5::ω>(vec_hint, encoded_hints);
   ret_val ^= encoded_hints[0] ^ encoded_hints[encoded_hints.size() - 1];
 
-  bit_packing::decode_hint_bits<dilithium5::l, dilithium5::ω>(encoded_hints, decoded_hints);
+  ml_dsa_bit_packing::decode_hint_bits<dilithium5::l, dilithium5::ω>(encoded_hints, decoded_hints);
   ret_val ^= static_cast<uint8_t>(decoded_hints[0].raw() ^ decoded_hints[decoded_hints.size() - 1].raw());
 
   return ret_val;

@@ -299,7 +299,7 @@ sign(std::span<const uint8_t, 32> rnd,
   std::memcpy(sig.template subspan<sigoff0, sigoff1 - sigoff0>().data(), c_tilda.data(), c_tilda.size());
   polyvec::sub_from_x<l, γ1>(z);
   polyvec::encode<l, gamma1_bw>(z, sig.template subspan<sigoff1, sigoff2 - sigoff1>());
-  bit_packing::encode_hint_bits<k, ω>(h, sig.template subspan<sigoff2, sigoff3 - sigoff2>());
+  ml_dsa_bit_packing::encode_hint_bits<k, ω>(h, sig.template subspan<sigoff2, sigoff3 - sigoff2>());
 }
 
 // Given a Dilithium public key, message bytes and serialized signature, this
@@ -361,7 +361,7 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
 
   polyvec::decode<l, gamma1_bw>(sig.template subspan<sigoff1, sigoff2 - sigoff1>(), z);
   polyvec::sub_from_x<l, γ1>(z);
-  const bool failed = bit_packing::decode_hint_bits<k, ω>(sig.template subspan<sigoff2, sigoff3 - sigoff2>(), h);
+  const bool failed = ml_dsa_bit_packing::decode_hint_bits<k, ω>(sig.template subspan<sigoff2, sigoff3 - sigoff2>(), h);
 
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w0{};
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w1{};

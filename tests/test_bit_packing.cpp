@@ -29,8 +29,8 @@ test_encode_decode()
     _polya[i] = ml_dsa_field::zq_t::random(prng);
   }
 
-  bit_packing::encode<sbw>(_polya, _arr);
-  bit_packing::decode<sbw>(_arr, _polyb);
+  ml_dsa_bit_packing::encode<sbw>(_polya, _arr);
+  ml_dsa_bit_packing::decode<sbw>(_arr, _polyb);
 
   constexpr size_t mask = (1u << sbw) - 1u;
   bool flg = false;
@@ -97,12 +97,12 @@ test_encode_decode_hint_bits()
 
   generate_random_hint_bits<k, ω>(_h0);
 
-  bit_packing::encode_hint_bits<k, ω>(_h0, _arr0);
+  ml_dsa_bit_packing::encode_hint_bits<k, ω>(_h0, _arr0);
   std::copy(_arr0.begin(), _arr0.end(), _arr1.begin());
   _arr1[enc_len - 1] = ~_arr1[enc_len - 1];
 
-  const bool failed0 = bit_packing::decode_hint_bits<k, ω>(_arr0, _h1);
-  const bool failed1 = bit_packing::decode_hint_bits<k, ω>(_arr1, _h2);
+  const bool failed0 = ml_dsa_bit_packing::decode_hint_bits<k, ω>(_arr0, _h1);
+  const bool failed1 = ml_dsa_bit_packing::decode_hint_bits<k, ω>(_arr1, _h2);
 
   bool flg = true;
 

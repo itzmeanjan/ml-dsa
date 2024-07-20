@@ -142,8 +142,8 @@ encode(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<uin
     const size_t off0 = i * ml_dsa_ntt::N;
     const size_t off1 = i * poly_blen;
 
-    bit_packing::encode<sbw>(const_poly_t(src.subspan(off0, ml_dsa_ntt::N)),
-                             std::span<uint8_t, poly_blen>(dst.subspan(off1, poly_blen)));
+    ml_dsa_bit_packing::encode<sbw>(const_poly_t(src.subspan(off0, ml_dsa_ntt::N)),
+                                    std::span<uint8_t, poly_blen>(dst.subspan(off1, poly_blen)));
   }
 }
 
@@ -161,8 +161,8 @@ decode(std::span<const uint8_t, k * sbw * ml_dsa_ntt::N / 8> src, std::span<ml_d
     const size_t off0 = i * poly_blen;
     const size_t off1 = i * ml_dsa_ntt::N;
 
-    bit_packing::decode<sbw>(std::span<const uint8_t, poly_blen>(src.subspan(off0, poly_blen)),
-                             poly_t(dst.subspan(off1, ml_dsa_ntt::N)));
+    ml_dsa_bit_packing::decode<sbw>(std::span<const uint8_t, poly_blen>(src.subspan(off0, poly_blen)),
+                                    poly_t(dst.subspan(off1, ml_dsa_ntt::N)));
   }
 }
 

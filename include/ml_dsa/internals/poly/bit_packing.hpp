@@ -3,30 +3,28 @@
 #include "ml_dsa/internals/utility/params.hpp"
 #include "ntt.hpp"
 #include <algorithm>
-#include <cstring>
+#include <limits>
 
-// Bit packing/ unpacking related utility functions for Dilithium Post-Quantum
-// Digital Signature Algorithm
-namespace bit_packing {
+// Bit packing/ unpacking -related utility functions
+namespace ml_dsa_bit_packing {
 
-// Given a degree-255 polynomial, where significant portion of each ( total 256
-// of them ) coefficient ∈ [0, 2^sbw), this routine serializes the polynomial to
-// a byte array of length 32 * sbw -bytes
+// Given a degree-255 polynomial, where significant portion of each coefficient ∈ [0, 2^sbw), this
+// routine serializes the polynomial to a byte array of length 32 * sbw -bytes.
 //
-// See section 5.2 ( which describes bit packing ) of Dilithium specification
-// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
+// See algorithm 10 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t sbw>
 static inline constexpr void
-encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_t, ml_dsa_ntt::N * sbw / 8> arr)
+encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
+       std::span<uint8_t, (ml_dsa_ntt::N * sbw) / std::numeric_limits<uint8_t>::digits> arr)
   requires(ml_dsa_params::check_sbw(sbw))
 {
-  std::memset(arr.data(), 0, arr.size());
+  std::fill(arr.begin(), arr.end(), 0);
 
   if constexpr (sbw == 3) {
     constexpr size_t itr_cnt = poly.size() >> 3;
     constexpr uint32_t mask3 = 0b111u;
-    constexpr uint32_t mask2 = 0b11u;
-    constexpr uint32_t mask1 = 0b1u;
+    constexpr uint32_t mask2 = mask3 >> 1;
+    constexpr uint32_t mask1 = mask2 >> 1;
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t poff = i << 3;
@@ -57,8 +55,8 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_
   } else if constexpr (sbw == 6) {
     constexpr size_t itr_cnt = poly.size() >> 2;
     constexpr uint32_t mask6 = 0b111111u;
-    constexpr uint32_t mask4 = 0b1111u;
-    constexpr uint32_t mask2 = 0b11u;
+    constexpr uint32_t mask4 = mask6 >> 2;
+    constexpr uint32_t mask2 = mask4 >> 2;
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t poff = i << 2;
@@ -74,8 +72,8 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_
   } else if constexpr (sbw == 10) {
     constexpr size_t itr_cnt = poly.size() >> 2;
     constexpr uint32_t mask6 = 0b111111u;
-    constexpr uint32_t mask4 = 0b1111u;
-    constexpr uint32_t mask2 = 0b11u;
+    constexpr uint32_t mask4 = mask6 >> 2;
+    constexpr uint32_t mask2 = mask4 >> 2;
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t poff = i << 2;
@@ -93,12 +91,12 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_
   } else if constexpr (sbw == 13) {
     constexpr size_t itr_cnt = poly.size() >> 3;
     constexpr uint32_t mask7 = 0b1111111u;
-    constexpr uint32_t mask6 = 0b111111u;
-    constexpr uint32_t mask5 = 0b11111u;
-    constexpr uint32_t mask4 = 0b1111u;
-    constexpr uint32_t mask3 = 0b111u;
-    constexpr uint32_t mask2 = 0b11u;
-    constexpr uint32_t mask1 = 0b1u;
+    constexpr uint32_t mask6 = mask7 >> 1;
+    constexpr uint32_t mask5 = mask6 >> 1;
+    constexpr uint32_t mask4 = mask5 >> 1;
+    constexpr uint32_t mask3 = mask4 >> 1;
+    constexpr uint32_t mask2 = mask3 >> 1;
+    constexpr uint32_t mask1 = mask2 >> 1;
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t poff = i << 3;
@@ -128,8 +126,8 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_
   } else if constexpr (sbw == 18) {
     constexpr size_t itr_cnt = poly.size() >> 2;
     constexpr uint32_t mask6 = 0b111111u;
-    constexpr uint32_t mask4 = 0b1111u;
-    constexpr uint32_t mask2 = 0b11u;
+    constexpr uint32_t mask4 = mask6 >> 2;
+    constexpr uint32_t mask2 = mask4 >> 2;
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t poff = i << 2;
@@ -177,28 +175,23 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_
   }
 }
 
-// Given a byte array of length 32 * sbw -bytes, this routine attempts to
-// extract out 256 coefficients of degree-255 polynomial s.t. significant
-// portion of each coefficient ∈ [0, 2^sbw)
+// Given a byte array of length 32 * sbw -bytes, this routine extracts out 256 coefficients of a degree-255
+// polynomial s.t. significant portion of each coefficient ∈ [0, 2^sbw).
 //
-// This is just the opposite of above `encode` routine. You may want to see
-// Dilithium specification's section 5.2
-// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
+// This is just the opposite of above `encode` routine.
+// See algorithm 12 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t sbw>
 static inline constexpr void
 decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
   requires(ml_dsa_params::check_sbw(sbw))
 {
-  // Instead of std::memset use following loop to avoid compiler warnings.
-  for (size_t i = 0; i < poly.size(); i++) {
-    poly[i] = ml_dsa_field::zq_t::zero();
-  }
+  std::fill(poly.begin(), poly.end(), ml_dsa_field::zq_t::zero());
 
   if constexpr (sbw == 3) {
     constexpr size_t itr_cnt = poly.size() >> 3;
     constexpr uint8_t mask3 = 0b111;
-    constexpr uint8_t mask2 = 0b11;
-    constexpr uint8_t mask1 = 0b1;
+    constexpr uint8_t mask2 = mask3 >> 1;
+    constexpr uint8_t mask1 = mask2 >> 1;
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t poff = i << 3;
@@ -227,8 +220,8 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
   } else if constexpr (sbw == 6) {
     constexpr size_t itr_cnt = poly.size() >> 2;
     constexpr uint8_t mask6 = 0b111111;
-    constexpr uint8_t mask4 = 0b1111;
-    constexpr uint8_t mask2 = 0b11;
+    constexpr uint8_t mask4 = mask6 >> 2;
+    constexpr uint8_t mask2 = mask4 >> 2;
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t poff = i << 2;
@@ -242,8 +235,8 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
   } else if constexpr (sbw == 10) {
     constexpr size_t itr_cnt = poly.size() >> 2;
     constexpr uint8_t mask6 = 0b111111;
-    constexpr uint8_t mask4 = 0b1111;
-    constexpr uint8_t mask2 = 0b11;
+    constexpr uint8_t mask4 = mask6 >> 2;
+    constexpr uint8_t mask2 = mask4 >> 2;
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t poff = i << 2;
@@ -257,12 +250,12 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
   } else if constexpr (sbw == 13) {
     constexpr size_t itr_cnt = poly.size() >> 3;
     constexpr uint8_t mask7 = 0b1111111;
-    constexpr uint8_t mask6 = 0b111111;
-    constexpr uint8_t mask5 = 0b11111;
-    constexpr uint8_t mask4 = 0b1111;
-    constexpr uint8_t mask3 = 0b111;
-    constexpr uint8_t mask2 = 0b11;
-    constexpr uint8_t mask1 = 0b1;
+    constexpr uint8_t mask6 = mask7 >> 1;
+    constexpr uint8_t mask5 = mask6 >> 1;
+    constexpr uint8_t mask4 = mask5 >> 1;
+    constexpr uint8_t mask3 = mask4 >> 1;
+    constexpr uint8_t mask2 = mask3 >> 1;
+    constexpr uint8_t mask1 = mask2 >> 1;
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t poff = i << 3;
@@ -284,8 +277,8 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
   } else if constexpr (sbw == 18) {
     constexpr size_t itr_cnt = poly.size() >> 2;
     constexpr uint8_t mask6 = 0b111111;
-    constexpr uint8_t mask4 = 0b1111;
-    constexpr uint8_t mask2 = 0b11;
+    constexpr uint8_t mask4 = mask6 >> 2;
+    constexpr uint8_t mask2 = mask4 >> 2;
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t poff = i << 2;
@@ -327,18 +320,18 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
   }
 }
 
-// Given a vector of hint bits ( of dimension k x 1 ), this routine encodes hint
-// bits into (ω + k) -bytes, following the description in section 5.4 ( see
-// point `Signature` on page 21 ) of Dilithium specification
-// https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf
+// Given a vector of hint bits ( of dimension k x 1 ), this routine encodes hint bits into (ω + k) -bytes.
+//
+// See algorithm 14 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t k, size_t ω>
 static inline constexpr void
 encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::span<uint8_t, ω + k> arr)
 {
-  constexpr auto zero = ml_dsa_field::zq_t::zero();
-  std::memset(arr.data(), 0, arr.size());
+  std::fill(arr.begin(), arr.end(), 0);
 
+  constexpr auto zero = ml_dsa_field::zq_t::zero();
   size_t idx = 0;
+
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
 
@@ -354,13 +347,13 @@ encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::
   }
 }
 
-// Given a serialized byte array holding hint bits, this routine unpacks hint
-// bits into a vector ( of dimension k x 1 ) of degree-255 polynomials s.t. <= ω
-// many hint bits are set.
+// Given a serialized byte array holding hint bits, this routine unpacks hint bits into a vector ( of dimension k x 1 )
+// of degree-255 polynomials s.t. <= ω many hint bits are set.
 //
-// Returns boolean result denoting status of decoding of byte serialized hint
-// bits. For example, say return value is true, it denotes that decoding has
-// failed.
+// Returns boolean result denoting status of decoding of byte serialized hint bits.
+// For example, say return value is true, it denotes that decoding has failed.
+//
+// See algorithm 15 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t k, size_t ω>
 static inline constexpr bool
 decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h)
