@@ -46,9 +46,9 @@ power2round(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    poly::power2round<d>(const_poly_t(poly.subspan(off, ml_dsa_ntt::N)),
-                         poly_t(poly_hi.subspan(off, ml_dsa_ntt::N)),
-                         poly_t(poly_lo.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::power2round<d>(const_poly_t(poly.subspan(off, ml_dsa_ntt::N)),
+                                poly_t(poly_hi.subspan(off, ml_dsa_ntt::N)),
+                                poly_t(poly_lo.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -73,7 +73,8 @@ matrix_multiply(std::span<const ml_dsa_field::zq_t, a_rows * a_cols * ml_dsa_ntt
         const size_t aoff = (i * a_cols + k) * ml_dsa_ntt::N;
         const size_t boff = (k * b_cols + j) * ml_dsa_ntt::N;
 
-        poly::mul(const_poly_t(a.subspan(aoff, ml_dsa_ntt::N)), const_poly_t(b.subspan(boff, ml_dsa_ntt::N)), _tmp);
+        ml_dsa_poly::mul(
+          const_poly_t(a.subspan(aoff, ml_dsa_ntt::N)), const_poly_t(b.subspan(boff, ml_dsa_ntt::N)), _tmp);
 
         for (size_t l = 0; l < _tmp.size(); l++) {
           c[coff + l] += _tmp[l];
@@ -123,7 +124,7 @@ sub_from_x(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    poly::sub_from_x<x>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::sub_from_x<x>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -174,7 +175,8 @@ highbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    poly::highbits<alpha>(const_poly_t(src.subspan(off, ml_dsa_ntt::N)), poly_t(dst.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::highbits<alpha>(const_poly_t(src.subspan(off, ml_dsa_ntt::N)),
+                                 poly_t(dst.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -187,7 +189,7 @@ lowbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    poly::lowbits<alpha>(const_poly_t(src.subspan(off, ml_dsa_ntt::N)), poly_t(dst.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::lowbits<alpha>(const_poly_t(src.subspan(off, ml_dsa_ntt::N)), poly_t(dst.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -203,7 +205,8 @@ mul_by_poly(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    poly::mul(poly, const_poly_t(src_vec.subspan(off, ml_dsa_ntt::N)), poly_t(dst_vec.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::mul(
+      poly, const_poly_t(src_vec.subspan(off, ml_dsa_ntt::N)), poly_t(dst_vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -220,7 +223,7 @@ infinity_norm(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    res = std::max(res, poly::infinity_norm(const_poly_t(vec.subspan(off, ml_dsa_ntt::N))));
+    res = std::max(res, ml_dsa_poly::infinity_norm(const_poly_t(vec.subspan(off, ml_dsa_ntt::N))));
   }
 
   return res;
@@ -236,9 +239,9 @@ make_hint(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polya,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    poly::make_hint<alpha>(const_poly_t(polya.subspan(off, ml_dsa_ntt::N)),
-                           const_poly_t(polyb.subspan(off, ml_dsa_ntt::N)),
-                           poly_t(polyc.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::make_hint<alpha>(const_poly_t(polya.subspan(off, ml_dsa_ntt::N)),
+                                  const_poly_t(polyb.subspan(off, ml_dsa_ntt::N)),
+                                  poly_t(polyc.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -253,9 +256,9 @@ use_hint(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyh,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    poly::use_hint<alpha>(const_poly_t(polyh.subspan(off, ml_dsa_ntt::N)),
-                          const_poly_t(polyr.subspan(off, ml_dsa_ntt::N)),
-                          poly_t(polyrz.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::use_hint<alpha>(const_poly_t(polyh.subspan(off, ml_dsa_ntt::N)),
+                                 const_poly_t(polyr.subspan(off, ml_dsa_ntt::N)),
+                                 poly_t(polyrz.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -269,7 +272,7 @@ count_1s(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    cnt += poly::count_1s(const_poly_t(vec.subspan(off, ml_dsa_ntt::N)));
+    cnt += ml_dsa_poly::count_1s(const_poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 
   return cnt;
@@ -283,7 +286,7 @@ shl(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    poly::shl<d>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::shl<d>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 

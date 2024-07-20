@@ -180,7 +180,7 @@ expand_mask(std::span<const uint8_t, 64> seed,
     hasher.squeeze(_buf);
 
     bit_packing::decode<gbw>(buf, poly_t(vec.subspan(off, ml_dsa_ntt::N)));
-    poly::sub_from_x<γ1>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::sub_from_x<γ1>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
