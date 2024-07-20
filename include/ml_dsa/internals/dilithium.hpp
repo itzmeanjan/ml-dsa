@@ -42,13 +42,13 @@ keygen(std::span<const uint8_t, 32> seed,
   auto key = _seed_hash.template subspan<rho.size() + rho_prime.size(), 32>();
 
   std::array<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> A{};
-  sampling::expand_a<k, l>(rho, A);
+  ml_dsa_sampling::expand_a<k, l>(rho, A);
 
   std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> s1{};
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> s2{};
 
-  sampling::expand_s<η, l, 0>(rho_prime, s1);
-  sampling::expand_s<η, k, l>(rho_prime, s2);
+  ml_dsa_sampling::expand_s<η, l, 0>(rho_prime, s1);
+  ml_dsa_sampling::expand_s<η, k, l>(rho_prime, s2);
 
   std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> s1_prime{};
 
@@ -160,7 +160,7 @@ sign(std::span<const uint8_t, 32> rnd,
   auto tr = seckey.template subspan<skoff2, skoff3 - skoff2>();
 
   std::array<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> A{};
-  sampling::expand_a<k, l>(rho, A);
+  ml_dsa_sampling::expand_a<k, l>(rho, A);
 
   std::array<uint8_t, 64> mu{};
   auto _mu = std::span(mu);
@@ -212,7 +212,7 @@ sign(std::span<const uint8_t, 32> rnd,
     std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> y_prime{};
     std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w{};
 
-    sampling::expand_mask<γ1, l>(rho_prime, kappa, y);
+    ml_dsa_sampling::expand_mask<γ1, l>(rho_prime, kappa, y);
 
     std::copy(y.begin(), y.end(), y_prime.begin());
 
@@ -239,7 +239,7 @@ sign(std::span<const uint8_t, 32> rnd,
     hasher.finalize();
     hasher.squeeze(c_tilda);
 
-    sampling::sample_in_ball<τ>(c1_tilda, c);
+    ml_dsa_sampling::sample_in_ball<τ>(c1_tilda, c);
     ml_dsa_ntt::ntt(c);
 
     ml_dsa_polyvec::mul_by_poly<l>(c, s1, z);
@@ -331,7 +331,7 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
   std::array<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> A{};
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t1{};
 
-  sampling::expand_a<k, l>(pubkey.template subspan<pkoff0, pkoff1 - pkoff0>(), A);
+  ml_dsa_sampling::expand_a<k, l>(pubkey.template subspan<pkoff0, pkoff1 - pkoff0>(), A);
   ml_dsa_polyvec::decode<k, t1_bw>(pubkey.template subspan<pkoff1, pkoff2 - pkoff1>(), t1);
 
   std::array<uint8_t, 64> tr{};
@@ -353,7 +353,7 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
   auto c1_tilda = c_tilda.template first<32>();
   auto c2_tilda = c_tilda.template last<32>();
 
-  sampling::sample_in_ball<τ>(c1_tilda, c);
+  ml_dsa_sampling::sample_in_ball<τ>(c1_tilda, c);
   ml_dsa_ntt::ntt(c);
 
   std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> z{};

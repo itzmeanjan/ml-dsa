@@ -31,7 +31,7 @@ do_one_computation(uint8_t* const data)
 
   uint8_t ret_val = 0;
 
-  sampling::expand_mask<dilithium3::γ1, dilithium3::l>(seed, kappa, vec);
+  ml_dsa_sampling::expand_mask<dilithium3::γ1, dilithium3::l>(seed, kappa, vec);
   ret_val ^= static_cast<uint8_t>(vec[0].raw() ^ vec[vec.size() - 1].raw());
 
   ml_dsa_polyvec::ntt<dilithium3::l>(vec);

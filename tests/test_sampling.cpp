@@ -17,7 +17,7 @@ test_sample_in_ball()
   ml_dsa_prng::prng_t<256> prng;
 
   prng.read(_seed);
-  sampling::sample_in_ball<τ>(_seed, _poly);
+  ml_dsa_sampling::sample_in_ball<τ>(_seed, _poly);
 
   auto sqrd_norm = ml_dsa_field::zq_t::zero();
 
