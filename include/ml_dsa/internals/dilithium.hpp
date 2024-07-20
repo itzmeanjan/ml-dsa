@@ -53,18 +53,18 @@ keygen(std::span<const uint8_t, 32> seed,
   std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> s1_prime{};
 
   std::copy(s1.begin(), s1.end(), s1_prime.begin());
-  polyvec::ntt<l>(s1_prime);
+  ml_dsa_polyvec::ntt<l>(s1_prime);
 
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t{};
 
-  polyvec::matrix_multiply<k, l, l, 1>(A, s1_prime, t);
-  polyvec::intt<k>(t);
-  polyvec::add_to<k>(s2, t);
+  ml_dsa_polyvec::matrix_multiply<k, l, l, 1>(A, s1_prime, t);
+  ml_dsa_polyvec::intt<k>(t);
+  ml_dsa_polyvec::add_to<k>(s2, t);
 
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t1{};
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t0{};
 
-  polyvec::power2round<k, d>(t, t1, t0);
+  ml_dsa_polyvec::power2round<k, d>(t, t1, t0);
 
   constexpr size_t t1_bw = std::bit_width(ml_dsa_field::Q) - d;
   std::array<uint8_t, 64> tr{};
@@ -75,7 +75,7 @@ keygen(std::span<const uint8_t, 32> seed,
   constexpr size_t pkoff2 = pubkey.size();
 
   std::memcpy(pubkey.template subspan<pkoff0, pkoff1 - pkoff0>().data(), rho.data(), rho.size());
-  polyvec::encode<k, t1_bw>(t1, pubkey.template subspan<pkoff1, pkoff2 - pkoff1>());
+  ml_dsa_polyvec::encode<k, t1_bw>(t1, pubkey.template subspan<pkoff1, pkoff2 - pkoff1>());
 
   // Prepare secret key
   hasher.reset();
@@ -99,16 +99,16 @@ keygen(std::span<const uint8_t, 32> seed,
   std::memcpy(seckey.template subspan<skoff1, skoff2 - skoff1>().data(), key.data(), key.size());
   std::memcpy(seckey.template subspan<skoff2, skoff3 - skoff2>().data(), tr.data(), tr.size());
 
-  polyvec::sub_from_x<l, η>(s1);
-  polyvec::sub_from_x<k, η>(s2);
+  ml_dsa_polyvec::sub_from_x<l, η>(s1);
+  ml_dsa_polyvec::sub_from_x<k, η>(s2);
 
-  polyvec::encode<l, eta_bw>(s1, seckey.template subspan<skoff3, skoff4 - skoff3>());
-  polyvec::encode<k, eta_bw>(s2, seckey.template subspan<skoff4, skoff5 - skoff4>());
+  ml_dsa_polyvec::encode<l, eta_bw>(s1, seckey.template subspan<skoff3, skoff4 - skoff3>());
+  ml_dsa_polyvec::encode<k, eta_bw>(s2, seckey.template subspan<skoff4, skoff5 - skoff4>());
 
   constexpr uint32_t t0_rng = 1u << (d - 1);
 
-  polyvec::sub_from_x<k, t0_rng>(t0);
-  polyvec::encode<k, d>(t0, seckey.template subspan<skoff5, skoff6 - skoff5>());
+  ml_dsa_polyvec::sub_from_x<k, t0_rng>(t0);
+  ml_dsa_polyvec::encode<k, d>(t0, seckey.template subspan<skoff5, skoff6 - skoff5>());
 }
 
 // Given a Dilithium secret key and non-empty message, this routine uses
@@ -184,17 +184,17 @@ sign(std::span<const uint8_t, 32> rnd,
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> s2{};
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t0{};
 
-  polyvec::decode<l, eta_bw>(seckey.template subspan<skoff3, skoff4 - skoff3>(), s1);
-  polyvec::decode<k, eta_bw>(seckey.template subspan<skoff4, skoff5 - skoff4>(), s2);
-  polyvec::decode<k, d>(seckey.template subspan<skoff5, seckey.size() - skoff5>(), t0);
+  ml_dsa_polyvec::decode<l, eta_bw>(seckey.template subspan<skoff3, skoff4 - skoff3>(), s1);
+  ml_dsa_polyvec::decode<k, eta_bw>(seckey.template subspan<skoff4, skoff5 - skoff4>(), s2);
+  ml_dsa_polyvec::decode<k, d>(seckey.template subspan<skoff5, seckey.size() - skoff5>(), t0);
 
-  polyvec::sub_from_x<l, η>(s1);
-  polyvec::sub_from_x<k, η>(s2);
-  polyvec::sub_from_x<k, t0_rng>(t0);
+  ml_dsa_polyvec::sub_from_x<l, η>(s1);
+  ml_dsa_polyvec::sub_from_x<k, η>(s2);
+  ml_dsa_polyvec::sub_from_x<k, t0_rng>(t0);
 
-  polyvec::ntt<l>(s1);
-  polyvec::ntt<k>(s2);
-  polyvec::ntt<k>(t0);
+  ml_dsa_polyvec::ntt<l>(s1);
+  ml_dsa_polyvec::ntt<k>(s2);
+  ml_dsa_polyvec::ntt<k>(t0);
 
   bool has_signed = false;
   uint16_t kappa = 0;
@@ -216,9 +216,9 @@ sign(std::span<const uint8_t, 32> rnd,
 
     std::copy(y.begin(), y.end(), y_prime.begin());
 
-    polyvec::ntt<l>(y_prime);
-    polyvec::matrix_multiply<k, l, l, 1>(A, y_prime, w);
-    polyvec::intt<k>(w);
+    ml_dsa_polyvec::ntt<l>(y_prime);
+    ml_dsa_polyvec::matrix_multiply<k, l, l, 1>(A, y_prime, w);
+    ml_dsa_polyvec::intt<k>(w);
 
     constexpr uint32_t α = γ2 << 1;
     constexpr uint32_t m = (ml_dsa_field::Q - 1u) / α;
@@ -229,10 +229,10 @@ sign(std::span<const uint8_t, 32> rnd,
     auto _hash_in = std::span(hash_in);
     std::array<ml_dsa_field::zq_t, ml_dsa_ntt::N> c{};
 
-    polyvec::highbits<k, α>(w, w1);
+    ml_dsa_polyvec::highbits<k, α>(w, w1);
 
     std::memcpy(_hash_in.template subspan<0, _mu.size()>().data(), _mu.data(), _mu.size());
-    polyvec::encode<k, w1bw>(w1, _hash_in.template subspan<_mu.size(), _hash_in.size() - _mu.size()>());
+    ml_dsa_polyvec::encode<k, w1bw>(w1, _hash_in.template subspan<_mu.size(), _hash_in.size() - _mu.size()>());
 
     hasher.reset();
     hasher.absorb(_hash_in);
@@ -242,21 +242,21 @@ sign(std::span<const uint8_t, 32> rnd,
     sampling::sample_in_ball<τ>(c1_tilda, c);
     ml_dsa_ntt::ntt(c);
 
-    polyvec::mul_by_poly<l>(c, s1, z);
-    polyvec::intt<l>(z);
-    polyvec::add_to<l>(y, z);
+    ml_dsa_polyvec::mul_by_poly<l>(c, s1, z);
+    ml_dsa_polyvec::intt<l>(z);
+    ml_dsa_polyvec::add_to<l>(y, z);
 
     std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> r0{};
     std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> r1{};
 
-    polyvec::mul_by_poly<k>(c, s2, r1);
-    polyvec::intt<k>(r1);
-    polyvec::neg<k>(r1);
-    polyvec::add_to<k>(w, r1);
-    polyvec::lowbits<k, α>(r1, r0);
+    ml_dsa_polyvec::mul_by_poly<k>(c, s2, r1);
+    ml_dsa_polyvec::intt<k>(r1);
+    ml_dsa_polyvec::neg<k>(r1);
+    ml_dsa_polyvec::add_to<k>(w, r1);
+    ml_dsa_polyvec::lowbits<k, α>(r1, r0);
 
-    const ml_dsa_field::zq_t z_norm = polyvec::infinity_norm<l>(z);
-    const ml_dsa_field::zq_t r0_norm = polyvec::infinity_norm<k>(r0);
+    const ml_dsa_field::zq_t z_norm = ml_dsa_polyvec::infinity_norm<l>(z);
+    const ml_dsa_field::zq_t r0_norm = ml_dsa_polyvec::infinity_norm<k>(r0);
 
     constexpr ml_dsa_field::zq_t bound0(γ1 - β);
     constexpr ml_dsa_field::zq_t bound1(γ2 - β);
@@ -270,15 +270,15 @@ sign(std::span<const uint8_t, 32> rnd,
     std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h0{};
     std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h1{};
 
-    polyvec::mul_by_poly<k>(c, t0, h0);
-    polyvec::intt<k>(h0);
+    ml_dsa_polyvec::mul_by_poly<k>(c, t0, h0);
+    ml_dsa_polyvec::intt<k>(h0);
     std::copy(h0.begin(), h0.end(), h1.begin());
-    polyvec::neg<k>(h0);
-    polyvec::add_to<k>(h1, r1);
-    polyvec::make_hint<k, α>(h0, r1, h);
+    ml_dsa_polyvec::neg<k>(h0);
+    ml_dsa_polyvec::add_to<k>(h1, r1);
+    ml_dsa_polyvec::make_hint<k, α>(h0, r1, h);
 
-    const ml_dsa_field::zq_t ct0_norm = polyvec::infinity_norm<k>(h1);
-    const size_t count_1 = polyvec::count_1s<k>(h);
+    const ml_dsa_field::zq_t ct0_norm = ml_dsa_polyvec::infinity_norm<k>(h1);
+    const size_t count_1 = ml_dsa_polyvec::count_1s<k>(h);
 
     constexpr ml_dsa_field::zq_t bound2(γ2);
 
@@ -297,8 +297,8 @@ sign(std::span<const uint8_t, 32> rnd,
   constexpr size_t sigoff3 = sig.size();
 
   std::memcpy(sig.template subspan<sigoff0, sigoff1 - sigoff0>().data(), c_tilda.data(), c_tilda.size());
-  polyvec::sub_from_x<l, γ1>(z);
-  polyvec::encode<l, gamma1_bw>(z, sig.template subspan<sigoff1, sigoff2 - sigoff1>());
+  ml_dsa_polyvec::sub_from_x<l, γ1>(z);
+  ml_dsa_polyvec::encode<l, gamma1_bw>(z, sig.template subspan<sigoff1, sigoff2 - sigoff1>());
   ml_dsa_bit_packing::encode_hint_bits<k, ω>(h, sig.template subspan<sigoff2, sigoff3 - sigoff2>());
 }
 
@@ -332,7 +332,7 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> t1{};
 
   sampling::expand_a<k, l>(pubkey.template subspan<pkoff0, pkoff1 - pkoff0>(), A);
-  polyvec::decode<k, t1_bw>(pubkey.template subspan<pkoff1, pkoff2 - pkoff1>(), t1);
+  ml_dsa_polyvec::decode<k, t1_bw>(pubkey.template subspan<pkoff1, pkoff2 - pkoff1>(), t1);
 
   std::array<uint8_t, 64> tr{};
   std::array<uint8_t, 64> mu{};
@@ -359,33 +359,33 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
   std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> z{};
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h{};
 
-  polyvec::decode<l, gamma1_bw>(sig.template subspan<sigoff1, sigoff2 - sigoff1>(), z);
-  polyvec::sub_from_x<l, γ1>(z);
+  ml_dsa_polyvec::decode<l, gamma1_bw>(sig.template subspan<sigoff1, sigoff2 - sigoff1>(), z);
+  ml_dsa_polyvec::sub_from_x<l, γ1>(z);
   const bool failed = ml_dsa_bit_packing::decode_hint_bits<k, ω>(sig.template subspan<sigoff2, sigoff3 - sigoff2>(), h);
 
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w0{};
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w1{};
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w2{};
 
-  const ml_dsa_field::zq_t z_norm = polyvec::infinity_norm<l>(z);
-  const size_t count_1 = polyvec::count_1s<k>(h);
+  const ml_dsa_field::zq_t z_norm = ml_dsa_polyvec::infinity_norm<l>(z);
+  const size_t count_1 = ml_dsa_polyvec::count_1s<k>(h);
 
-  polyvec::ntt<l>(z);
-  polyvec::matrix_multiply<k, l, l, 1>(A, z, w0);
+  ml_dsa_polyvec::ntt<l>(z);
+  ml_dsa_polyvec::matrix_multiply<k, l, l, 1>(A, z, w0);
 
-  polyvec::shl<k, d>(t1);
-  polyvec::ntt<k>(t1);
-  polyvec::mul_by_poly<k>(c, t1, w2);
-  polyvec::neg<k>(w2);
+  ml_dsa_polyvec::shl<k, d>(t1);
+  ml_dsa_polyvec::ntt<k>(t1);
+  ml_dsa_polyvec::mul_by_poly<k>(c, t1, w2);
+  ml_dsa_polyvec::neg<k>(w2);
 
-  polyvec::add_to<k>(w0, w2);
-  polyvec::intt<k>(w2);
+  ml_dsa_polyvec::add_to<k>(w0, w2);
+  ml_dsa_polyvec::intt<k>(w2);
 
   constexpr uint32_t α = γ2 << 1;
   constexpr uint32_t m = (ml_dsa_field::Q - 1u) / α;
   constexpr size_t w1bw = std::bit_width(m - 1u);
 
-  polyvec::use_hint<k, α>(h, w2, w1);
+  ml_dsa_polyvec::use_hint<k, α>(h, w2, w1);
 
   std::array<uint8_t, mu.size() + (k * w1bw * 32)> hash_in{};
   std::array<uint8_t, (2 * λ) / std::numeric_limits<uint8_t>::digits> c_tilda_prime{};
@@ -393,7 +393,7 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
   auto _hash_in = std::span(hash_in);
 
   std::memcpy(_hash_in.template subspan<0, mu.size()>().data(), mu.data(), mu.size());
-  polyvec::encode<k, w1bw>(w1, _hash_in.template subspan<mu.size(), _hash_in.size() - mu.size()>());
+  ml_dsa_polyvec::encode<k, w1bw>(w1, _hash_in.template subspan<mu.size(), _hash_in.size() - mu.size()>());
 
   hasher.reset();
   hasher.absorb(_hash_in);

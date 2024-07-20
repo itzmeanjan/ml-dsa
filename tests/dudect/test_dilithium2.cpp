@@ -34,31 +34,31 @@ do_one_computation(uint8_t* const data)
   sampling::expand_mask<dilithium2::γ1, dilithium2::l>(seed, kappa, vec);
   ret_val ^= static_cast<uint8_t>(vec[0].raw() ^ vec[vec.size() - 1].raw());
 
-  polyvec::ntt<dilithium2::l>(vec);
+  ml_dsa_polyvec::ntt<dilithium2::l>(vec);
   ret_val ^= static_cast<uint8_t>(vec[0].raw() ^ vec[vec.size() - 1].raw());
 
-  polyvec::intt<dilithium2::l>(vec);
+  ml_dsa_polyvec::intt<dilithium2::l>(vec);
   ret_val ^= static_cast<uint8_t>(vec[0].raw() ^ vec[vec.size() - 1].raw());
 
-  polyvec::highbits<dilithium2::l, α>(vec, vec_high);
+  ml_dsa_polyvec::highbits<dilithium2::l, α>(vec, vec_high);
   ret_val ^= static_cast<uint8_t>(vec_high[0].raw() ^ vec_high[vec_high.size() - 1].raw());
 
-  polyvec::lowbits<dilithium2::l, α>(vec, vec_low);
+  ml_dsa_polyvec::lowbits<dilithium2::l, α>(vec, vec_low);
   ret_val ^= static_cast<uint8_t>(vec_low[0].raw() ^ vec_low[vec_low.size() - 1].raw());
 
-  polyvec::encode<dilithium2::l, w1bw>(vec_high, encoded);
+  ml_dsa_polyvec::encode<dilithium2::l, w1bw>(vec_high, encoded);
   ret_val ^= encoded[0] ^ encoded[encoded.size() - 1];
 
-  polyvec::decode<dilithium2::l, w1bw>(encoded, decoded);
+  ml_dsa_polyvec::decode<dilithium2::l, w1bw>(encoded, decoded);
   ret_val ^= static_cast<uint8_t>(decoded[0].raw() ^ decoded[decoded.size() - 1].raw());
 
-  const auto z_norm = polyvec::infinity_norm<dilithium2::l>(vec);
+  const auto z_norm = ml_dsa_polyvec::infinity_norm<dilithium2::l>(vec);
   ret_val ^= static_cast<uint8_t>(z_norm.raw());
 
-  polyvec::make_hint<dilithium2::l, α>(vec, vec_high, vec_hint);
+  ml_dsa_polyvec::make_hint<dilithium2::l, α>(vec, vec_high, vec_hint);
   ret_val ^= static_cast<uint8_t>(vec_high[0].raw() ^ vec_hint[vec_hint.size() - 1].raw());
 
-  const auto count_1 = polyvec::count_1s<dilithium2::l>(vec_hint);
+  const auto count_1 = ml_dsa_polyvec::count_1s<dilithium2::l>(vec_hint);
   ret_val ^= static_cast<uint8_t>(count_1);
 
   ml_dsa_bit_packing::encode_hint_bits<dilithium2::l, dilithium2::ω>(vec_hint, encoded_hints);
