@@ -1,6 +1,6 @@
-#include "ml_dsa/dilithium5.hpp"
 #include "ml_dsa/ml_dsa_44.hpp"
 #include "ml_dsa/ml_dsa_65.hpp"
+#include "ml_dsa/ml_dsa_87.hpp"
 #include <charconv>
 #include <cstdint>
 #include <fstream>
@@ -280,18 +280,18 @@ TEST(Dilithium, Dilithium5KnownAnswerTests)
       auto sig2 = sig1.substr(sig1.find("="sv) + 2, sig1.size());
       auto sig = from_hex(sig2); // Expected signature
 
-      std::vector<uint8_t> _pkey(dilithium5::PubKeyLen, 0);
-      std::vector<uint8_t> _skey(dilithium5::SecKeyLen, 0);
-      std::vector<uint8_t> _sig(dilithium5::SigLen, 0);
+      std::vector<uint8_t> _pkey(ml_dsa_87::PubKeyByteLen, 0);
+      std::vector<uint8_t> _skey(ml_dsa_87::SecKeyByteLen, 0);
+      std::vector<uint8_t> _sig(ml_dsa_87::SigByteLen, 0);
 
-      auto __pkey = std::span<uint8_t, dilithium5::PubKeyLen>(_pkey); // Computed public key
-      auto __skey = std::span<uint8_t, dilithium5::SecKeyLen>(_skey); // Computed secret key
-      auto __sig = std::span<uint8_t, dilithium5::SigLen>(_sig);      // Computed signature
+      auto __pkey = std::span<uint8_t, ml_dsa_87::PubKeyByteLen>(_pkey); // Computed public key
+      auto __skey = std::span<uint8_t, ml_dsa_87::SecKeyByteLen>(_skey); // Computed secret key
+      auto __sig = std::span<uint8_t, ml_dsa_87::SigByteLen>(_sig);      // Computed signature
 
       // Keygen -> Sign -> Verify
-      dilithium5::keygen(_seed, __pkey, __skey);
-      dilithium5::sign(_rnd, __skey, _msg, __sig);
-      const auto f = dilithium5::verify(__pkey, _msg, __sig);
+      ml_dsa_87::keygen(_seed, __pkey, __skey);
+      ml_dsa_87::sign(_rnd, __skey, _msg, __sig);
+      const auto f = ml_dsa_87::verify(__pkey, _msg, __sig);
 
       // Check if computed public key, secret key and signature matches expected
       // ones, from KAT file.
