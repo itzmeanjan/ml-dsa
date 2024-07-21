@@ -421,14 +421,14 @@ Let's walk through an example, where I show you how to use Dilithium key generat
 // main.cpp
 
 // In case interested in using Dilithium3 or Dilithium5 API, import "dilithium3.hpp" or "dilithium5.hpp" and use keygen/ sign/ verify functions living either under `dilithium3::` or `dilithium5::` namespace.
-#include "dilithium2.hpp"
+#include "ml_dsa/ml_dsa_44.hpp"
 #include <array>
-#include "prng.hpp"
+#include "ml_dsa/internals/rng/prng.hpp"
 
 int main() {
     std::array<uint8_t, 32> seed{};
-    std::array<uint8_t, dilithium2::PubKeyLen> pubkey{};
-    std::array<uint8_t, dilithium2::SecKeyLen> seckey{};
+    std::array<uint8_t, ml_dsa_44::PubKeyLen> pubkey{};
+    std::array<uint8_t, ml_dsa_44::SecKeyLen> seckey{};
 
     // Sample seed bytes from PRNG
     //
@@ -437,7 +437,7 @@ int main() {
     ml_dsa_prng::prng_t<128> prng;
     prng.read(seed);
 
-    dilithium2::keygen(seed, pubkey, seckey);
+    ml_dsa_44::keygen(seed, pubkey, seckey);
 
     // ...
 
@@ -453,14 +453,14 @@ int main() {
   // ...
 
   std::array<uint8_t, 32> msg{};
-  std::array<uint8_t, dilithium2::SigLen> sig{};
+  std::array<uint8_t, ml_dsa_44::SigLen> sig{};
 
   // Sample a psuedo-random message, to be signed
   prng.read(msg);
 
   // Default behaviour is deterministic signing and you can safely pass
   // an empty std::span (i.e. `{}`) for last parameter i.e. random seed.
-  dilithium2::sign(seckey, msg, sig, {});
+  ml_dsa_44::sign(seckey, msg, sig, {});
 
   // ...
 
@@ -484,7 +484,7 @@ int main() {
   prng.read(rnd_seed);
 
   // You must pass a 64 -bytes random seed when you explicitly opt for randomized signing.
-  dilithium2::sign<true>(seckey, msg, sig, rnd_seed);
+  ml_dsa_44::sign<true>(seckey, msg, sig, rnd_seed);
 
   return 0;
 }
@@ -503,17 +503,17 @@ int main() {
   // Randomized Signing ( explicit )
   // ...
 
-  const bool flg = dilithium2::verify(pubkey, msg, sig);
+  const bool flg = ml_dsa_44::verify(pubkey, msg, sig);
   assert(flg);
 
   return 0;
 }
 ```
 
-I suggest you look at example [program](./examples/dilithium2.cpp), which demonstrates how to use Dilithium2 API, similarly you can use Dilithium{3,5} API.
+I suggest you look at example [program](./examples/ml_dsa_44.cpp), which demonstrates how to use Dilithium2 API, similarly you can use Dilithium{3,5} API.
 
 ```bash
-$ g++ -std=c++20 -Wall -Wextra -pedantic -O3 -march=native -I ./include -I ./sha3/include examples/dilithium2.cpp && ./a.out
+$ g++ -std=c++20 -Wall -Wextra -pedantic -O3 -march=native -I ./include -I ./sha3/include examples/ml_dsa_44.cpp && ./a.out
 Dilithium @ NIST security level 2
 seed      : e9ae2e74d3bc6e60b4966eb0da2f6d03c0d864ef7b001947d294d64cb90fd8c7
 pubkey    : 1587ba74cc89529d73cc656feed4787e7c3b81399f211eaa262fe7d2e6b4c1e36ab472cf5f3f86a34f24504168dd3d5fa5464b7baeef99cfcc0cd5327a58c7a14dd26b231c70587011e23536d6710bdc265d58dbc036f12c4d20c867b912929b2b4113319927d262b19faaa5a700464bc31fe5082c57d533075115f80adf74d6dbed2387391006c4a30d3fdb56bd536e6f28c0f0030f55cc5fa2fa8ad4ade48bc07b23e8be49bdd4b1af6965ce6621d9a4a0f6dc634161702b3436d18c52f45ef3df50bd56d8572e4c10db101ae8b035f25f4f94169306de474f5b63ef50765c55b8b1088ed524c95441a31a7e886166dc1bbe61ca5c43ec81e60087b749c1a1143439c7df852e49087cc9bf442ffa01e02e9c21ba734195561e764a0f8700313a6c7002728220e27a7cffbc123c77e41b8a34ebcc9b2c7137da55aedcc7e37f9ebb0d146c60ada1089a57ee3b8e9a2456daf8900b65f3c74fe0150331f0c6b13ec18a12e3033b74ca934dadcc8fc03d22277fec5baa6565340de50cd04656cf8482c13f696316ef5bdd049d81a8b9197ebb817f4da289efb839ddef0101e13b3c5a76411fa48a1899c6a3b3c9a01143f47dc1b215073298fae398edbda469bf9fa314886ed23984335647ff6dbde83844b26b997fbf65069b5e6b304b1934863ce9395f247501c7071d0519949adb6708b4bcfef36842073f435a22e83355a87662531e5fdf5ce985bc96b23f993046fb32819a14b3f9c8b68cf71b5d1841cdfc0197ed5c2751846504afc198652f41f611ab1e617606a8557f672e11bad50475fac511c83e2b8970b86e2e4e06d055f46adf218cfd8e7c711ba5a92acbd015cfb21ce41f751111a58115f78742c7f48ded07149e6d4e9f65e11a616443475a0d1f3a100ba3532d79b13393e3671dc97fc6e4befd4497b6d0c8c7be4a7f9d4a5eff849c6240c985c4fd6bd8b548ed9c1c382a4f60b046beec03a9f7f4e26056ccc90357e726b768bc7b6ce75f9ab447a07b60b97bc8a591736dcd023fb8473e8de0898f34393e5be897802f017d7be7fb4766f866520fe2a5032bdc630c453c7f00a48307465185b25e1061452399513f569bee79db2ad1dab0d6e513a5a9542a5b438cbc140e56ea7ce9f951d39b0a5de98df072197632683892b2741bac4d0059fd5dfad37a3e3e2a4e3726933c81a5b1dd9c7f1bb6104784457dda8888c30e95d3b6786038c3c9b970c6a24d4df85b966315855e4b00ef7a5a2e8e0ba64cfd76de2302077425a1f6deaebed670c3e7d144c74bc2068fbaa3cdb44a1ae98f912272c1d980dba976ca93206cce50a4128066411e7322c1a3e4ecdba2011a0f64284bb5551c840f9305233700cbd1cb4d387fdb6066c0cff6b8aece0af44a78f6c5054228664c29092081fb341761696a25ac8aceb360e7e6764230cf83bae14746f7f8b6569d88e01b604b3294286e922e2314dd180a82eae1d31af6c7eec71917acc18cb86c6f590db24d6653d39dc995b576088784a6f95bdb48dbd4edd6e1d8e936b27f7e9d8d5c59c0d54dc690c8c8e0cb2c06561b2a8b89fad0550a7c07a5c6165bb7dc3b72e7cc559bdf9259a9290d03dda1f57779b89bd46f801d24ebd6cb6d9924225d817b625afb42b405163494d005e5a5e49a87ba55482adb81dc0e07717d7d3278880233720aabadd9cef8638474f333a92dca085b22935add88ebc3f33a5db1f17db92f4b5c76cad1b51477dbd729bdbb86d40f762668969fdc92692451e816113bc44b6398d6535ffa81e4685457a9c8eb0058445e8dbc80e36fe62c7b4267d6a47ca466f50c1921bd3343e1f5d6e0dd86fb67e32a0bdee8

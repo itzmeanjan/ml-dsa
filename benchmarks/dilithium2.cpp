@@ -1,5 +1,5 @@
-#include "ml_dsa/dilithium2.hpp"
 #include "bench_helper.hpp"
+#include "ml_dsa/ml_dsa_44.hpp"
 #include <benchmark/benchmark.h>
 
 // Benchmark Dilithium2 key generation algorithm's performance
@@ -7,8 +7,8 @@ inline void
 dilithium2_keygen(benchmark::State& state)
 {
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium2::PubKeyLen;
-  constexpr size_t sklen = dilithium2::SecKeyLen;
+  constexpr size_t pklen = ml_dsa_44::PubKeyLen;
+  constexpr size_t sklen = ml_dsa_44::SecKeyLen;
 
   std::vector<uint8_t> seed(slen, 0);
   std::vector<uint8_t> pubkey(pklen, 0);
@@ -22,7 +22,7 @@ dilithium2_keygen(benchmark::State& state)
   prng.read(_seed);
 
   for (auto _ : state) {
-    dilithium2::keygen(_seed, _pubkey, _seckey);
+    ml_dsa_44::keygen(_seed, _pubkey, _seckey);
 
     benchmark::DoNotOptimize(_seed);
     benchmark::DoNotOptimize(_pubkey);
@@ -39,9 +39,9 @@ dilithium2_sign(benchmark::State& state)
 {
   const size_t mlen = state.range(0);
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium2::PubKeyLen;
-  constexpr size_t sklen = dilithium2::SecKeyLen;
-  constexpr size_t siglen = dilithium2::SigLen;
+  constexpr size_t pklen = ml_dsa_44::PubKeyLen;
+  constexpr size_t sklen = ml_dsa_44::SecKeyLen;
+  constexpr size_t siglen = ml_dsa_44::SigLen;
 
   std::vector<uint8_t> seed(slen, 0);
   std::vector<uint8_t> pkey(pklen, 0);
@@ -59,10 +59,10 @@ dilithium2_sign(benchmark::State& state)
   prng.read(_seed);
   prng.read(_msg);
 
-  dilithium2::keygen(_seed, _pkey, _skey);
+  ml_dsa_44::keygen(_seed, _pkey, _skey);
 
   for (auto _ : state) {
-    dilithium2::sign(_skey, _msg, _sig, {});
+    ml_dsa_44::sign(_skey, _msg, _sig, {});
 
     benchmark::DoNotOptimize(_skey);
     benchmark::DoNotOptimize(_msg);
@@ -71,7 +71,7 @@ dilithium2_sign(benchmark::State& state)
   }
 
   state.SetItemsProcessed(state.iterations());
-  assert(dilithium2::verify(_pkey, _msg, _sig));
+  assert(ml_dsa_44::verify(_pkey, _msg, _sig));
 }
 
 // Benchmark Dilithium2 signature verification routine's performance
@@ -80,9 +80,9 @@ dilithium2_verify(benchmark::State& state)
 {
   const size_t mlen = state.range(0);
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium2::PubKeyLen;
-  constexpr size_t sklen = dilithium2::SecKeyLen;
-  constexpr size_t siglen = dilithium2::SigLen;
+  constexpr size_t pklen = ml_dsa_44::PubKeyLen;
+  constexpr size_t sklen = ml_dsa_44::SecKeyLen;
+  constexpr size_t siglen = ml_dsa_44::SigLen;
 
   std::vector<uint8_t> seed(slen, 0);
   std::vector<uint8_t> pkey(pklen, 0);
@@ -100,11 +100,11 @@ dilithium2_verify(benchmark::State& state)
   prng.read(_seed);
   prng.read(_msg);
 
-  dilithium2::keygen(_seed, _pkey, _skey);
-  dilithium2::sign(_skey, _msg, _sig, {});
+  ml_dsa_44::keygen(_seed, _pkey, _skey);
+  ml_dsa_44::sign(_skey, _msg, _sig, {});
 
   for (auto _ : state) {
-    bool flg = dilithium2::verify(_pkey, _msg, _sig);
+    bool flg = ml_dsa_44::verify(_pkey, _msg, _sig);
 
     benchmark::DoNotOptimize(flg);
     benchmark::DoNotOptimize(_pkey);
