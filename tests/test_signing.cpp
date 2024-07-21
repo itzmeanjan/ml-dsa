@@ -1,6 +1,6 @@
-#include "ml_dsa/dilithium3.hpp"
 #include "ml_dsa/dilithium5.hpp"
 #include "ml_dsa/ml_dsa_44.hpp"
+#include "ml_dsa/ml_dsa_65.hpp"
 #include <gtest/gtest.h>
 
 // Given a byte array, this routine randomly selects a bit and flips it. This
@@ -113,9 +113,9 @@ inline void
 test_dilithium3_signing(const size_t mlen)
 {
   constexpr size_t slen = 32;
-  constexpr size_t pklen = dilithium3::PubKeyLen;
-  constexpr size_t sklen = dilithium3::SecKeyLen;
-  constexpr size_t siglen = dilithium3::SigLen;
+  constexpr size_t pklen = ml_dsa_65::PubKeyByteLen;
+  constexpr size_t sklen = ml_dsa_65::SecKeyByteLen;
+  constexpr size_t siglen = ml_dsa_65::SigByteLen;
 
   std::vector<uint8_t> seed(slen, 0);
   std::vector<uint8_t> rnd(slen, 0);
@@ -145,8 +145,8 @@ test_dilithium3_signing(const size_t mlen)
 
   bool flg0 = false, flg1 = false, flg2 = false, flg3 = false;
 
-  dilithium3::keygen(_seed, _pkey0, _skey);
-  dilithium3::sign(_rnd, _skey, _msg0, _sig0);
+  ml_dsa_65::keygen(_seed, _pkey0, _skey);
+  ml_dsa_65::sign(_rnd, _skey, _msg0, _sig0);
 
   std::copy(_sig0.begin(), _sig0.end(), _sig1.begin());
   std::copy(_pkey0.begin(), _pkey0.end(), _pkey1.begin());
@@ -156,10 +156,10 @@ test_dilithium3_signing(const size_t mlen)
   random_bit_flip(_pkey1);
   random_bit_flip(_msg1);
 
-  flg0 = dilithium3::verify(_pkey0, _msg0, _sig0);
-  flg1 = dilithium3::verify(_pkey0, _msg0, _sig1);
-  flg2 = dilithium3::verify(_pkey1, _msg0, _sig0);
-  flg3 = dilithium3::verify(_pkey0, _msg1, _sig0);
+  flg0 = ml_dsa_65::verify(_pkey0, _msg0, _sig0);
+  flg1 = ml_dsa_65::verify(_pkey0, _msg0, _sig1);
+  flg2 = ml_dsa_65::verify(_pkey1, _msg0, _sig0);
+  flg3 = ml_dsa_65::verify(_pkey0, _msg1, _sig0);
 
   EXPECT_TRUE(flg0 & !flg1 & !flg2 & !flg3);
 }

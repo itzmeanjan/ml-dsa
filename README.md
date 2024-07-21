@@ -420,7 +420,7 @@ Let's walk through an example, where I show you how to use Dilithium key generat
 ```cpp
 // main.cpp
 
-// In case interested in using Dilithium3 or Dilithium5 API, import "dilithium3.hpp" or "dilithium5.hpp" and use keygen/ sign/ verify functions living either under `dilithium3::` or `dilithium5::` namespace.
+// In case interested in using Dilithium3 or Dilithium5 API, import "ml_dsa_65.hpp" or "dilithium5.hpp" and use keygen/ sign/ verify functions living either under `ml_dsa_65::` or `dilithium5::` namespace.
 #include "ml_dsa/ml_dsa_44.hpp"
 #include <array>
 #include "ml_dsa/internals/rng/prng.hpp"
