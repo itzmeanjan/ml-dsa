@@ -5,10 +5,13 @@
 #include <random>
 #include <span>
 #include <string_view>
+#include <vector>
 
 namespace ml_dsa_test_helper {
 
 // Given a hex encoded string of length 2*L, this routine can be used for parsing it as a byte array of length L.
+//
+// Note, template parameter and return type. Compare it with next function definition.
 template<size_t L>
 static inline std::array<uint8_t, L>
 from_hex(std::string_view bytes)
@@ -25,6 +28,31 @@ from_hex(std::string_view bytes)
 
     uint8_t byte = 0;
     auto sstr = bytes.substr(off, 2);
+    std::from_chars(sstr.data(), sstr.data() + 2, byte, 16);
+
+    res[i] = byte;
+  }
+
+  return res;
+}
+
+// Given a hex encoded string of length 2*L, this routine can be used for parsing it as a byte array of length L.
+//
+// Note, no template type required and return type is different from above function definition.
+static inline std::vector<uint8_t>
+from_hex(std::string_view hex)
+{
+  const size_t hlen = hex.length();
+  assert(hlen % 2 == 0);
+
+  const size_t blen = hlen / 2;
+  std::vector<uint8_t> res(blen, 0);
+
+  for (size_t i = 0; i < blen; i++) {
+    const size_t off = i * 2;
+
+    uint8_t byte = 0;
+    auto sstr = hex.substr(off, 2);
     std::from_chars(sstr.data(), sstr.data() + 2, byte, 16);
 
     res[i] = byte;
