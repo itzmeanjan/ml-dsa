@@ -84,7 +84,7 @@ prepare_inputs(dudect_config_t* const c, uint8_t* const input_data, uint8_t* con
 }
 
 dudect_state_t
-test_dilithium2()
+test_ml_dsa_44()
 {
   constexpr size_t chunk_size = 2 * SEED_LEN + 2 + SEED_LEN;
   constexpr size_t number_measurements = 1e5;
@@ -110,7 +110,7 @@ test_dilithium2()
 int
 main()
 {
-  if (test_dilithium2() != DUDECT_NO_LEAKAGE_EVIDENCE_YET) {
+  if (test_ml_dsa_44() != DUDECT_NO_LEAKAGE_EVIDENCE_YET) {
     return EXIT_FAILURE;
   }
 
