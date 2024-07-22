@@ -14,8 +14,7 @@ namespace ml_dsa_bit_packing {
 // See algorithm 10 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t sbw>
 static inline constexpr void
-encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
-       std::span<uint8_t, (ml_dsa_ntt::N * sbw) / std::numeric_limits<uint8_t>::digits> arr)
+encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_t, (ml_dsa_ntt::N * sbw) / std::numeric_limits<uint8_t>::digits> arr)
   requires(ml_dsa_params::check_sbw(sbw))
 {
   std::fill(arr.begin(), arr.end(), 0);
@@ -30,15 +29,11 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
       const size_t poff = i << 3;
       const size_t boff = i * 3;
 
-      arr[boff + 0] = (static_cast<uint8_t>(poly[poff + 2].raw() & mask2) << 6) |
-                      (static_cast<uint8_t>(poly[poff + 1].raw() & mask3) << 3) |
+      arr[boff + 0] = (static_cast<uint8_t>(poly[poff + 2].raw() & mask2) << 6) | (static_cast<uint8_t>(poly[poff + 1].raw() & mask3) << 3) |
                       (static_cast<uint8_t>(poly[poff + 0].raw() & mask3) << 0);
-      arr[boff + 1] = (static_cast<uint8_t>(poly[poff + 5].raw() & mask1) << 7) |
-                      (static_cast<uint8_t>(poly[poff + 4].raw() & mask3) << 4) |
-                      (static_cast<uint8_t>(poly[poff + 3].raw() & mask3) << 1) |
-                      static_cast<uint8_t>((poly[poff + 2].raw() >> 2) & mask1);
-      arr[boff + 2] = (static_cast<uint8_t>(poly[poff + 7].raw() & mask3) << 5) |
-                      (static_cast<uint8_t>(poly[poff + 6].raw() & mask3) << 2) |
+      arr[boff + 1] = (static_cast<uint8_t>(poly[poff + 5].raw() & mask1) << 7) | (static_cast<uint8_t>(poly[poff + 4].raw() & mask3) << 4) |
+                      (static_cast<uint8_t>(poly[poff + 3].raw() & mask3) << 1) | static_cast<uint8_t>((poly[poff + 2].raw() >> 2) & mask1);
+      arr[boff + 2] = (static_cast<uint8_t>(poly[poff + 7].raw() & mask3) << 5) | (static_cast<uint8_t>(poly[poff + 6].raw() & mask3) << 2) |
                       static_cast<uint8_t>((poly[poff + 5].raw() >> 1) & mask2);
     }
   } else if constexpr (sbw == 4) {
@@ -47,8 +42,7 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
 
     for (size_t i = 0; i < itr_cnt; i++) {
       const size_t off = i << 1;
-      const uint8_t byte = (static_cast<uint8_t>(poly[off + 1].raw() & mask) << 4) |
-                           (static_cast<uint8_t>(poly[off + 0].raw() & mask) << 0);
+      const uint8_t byte = (static_cast<uint8_t>(poly[off + 1].raw() & mask) << 4) | (static_cast<uint8_t>(poly[off + 0].raw() & mask) << 0);
 
       arr[i] = byte;
     }
@@ -62,12 +56,9 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
       const size_t poff = i << 2;
       const size_t boff = i * 3;
 
-      arr[boff + 0] = (static_cast<uint8_t>(poly[poff + 1].raw() & mask2) << 6) |
-                      (static_cast<uint8_t>(poly[poff + 0].raw() & mask6) << 0);
-      arr[boff + 1] = (static_cast<uint8_t>(poly[poff + 2].raw() & mask4) << 4) |
-                      static_cast<uint8_t>((poly[poff + 1].raw() >> 2) & mask4);
-      arr[boff + 2] = (static_cast<uint8_t>(poly[poff + 3].raw() & mask6) << 2) |
-                      static_cast<uint8_t>((poly[poff + 2].raw() >> 4) & mask2);
+      arr[boff + 0] = (static_cast<uint8_t>(poly[poff + 1].raw() & mask2) << 6) | (static_cast<uint8_t>(poly[poff + 0].raw() & mask6) << 0);
+      arr[boff + 1] = (static_cast<uint8_t>(poly[poff + 2].raw() & mask4) << 4) | static_cast<uint8_t>((poly[poff + 1].raw() >> 2) & mask4);
+      arr[boff + 2] = (static_cast<uint8_t>(poly[poff + 3].raw() & mask6) << 2) | static_cast<uint8_t>((poly[poff + 2].raw() >> 4) & mask2);
     }
   } else if constexpr (sbw == 10) {
     constexpr size_t itr_cnt = poly.size() >> 2;
@@ -80,12 +71,9 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
       const size_t boff = i * 5;
 
       arr[boff + 0] = static_cast<uint8_t>(poly[poff + 0].raw());
-      arr[boff + 1] = static_cast<uint8_t>((poly[poff + 1].raw() & mask6) << 2) |
-                      static_cast<uint8_t>((poly[poff + 0].raw() >> 8) & mask2);
-      arr[boff + 2] = static_cast<uint8_t>((poly[poff + 2].raw() & mask4) << 4) |
-                      static_cast<uint8_t>((poly[poff + 1].raw() >> 6) & mask4);
-      arr[boff + 3] = static_cast<uint8_t>((poly[poff + 3].raw() & mask2) << 6) |
-                      static_cast<uint8_t>((poly[poff + 2].raw() >> 4) & mask6);
+      arr[boff + 1] = static_cast<uint8_t>((poly[poff + 1].raw() & mask6) << 2) | static_cast<uint8_t>((poly[poff + 0].raw() >> 8) & mask2);
+      arr[boff + 2] = static_cast<uint8_t>((poly[poff + 2].raw() & mask4) << 4) | static_cast<uint8_t>((poly[poff + 1].raw() >> 6) & mask4);
+      arr[boff + 3] = static_cast<uint8_t>((poly[poff + 3].raw() & mask2) << 6) | static_cast<uint8_t>((poly[poff + 2].raw() >> 4) & mask6);
       arr[boff + 4] = static_cast<uint8_t>(poly[poff + 3].raw() >> 2);
     }
   } else if constexpr (sbw == 13) {
@@ -103,24 +91,17 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
       const size_t boff = i * 13;
 
       arr[boff + 0] = static_cast<uint8_t>(poly[poff + 0].raw());
-      arr[boff + 1] = static_cast<uint8_t>((poly[poff + 1].raw() & mask3) << 5) |
-                      static_cast<uint8_t>((poly[poff + 0].raw() >> 8) & mask5);
+      arr[boff + 1] = static_cast<uint8_t>((poly[poff + 1].raw() & mask3) << 5) | static_cast<uint8_t>((poly[poff + 0].raw() >> 8) & mask5);
       arr[boff + 2] = static_cast<uint8_t>(poly[poff + 1].raw() >> 3);
-      arr[boff + 3] = static_cast<uint8_t>((poly[poff + 2].raw() & mask6) << 2) |
-                      static_cast<uint8_t>((poly[poff + 1].raw() >> 11) & mask2);
-      arr[boff + 4] = static_cast<uint8_t>((poly[poff + 3].raw() & mask1) << 7) |
-                      static_cast<uint8_t>((poly[poff + 2].raw() >> 6) & mask7);
+      arr[boff + 3] = static_cast<uint8_t>((poly[poff + 2].raw() & mask6) << 2) | static_cast<uint8_t>((poly[poff + 1].raw() >> 11) & mask2);
+      arr[boff + 4] = static_cast<uint8_t>((poly[poff + 3].raw() & mask1) << 7) | static_cast<uint8_t>((poly[poff + 2].raw() >> 6) & mask7);
       arr[boff + 5] = static_cast<uint8_t>(poly[poff + 3].raw() >> 1);
-      arr[boff + 6] = static_cast<uint8_t>((poly[poff + 4].raw() & mask4) << 4) |
-                      static_cast<uint8_t>((poly[poff + 3].raw() >> 9) & mask4);
+      arr[boff + 6] = static_cast<uint8_t>((poly[poff + 4].raw() & mask4) << 4) | static_cast<uint8_t>((poly[poff + 3].raw() >> 9) & mask4);
       arr[boff + 7] = static_cast<uint8_t>(poly[poff + 4].raw() >> 4);
-      arr[boff + 8] = static_cast<uint8_t>((poly[poff + 5].raw() & mask7) << 1) |
-                      static_cast<uint8_t>((poly[poff + 4].raw() >> 12) & mask1);
-      arr[boff + 9] = static_cast<uint8_t>((poly[poff + 6].raw() & mask2) << 6) |
-                      static_cast<uint8_t>((poly[poff + 5].raw() >> 7) & mask6);
+      arr[boff + 8] = static_cast<uint8_t>((poly[poff + 5].raw() & mask7) << 1) | static_cast<uint8_t>((poly[poff + 4].raw() >> 12) & mask1);
+      arr[boff + 9] = static_cast<uint8_t>((poly[poff + 6].raw() & mask2) << 6) | static_cast<uint8_t>((poly[poff + 5].raw() >> 7) & mask6);
       arr[boff + 10] = static_cast<uint8_t>(poly[poff + 6].raw() >> 2);
-      arr[boff + 11] = static_cast<uint8_t>((poly[poff + 7].raw() & mask5) << 3) |
-                       static_cast<uint8_t>((poly[poff + 6].raw() >> 10) & mask3);
+      arr[boff + 11] = static_cast<uint8_t>((poly[poff + 7].raw() & mask5) << 3) | static_cast<uint8_t>((poly[poff + 6].raw() >> 10) & mask3);
       arr[boff + 12] = static_cast<uint8_t>(poly[poff + 7].raw() >> 5);
     }
   } else if constexpr (sbw == 18) {
@@ -135,14 +116,11 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
 
       arr[boff + 0] = static_cast<uint8_t>(poly[poff + 0].raw());
       arr[boff + 1] = static_cast<uint8_t>(poly[poff + 0].raw() >> 8);
-      arr[boff + 2] = static_cast<uint8_t>((poly[poff + 1].raw() & mask6) << 2) |
-                      static_cast<uint8_t>((poly[poff + 0].raw() >> 16) & mask2);
+      arr[boff + 2] = static_cast<uint8_t>((poly[poff + 1].raw() & mask6) << 2) | static_cast<uint8_t>((poly[poff + 0].raw() >> 16) & mask2);
       arr[boff + 3] = static_cast<uint8_t>(poly[poff + 1].raw() >> 6);
-      arr[boff + 4] = static_cast<uint8_t>((poly[poff + 2].raw() & mask4) << 4) |
-                      static_cast<uint8_t>((poly[poff + 1].raw() >> 14) & mask4);
+      arr[boff + 4] = static_cast<uint8_t>((poly[poff + 2].raw() & mask4) << 4) | static_cast<uint8_t>((poly[poff + 1].raw() >> 14) & mask4);
       arr[boff + 5] = static_cast<uint8_t>(poly[poff + 2].raw() >> 4);
-      arr[boff + 6] = static_cast<uint8_t>((poly[poff + 3].raw() & mask2) << 6) |
-                      static_cast<uint8_t>((poly[poff + 2].raw() >> 12) & mask6);
+      arr[boff + 6] = static_cast<uint8_t>((poly[poff + 3].raw() & mask2) << 6) | static_cast<uint8_t>((poly[poff + 2].raw() >> 12) & mask6);
       arr[boff + 7] = static_cast<uint8_t>(poly[poff + 3].raw() >> 2);
       arr[boff + 8] = static_cast<uint8_t>(poly[poff + 3].raw() >> 10);
     }
@@ -156,8 +134,7 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
 
       arr[boff + 0] = static_cast<uint8_t>(poly[poff + 0].raw());
       arr[boff + 1] = static_cast<uint8_t>(poly[poff + 0].raw() >> 8);
-      arr[boff + 2] = static_cast<uint8_t>((poly[poff + 1].raw() & mask4) << 4) |
-                      static_cast<uint8_t>((poly[poff + 0].raw() >> 16) & mask4);
+      arr[boff + 2] = static_cast<uint8_t>((poly[poff + 1].raw() & mask4) << 4) | static_cast<uint8_t>((poly[poff + 0].raw() >> 16) & mask4);
       arr[boff + 3] = static_cast<uint8_t>(poly[poff + 1].raw() >> 4);
       arr[boff + 4] = static_cast<uint8_t>(poly[poff + 1].raw() >> 12);
     }
@@ -262,16 +239,12 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
       const size_t boff = i * 13;
 
       poly[poff + 0] = (static_cast<uint32_t>(arr[boff + 1] & mask5) << 8) | static_cast<uint32_t>(arr[boff + 0]);
-      poly[poff + 1] = (static_cast<uint32_t>(arr[boff + 3] & mask2) << 11) |
-                       (static_cast<uint32_t>(arr[boff + 2]) << 3) | static_cast<uint32_t>(arr[boff + 1] >> 5);
+      poly[poff + 1] = (static_cast<uint32_t>(arr[boff + 3] & mask2) << 11) | (static_cast<uint32_t>(arr[boff + 2]) << 3) | static_cast<uint32_t>(arr[boff + 1] >> 5);
       poly[poff + 2] = (static_cast<uint32_t>(arr[boff + 4] & mask7) << 6) | static_cast<uint32_t>(arr[boff + 3] >> 2);
-      poly[poff + 3] = (static_cast<uint32_t>(arr[boff + 6] & mask4) << 9) |
-                       (static_cast<uint32_t>(arr[boff + 5]) << 1) | static_cast<uint32_t>(arr[boff + 4] >> 7);
-      poly[poff + 4] = (static_cast<uint32_t>(arr[boff + 8] & mask1) << 12) |
-                       (static_cast<uint32_t>(arr[boff + 7]) << 4) | static_cast<uint32_t>(arr[boff + 6] >> 4);
+      poly[poff + 3] = (static_cast<uint32_t>(arr[boff + 6] & mask4) << 9) | (static_cast<uint32_t>(arr[boff + 5]) << 1) | static_cast<uint32_t>(arr[boff + 4] >> 7);
+      poly[poff + 4] = (static_cast<uint32_t>(arr[boff + 8] & mask1) << 12) | (static_cast<uint32_t>(arr[boff + 7]) << 4) | static_cast<uint32_t>(arr[boff + 6] >> 4);
       poly[poff + 5] = (static_cast<uint32_t>(arr[boff + 9] & mask6) << 7) | static_cast<uint32_t>(arr[boff + 8] >> 1);
-      poly[poff + 6] = (static_cast<uint32_t>(arr[boff + 11] & mask3) << 10) |
-                       (static_cast<uint32_t>(arr[boff + 10]) << 2) | static_cast<uint32_t>(arr[boff + 9] >> 6);
+      poly[poff + 6] = (static_cast<uint32_t>(arr[boff + 11] & mask3) << 10) | (static_cast<uint32_t>(arr[boff + 10]) << 2) | static_cast<uint32_t>(arr[boff + 9] >> 6);
       poly[poff + 7] = (static_cast<uint32_t>(arr[boff + 12]) << 5) | static_cast<uint32_t>(arr[boff + 11] >> 3);
     }
   } else if constexpr (sbw == 18) {
@@ -284,14 +257,10 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
       const size_t poff = i << 2;
       const size_t boff = i * 9;
 
-      poly[poff + 0] = (static_cast<uint32_t>(arr[boff + 2] & mask2) << 16) |
-                       (static_cast<uint32_t>(arr[boff + 1]) << 8) | static_cast<uint32_t>(arr[boff + 0]);
-      poly[poff + 1] = (static_cast<uint32_t>(arr[boff + 4] & mask4) << 14) |
-                       (static_cast<uint32_t>(arr[boff + 3]) << 6) | static_cast<uint32_t>(arr[boff + 2] >> 2);
-      poly[poff + 2] = (static_cast<uint32_t>(arr[boff + 6] & mask6) << 12) |
-                       (static_cast<uint32_t>(arr[boff + 5]) << 4) | static_cast<uint32_t>(arr[boff + 4] >> 4);
-      poly[poff + 3] = (static_cast<uint32_t>(arr[boff + 8]) << 10) | (static_cast<uint32_t>(arr[boff + 7]) << 2) |
-                       static_cast<uint32_t>(arr[boff + 6] >> 6);
+      poly[poff + 0] = (static_cast<uint32_t>(arr[boff + 2] & mask2) << 16) | (static_cast<uint32_t>(arr[boff + 1]) << 8) | static_cast<uint32_t>(arr[boff + 0]);
+      poly[poff + 1] = (static_cast<uint32_t>(arr[boff + 4] & mask4) << 14) | (static_cast<uint32_t>(arr[boff + 3]) << 6) | static_cast<uint32_t>(arr[boff + 2] >> 2);
+      poly[poff + 2] = (static_cast<uint32_t>(arr[boff + 6] & mask6) << 12) | (static_cast<uint32_t>(arr[boff + 5]) << 4) | static_cast<uint32_t>(arr[boff + 4] >> 4);
+      poly[poff + 3] = (static_cast<uint32_t>(arr[boff + 8]) << 10) | (static_cast<uint32_t>(arr[boff + 7]) << 2) | static_cast<uint32_t>(arr[boff + 6] >> 6);
     }
   } else if constexpr (sbw == 20) {
     constexpr size_t itr_cnt = poly.size() >> 1;
@@ -301,10 +270,8 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
       const size_t poff = i << 1;
       const size_t boff = i * 5;
 
-      poly[poff + 0] = (static_cast<uint32_t>(arr[boff + 2] & mask4) << 16) |
-                       (static_cast<uint32_t>(arr[boff + 1]) << 8) | static_cast<uint32_t>(arr[boff + 0]);
-      poly[poff + 1] = (static_cast<uint32_t>(arr[boff + 4]) << 12) | (static_cast<uint32_t>(arr[boff + 3]) << 4) |
-                       static_cast<uint32_t>(arr[boff + 2] >> 4);
+      poly[poff + 0] = (static_cast<uint32_t>(arr[boff + 2] & mask4) << 16) | (static_cast<uint32_t>(arr[boff + 1]) << 8) | static_cast<uint32_t>(arr[boff + 0]);
+      poly[poff + 1] = (static_cast<uint32_t>(arr[boff + 4]) << 12) | (static_cast<uint32_t>(arr[boff + 3]) << 4) | static_cast<uint32_t>(arr[boff + 2] >> 4);
     }
   } else {
     for (size_t i = 0; i < arr.size() * 8; i++) {

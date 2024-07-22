@@ -32,9 +32,7 @@ static constexpr size_t SigByteLen = ml_dsa_utils::sig_len(k, l, γ1, ω, λ);
 
 // Given a 32 -bytes seed, this routine can be used for generating a fresh ML-DSA-87 keypair.
 inline void
-keygen(std::span<const uint8_t, KeygenSeedByteLen> ξ,
-       std::span<uint8_t, PubKeyByteLen> pubkey,
-       std::span<uint8_t, SecKeyByteLen> seckey)
+keygen(std::span<const uint8_t, KeygenSeedByteLen> ξ, std::span<uint8_t, PubKeyByteLen> pubkey, std::span<uint8_t, SecKeyByteLen> seckey)
 {
   ml_dsa::keygen<k, l, d, η>(ξ, pubkey, seckey);
 }
@@ -45,10 +43,7 @@ keygen(std::span<const uint8_t, KeygenSeedByteLen> ξ,
 // Default (and recommended) signing mode is "hedged" i.e. using 32B input randomness for signing, results into
 // randomized signature. For "deterministic" signing mode, simply fill `rnd` with zero bytes.
 inline void
-sign(std::span<const uint8_t, SigningSeedByteLen> rnd,
-     std::span<const uint8_t, SecKeyByteLen> seckey,
-     std::span<const uint8_t> msg,
-     std::span<uint8_t, SigByteLen> sig)
+sign(std::span<const uint8_t, SigningSeedByteLen> rnd, std::span<const uint8_t, SecKeyByteLen> seckey, std::span<const uint8_t> msg, std::span<uint8_t, SigByteLen> sig)
 {
   ml_dsa::sign<k, l, d, η, γ1, γ2, τ, β, ω, λ>(rnd, seckey, msg, sig);
 }
@@ -57,9 +52,7 @@ sign(std::span<const uint8_t, SigningSeedByteLen> rnd,
 // is valid for the provided message or not, returning truth value only in case of successful signature verification,
 // otherwise false is returned.
 inline bool
-verify(std::span<const uint8_t, PubKeyByteLen> pubkey,
-       std::span<const uint8_t> msg,
-       std::span<const uint8_t, SigByteLen> sig)
+verify(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t, SigByteLen> sig)
 {
   return ml_dsa::verify<k, l, d, γ1, γ2, τ, β, ω, λ>(pubkey, msg, sig);
 }

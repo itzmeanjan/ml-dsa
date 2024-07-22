@@ -26,9 +26,7 @@ power2round(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
 
 // Given two degree-255 polynomials in NTT representation, this routine performs element-wise multiplication over Z_q.
 static inline constexpr void
-mul(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polya,
-    std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyb,
-    std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> polyc)
+mul(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polya, std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyb, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> polyc)
 {
   for (size_t i = 0; i < polya.size(); i++) {
     polyc[i] = polya[i] * polyb[i];

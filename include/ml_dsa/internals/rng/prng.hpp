@@ -47,8 +47,7 @@ public:
   }
 
   // Explicit constructor which can be used for seeding PRNG.
-  inline explicit constexpr prng_t(
-    std::span<const uint8_t, bit_security_level / std::numeric_limits<uint8_t>::digits> seed)
+  inline explicit constexpr prng_t(std::span<const uint8_t, bit_security_level / std::numeric_limits<uint8_t>::digits> seed)
   {
     state.absorb(seed);
     state.finalize();

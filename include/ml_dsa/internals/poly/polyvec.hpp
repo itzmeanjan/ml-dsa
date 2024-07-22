@@ -43,9 +43,7 @@ power2round(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    ml_dsa_poly::power2round<d>(const_poly_t(poly.subspan(off, ml_dsa_ntt::N)),
-                                poly_t(poly_hi.subspan(off, ml_dsa_ntt::N)),
-                                poly_t(poly_lo.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::power2round<d>(const_poly_t(poly.subspan(off, ml_dsa_ntt::N)), poly_t(poly_hi.subspan(off, ml_dsa_ntt::N)), poly_t(poly_lo.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -69,8 +67,7 @@ matrix_multiply(std::span<const ml_dsa_field::zq_t, a_rows * a_cols * ml_dsa_ntt
         const size_t aoff = (i * a_cols + k) * ml_dsa_ntt::N;
         const size_t boff = (k * b_cols + j) * ml_dsa_ntt::N;
 
-        ml_dsa_poly::mul(
-          const_poly_t(a.subspan(aoff, ml_dsa_ntt::N)), const_poly_t(b.subspan(boff, ml_dsa_ntt::N)), tmp_span);
+        ml_dsa_poly::mul(const_poly_t(a.subspan(aoff, ml_dsa_ntt::N)), const_poly_t(b.subspan(boff, ml_dsa_ntt::N)), tmp_span);
 
         for (size_t l = 0; l < tmp_span.size(); l++) {
           c[coff + l] += tmp_span[l];
@@ -125,8 +122,7 @@ sub_from_x(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 // 32 x sbw -bytes, writing to a (k x 32 x sbw) -bytes destination array.
 template<size_t k, size_t sbw>
 static inline constexpr void
-encode(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src,
-       std::span<uint8_t, (k * sbw * ml_dsa_ntt::N) / std::numeric_limits<uint8_t>::digits> dst)
+encode(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<uint8_t, (k * sbw * ml_dsa_ntt::N) / std::numeric_limits<uint8_t>::digits> dst)
 {
   // Byte length of degree-255 polynomial after serialization
   constexpr size_t poly_blen = dst.size() / k;
@@ -135,8 +131,7 @@ encode(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src,
     const size_t off0 = i * ml_dsa_ntt::N;
     const size_t off1 = i * poly_blen;
 
-    ml_dsa_bit_packing::encode<sbw>(const_poly_t(src.subspan(off0, ml_dsa_ntt::N)),
-                                    std::span<uint8_t, poly_blen>(dst.subspan(off1, poly_blen)));
+    ml_dsa_bit_packing::encode<sbw>(const_poly_t(src.subspan(off0, ml_dsa_ntt::N)), std::span<uint8_t, poly_blen>(dst.subspan(off1, poly_blen)));
   }
 }
 
@@ -144,8 +139,7 @@ encode(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src,
 // them to a column vector of dimension k x 1.
 template<size_t k, size_t sbw>
 static inline constexpr void
-decode(std::span<const uint8_t, (k * sbw * ml_dsa_ntt::N) / std::numeric_limits<uint8_t>::digits> src,
-       std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
+decode(std::span<const uint8_t, (k * sbw * ml_dsa_ntt::N) / std::numeric_limits<uint8_t>::digits> src, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   // Byte length of degree-255 polynomial after serialization
   constexpr size_t poly_blen = src.size() / k;
@@ -154,29 +148,25 @@ decode(std::span<const uint8_t, (k * sbw * ml_dsa_ntt::N) / std::numeric_limits<
     const size_t off0 = i * poly_blen;
     const size_t off1 = i * ml_dsa_ntt::N;
 
-    ml_dsa_bit_packing::decode<sbw>(std::span<const uint8_t, poly_blen>(src.subspan(off0, poly_blen)),
-                                    poly_t(dst.subspan(off1, ml_dsa_ntt::N)));
+    ml_dsa_bit_packing::decode<sbw>(std::span<const uint8_t, poly_blen>(src.subspan(off0, poly_blen)), poly_t(dst.subspan(off1, ml_dsa_ntt::N)));
   }
 }
 
 // Given a vector (of dimension k x 1) of degree-255 polynomials, it extracts out high order bits from each coefficient.
 template<size_t k, uint32_t alpha>
 static inline constexpr void
-highbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src,
-         std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
+highbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    ml_dsa_poly::highbits<alpha>(const_poly_t(src.subspan(off, ml_dsa_ntt::N)),
-                                 poly_t(dst.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::highbits<alpha>(const_poly_t(src.subspan(off, ml_dsa_ntt::N)), poly_t(dst.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
 // Given a vector (of dimension k x 1) of degree-255 polynomials, it extracts out low order bits from each coefficient.
 template<size_t k, uint32_t alpha>
 static inline constexpr void
-lowbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src,
-        std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
+lowbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
@@ -194,8 +184,7 @@ mul_by_poly(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    ml_dsa_poly::mul(
-      poly, const_poly_t(src_vec.subspan(off, ml_dsa_ntt::N)), poly_t(dst_vec.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::mul(poly, const_poly_t(src_vec.subspan(off, ml_dsa_ntt::N)), poly_t(dst_vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -224,9 +213,8 @@ make_hint(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polya,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    ml_dsa_poly::make_hint<alpha>(const_poly_t(polya.subspan(off, ml_dsa_ntt::N)),
-                                  const_poly_t(polyb.subspan(off, ml_dsa_ntt::N)),
-                                  poly_t(polyc.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::make_hint<alpha>(
+      const_poly_t(polya.subspan(off, ml_dsa_ntt::N)), const_poly_t(polyb.subspan(off, ml_dsa_ntt::N)), poly_t(polyc.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
@@ -240,9 +228,8 @@ use_hint(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyh,
 {
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
-    ml_dsa_poly::use_hint<alpha>(const_poly_t(polyh.subspan(off, ml_dsa_ntt::N)),
-                                 const_poly_t(polyr.subspan(off, ml_dsa_ntt::N)),
-                                 poly_t(polyrz.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::use_hint<alpha>(
+      const_poly_t(polyh.subspan(off, ml_dsa_ntt::N)), const_poly_t(polyr.subspan(off, ml_dsa_ntt::N)), poly_t(polyrz.subspan(off, ml_dsa_ntt::N)));
   }
 }
 

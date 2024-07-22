@@ -294,9 +294,7 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 // See algorithm 3 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t k, size_t l, size_t d, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω, size_t λ>
 static inline bool
-verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
-       std::span<const uint8_t> msg,
-       std::span<const uint8_t, ml_dsa_utils::sig_len(k, l, γ1, ω, λ)> sig)
+verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t, ml_dsa_utils::sig_len(k, l, γ1, ω, λ)> sig)
   requires(ml_dsa_params::check_verify_params(k, l, d, γ1, γ2, τ, β, ω, λ))
 {
   constexpr size_t t1_bw = std::bit_width(ml_dsa_field::Q) - d;

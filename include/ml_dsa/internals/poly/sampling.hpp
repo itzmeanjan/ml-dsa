@@ -140,9 +140,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
 // See algorithm 28 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<uint32_t γ1, size_t l>
 static inline constexpr void
-expand_mask(std::span<const uint8_t, 64> seed,
-            const uint16_t nonce,
-            std::span<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> vec)
+expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_γ1(γ1))
 {
   constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);

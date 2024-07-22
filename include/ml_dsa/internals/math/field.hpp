@@ -30,10 +30,7 @@ public:
   // Constructor(s)
   inline constexpr zq_t() = default;
   inline constexpr zq_t(const uint32_t val /* val ∈ [0, Q) */) { v = val; }
-  static inline constexpr zq_t from_non_reduced(const uint32_t val /* val ∈ [0, 2^32) */)
-  {
-    return barrett_reduce(val);
-  }
+  static inline constexpr zq_t from_non_reduced(const uint32_t val /* val ∈ [0, 2^32) */) { return barrett_reduce(val); }
 
   // Accessor
   inline constexpr uint32_t raw() const { return this->v; }
