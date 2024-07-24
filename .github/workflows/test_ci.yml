@@ -1,4 +1,4 @@
-name: Test Dilithium Post-Quantum Digital Signature Scheme
+name: Test NIST FIPS 204 ML-DSA
 
 on:
   push:
@@ -23,8 +23,8 @@ jobs:
         mkdir build
         pushd build
         cmake .. -DBUILD_GMOCK=OFF
-        make
-        sudo make install
+        make -j
+        sudo make install -j
         popd
         popd
         popd
