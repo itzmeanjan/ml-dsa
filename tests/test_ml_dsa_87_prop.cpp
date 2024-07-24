@@ -29,7 +29,7 @@ test_ml_dsa_87_signing(const size_t mlen)
   auto msg_span = std::span(msg);
   auto msg_copy_span = std::span(msg_copy);
 
-  ml_dsa_prng::prng_t<128> prng;
+  ml_dsa_prng::prng_t<256> prng;
   prng.read(seed);
   prng.read(msg_span);
   prng.read(rnd);
