@@ -1,42 +1,40 @@
 > [!CAUTION]
-> This Dilithium implementation is conformant with Dilithium specification @ https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf. I also try to make it timing leakage free, using `dudect` (see https://github.com/oreparaz/dudect) -based tests, but be informed that this implementation is not yet audited. *If you consider using it in production, be careful !*
+> This ML-DSA implementation is conformant with ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd. I also try to make it timing leakage free, using `dudect` (see https://github.com/oreparaz/dudect) -based tests, but be informed that this implementation is not yet audited. *If you consider using it in production, be careful !*
 
-# dilithium
-CRYSTALS-Dilithium: Post-Quantum Digital Signature Algorithm
+# ML-DSA (formerly known as Dilithium)
+
+Module-Lattice-Based Digital Signature Standard by NIST.
 
 ## Motivation
 
-Dilithium is one of those post-quantum digital signature algorithms ( DSA ), which is selected by NIST for standardization. Dilithium's security is based on hardness of finding short vectors in lattice i.e. it's a lattice based Post Quantum Cryptographic (PQC) construction.
+ML-DSA is being standardized by NIST as post-quantum secure digital signature algorithm (DSA), which can be used for verifying the authenticity of digital messages, giving recipient party confidence that the message indeed came from the known sender. ML-DSA's security is based on hardness of finding short vectors in lattice i.e. it's a lattice-based Post Quantum Cryptographic (PQC) construction.
 
-Dilithium DSA offers following three algorithms.
+ML-DSA offers following three algorithms.
 
 Algorithm | What does it do ?
 --- | --:
-KeyGen | It takes a 32 -bytes seed, which is used for deterministically computing both public key and secret key i.e. keypair.
-Sign | It takes a secret key and a N (>0) -bytes message as input, which is used for deterministically ( default )/ randomly ( in this case, you must supply 64 uniform random sampled bytes as seed ) signing message, producing signature bytes.
-Verify | It takes a public key, N (>0) -bytes message and signature, returning boolean value, denoting status of successful signature verification operation.
+KeyGen | It takes a 32 -bytes seed, which is used for *deterministically* computing a ML-DSA keypair i.e. both public key and secret key.
+Sign | It takes a 32 -bytes seed, a ML-DSA secret key and a N (>=0) -bytes message as input, producing ML-DSA signature bytes. For default and recommended **hedged** message signing, one must provide with 32B random seed. For deterministic message signing, one should simply fill seed with 32 zero bytes.
+Verify | It takes a ML-DSA public key, N (>=0) -bytes message and ML-DSA signature, returning boolean value, denoting status of successful signature verification operation.
 
-Here I'm maintaining Dilithium as a header-only, easy-to-use C++ library, offering key generation, signing & verification API for three NIST security level ( i.e. 2, 3, 5 ) parameters, as defined in table 2 of Dilithium specification. For more details see [below](#usage).
+Here I'm maintaining `ml-dsa` as a header-only, easy-to-use C++20 library, implementing NIST FIPS 204 ML-DSA, supporting ML-DSA-{44, 65, 87} parameter sets, as defined in table 1 of ML-DSA draft standard. For more details see [below](#usage).
 
 > [!NOTE]
-> Find Dilithium specification @ https://pq-crystals.org/dilithium/data/dilithium-specification-round3-20210208.pdf, which you should refer to when understanding intricate details of this implementation.
-
-> [!NOTE] 
-> Follow progress of NIST PQC standardization effort [here](https://csrc.nist.gov/projects/post-quantum-cryptography).
+> Find ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd, which you should refer to when understanding intricate details of this implementation.
 
 ## Prerequisites
 
-- A C++ compiler with C++20 standard library such as `g++`/ `clang++`.
+- A C++ compiler with C++20 standard library such as `clang++`/ `g++`.
 
 ```bash
 $ clang++ --version
-Ubuntu clang version 17.0.2 (1~exp1ubuntu2.1)
+Ubuntu clang version 17.0.6 (9ubuntu1)
 Target: x86_64-pc-linux-gnu
 Thread model: posix
 InstalledDir: /usr/bin
 
 $ g++ --version
-gcc (Ubuntu 13.2.0-4ubuntu3) 13.2.0
+g++ (Ubuntu 14-20240412-0ubuntu1) 14.0.1 20240412 (experimental) [master r14-9935-g67e1433a94f]
 ```
 
 - System development utilities such as `make`, `cmake`.
@@ -46,24 +44,24 @@ $ make --version
 GNU Make 4.3
 
 $ cmake --version
-cmake version 3.25.1
+cmake version 3.28.3
 ```
 
-- For testing correctness and compatibility of this Dilithium implementation, you need to globally install `google-test` library and headers. Follow guide @ https://github.com/google/googletest/tree/main/googletest#standalone-cmake-project, if you don't have it installed.
-- For benchmarking Dilithium algorithms, you must have `google-benchmark` header and library globally installed. I found guide @ https://github.com/google/benchmark#installation helpful.
+- For testing correctness and compatibility of this ML-DSA implementation, you need to globally install `google-test` library and headers. Follow guide @ https://github.com/google/googletest/tree/main/googletest#standalone-cmake-project, if you don't have it installed.
+- For benchmarking ML-DSA algorithms, you must have `google-benchmark` header and library globally installed. I found guide @ https://github.com/google/benchmark#installation helpful.
 
 > [!NOTE]
-> If you are on a machine running GNU/Linux kernel and you want to obtain CPU cycle count for KEM routines, you should consider building `google-benchmark` library with `libPFM` support, following https://gist.github.com/itzmeanjan/05dc3e946f635d00c5e0b21aae6203a7, a step-by-step guide. Find more about `libPFM` @ https://perfmon2.sourceforge.net.
+> If you are on a machine running GNU/Linux kernel and you want to obtain CPU cycle count for ML-DSA routines, you should consider building `google-benchmark` library with `libPFM` support, following https://gist.github.com/itzmeanjan/05dc3e946f635d00c5e0b21aae6203a7, a step-by-step guide. Find more about `libPFM` @ https://perfmon2.sourceforge.net.
 
 > [!TIP]
-> Git submodule based dependencies will generally be imported automatically, but in case that doesn't work, you can manually initialize and update them by issuing `$ git submodule update --init` from inside the root of this repository.
+> Git submodule based dependencies will normally be imported automatically, but in case that doesn't work, you can manually initialize and update them by issuing `$ git submodule update --init` from inside the root of this repository.
 
 ## Testing
 
-For ensuring functional correctness ( & conformance with the Dilithium specification, assuming the reference implemenation @ https://github.com/pq-crystals/dilithium.git is correct ) of this Dilithium library implemenation, issue
+For ensuring functional correctness of this library implementation of ML-DSA and conformance with the ML-DSA draft standard, issue following command.
 
-> [!NOTE] 
-> Dilithium Known Answer Tests are generated following the procedure, described in https://gist.github.com/itzmeanjan/d14afc3866b82119221682f0f3c9822d.
+> [!NOTE]
+> ML-DSA Known Answer Tests, living in this [directory](./kats), are generated following the procedure, described in https://gist.github.com/itzmeanjan/d14afc3866b82119221682f0f3c9822d.
 
 ```bash
 make -j            # Run tests without any sort of sanitizers
@@ -72,27 +70,25 @@ make ubsan_test -j # Run tests with UndefinedBehaviourSanitizer enabled
 ```
 
 ```bash
-[13/13] Dilithium.ArithmeticOverZq (365 ms)
-PASSED TESTS (13/13):
-       1 ms: build/test.out Dilithium.HintBitPolynomialEncodingDecoding
-       1 ms: build/test.out Dilithium.PolynomialEncodingDecoding
-       1 ms: build/test.out Dilithium.HashingToABall
-       1 ms: build/test.out Dilithium.NumberTheoreticTransform
-       6 ms: build/test.out Dilithium.Power2Round
-      16 ms: build/test.out Dilithium.MakingAndUsingOfHintBits
-      54 ms: build/test.out Dilithium.Dilithium3KeygenSignVerifyFlow
-      54 ms: build/test.out Dilithium.Dilithium2KeygenSignVerifyFlow
-      92 ms: build/test.out Dilithium.Dilithium3KnownAnswerTests
-      93 ms: build/test.out Dilithium.Dilithium5KeygenSignVerifyFlow
-     112 ms: build/test.out Dilithium.Dilithium2KnownAnswerTests
-     149 ms: build/test.out Dilithium.Dilithium5KnownAnswerTests
-     365 ms: build/test.out Dilithium.ArithmeticOverZq
+PASSED TESTS (12/12):
+       3 ms: build/test.out ML_DSA.HintBitPolynomialEncodingDecoding
+       4 ms: build/test.out ML_DSA.HashingToABall
+       4 ms: build/test.out ML_DSA.PolynomialEncodingDecoding
+      13 ms: build/test.out ML_DSA.Power2Round
+      42 ms: build/test.out ML_DSA.MakingAndUsingOfHintBits
+      78 ms: build/test.out ML_DSA.ML_DSA_44_KeygenSignVerifyFlow
+     116 ms: build/test.out ML_DSA.ML_DSA_44_KnownAnswerTests
+     123 ms: build/test.out ML_DSA.ML_DSA_87_KeygenSignVerifyFlow
+     126 ms: build/test.out ML_DSA.ML_DSA_65_KeygenSignVerifyFlow
+     170 ms: build/test.out ML_DSA.ML_DSA_65_KnownAnswerTests
+     276 ms: build/test.out ML_DSA.ML_DSA_87_KnownAnswerTests
+     767 ms: build/test.out ML_DSA.ArithmeticOverZq
 ```
 
 You can run timing leakage tests, using `dudect`, execute following
 
 > [!NOTE]
-> `dudect` is integrated into this library implementation of Dilithium DSA to find any sort of timing leakages. It checks for constant-timeness of most of the vital internal functions. Though it doesn't check constant-timeness of functions which use uniform rejection sampling, such as expansion of public matrix `A` or sampling of the vectors `s1`, `s2` or hashing to a ball etc.
+> `dudect` is integrated into this library implementation of ML-DSA to find any sort of timing leakages. It checks for constant-timeness of most of the vital internal functions. Though it doesn't check constant-timeness of functions which use uniform rejection sampling, such as expansion of public matrix `A` or sampling of the vectors `s1`, `s2` or hashing to a ball etc..
 
 ```bash
 # Can only be built and run on x86_64 machine.
@@ -101,9 +97,9 @@ make dudect_test_build -j
 # Before running the constant-time tests, it's a good idea to put all CPU cores on "performance" mode.
 # You may find the guide @ https://github.com/google/benchmark/blob/main/docs/reducing_variance.md helpful.
 
-timeout 10m taskset -c 0 ./build/dudect/test_dilithium2.out
-timeout 10m taskset -c 0 ./build/dudect/test_dilithium3.out
-timeout 10m taskset -c 0 ./build/dudect/test_dilithium5.out
+timeout 10m taskset -c 0 ./build/dudect/test_ml_dsa_44.out
+timeout 10m taskset -c 0 ./build/dudect/test_ml_dsa_65.out
+timeout 10m taskset -c 0 ./build/dudect/test_ml_dsa_87.out
 ```
 
 > [!TIP]
@@ -130,403 +126,198 @@ meas:   49.71 M, max t:   +2.78, max tau: 3.94e-04, (5/tau)^2: 1.61e+08. For the
 
 ## Benchmarking
 
-Benchmarking key generation, signing and verification algorithms for various instantiations of Dilithium digital signature scheme can be done, by issuing
+> [!WARNING]
+> Relying only on average timing measurement for understanding performance characteristics of ML-DSA `sign` algorithm may not be a good idea, given that it's a post-quantum digital signature scheme of **"Fiat-Shamir with Aborts"** paradigm - simply put, during signing procedure it may need to abort and restart again, multiple times, based on what message is being signed or what random seed is being used for default **hedged** signing. So it's a better idea to also compute other statistics such as minimum, maximum and *median* ( pretty useful ) when timing execution of `sign` procedure. In following benchmark results, you'll see such statistics demonstrating broader performance characteristics of ML-DSA `sign` procedure for various parameter sets.
+
+Benchmarking key generation, signing and verification algorithms for various instantiations of ML-DSA can be done, by issuing
 
 ```bash
 make benchmark -j  # If you haven't built google-benchmark library with libPFM support.
 make perf -j       # If you have built google-benchmark library with libPFM support.
 ```
 
-> [!NOTE] 
-> Benchmarking expects presence of `google-benchmark` headers and library in global namespace ( so that it can be found by the compiler ) i.e. header and library path must live on **$PATH**.
-
 > [!CAUTION] 
-> Ensure you've put all your CPU cores on performance mode before running benchmarks, follow guide @ https://github.com/google/benchmark/blob/main/docs/reducing_variance.md.
-
-> [!NOTE]
-> Only deterministic signing procedure is benchmarked here, while signing random message of length 32 -bytes. One can benchmark non-deterministic signing procedure by explicitly passing truth value to template parameter of `sign(...)` routine and they must supply a 64 -bytes uniform random sampled seed, when invoking `sign` routine.
-
-> [!WARNING]
-> Relying only on average timing measurement for understanding performance characteristics of Dilithium signing algorithm may not be a good idea, given that it's a post-quantum digital signature scheme of **"Fiat-Shamir with Aborts"** paradigm - broadly speaking, during signing procedure it may need to abort and restart again, multiple times, based on what message is being signed or what sort of random seed is being used for randomized signing. So it's a better idea to also compute other statistics such as minimum, maximum and *median* ( pretty useful ) when timing execution of signing procedure. In following benchmark results, you'll see such statistics demonstrating broader performance characteristics of Dilithium signing procedure for various parameter sets.
-
-> [!NOTE]
-> `make perf` - was issued when collecting following benchmarks. Notice, *cycles* column, denoting cost of executing Dilithium signature scheme routines in terms of CPU cycles. Follow [this](https://github.com/google/benchmark/blob/main/docs/perf_counters.md) for more details.
+> Ensure you've put all CPU cores on **performance** mode, before running benchmarks, follow guide @ https://github.com/google/benchmark/blob/main/docs/reducing_variance.md.
 
 ### On 12th Gen Intel(R) Core(TM) i7-1260P
 
-Compiled with **gcc version 13.2.0 (Ubuntu 13.2.0-4ubuntu3)**.
+Compiled with **gcc version 14.0.1 20240412**.
 
 ```bash
 $ uname -srm
-Linux 6.5.0-14-generic x86_64
+Linux 6.8.0-39-generic x86_64
 ```
 
 ```bash
-2023-12-24T13:05:17+04:00
+2024-08-01T21:31:03+05:30
 Running ./build/perf.out
-Run on (16 X 4129.81 MHz CPU s)
+Run on (16 X 399.747 MHz CPU s)
 CPU Caches:
   L1 Data 48 KiB (x8)
   L1 Instruction 32 KiB (x8)
   L2 Unified 1280 KiB (x8)
   L3 Unified 18432 KiB (x1)
-Load Average: 0.33, 0.29, 0.27
---------------------------------------------------------------------------------------------------
-Benchmark                            Time             CPU   Iterations     CYCLES items_per_second
---------------------------------------------------------------------------------------------------
-dilithium5_sign/32_mean            573 us          573 us           32   2.62244M       2.15221k/s
-dilithium5_sign/32_median          570 us          570 us           32   2.56475M       1.77223k/s
-dilithium5_sign/32_stddev          289 us          289 us           32   1.33162M        983.885/s
-dilithium5_sign/32_cv            50.50 %         50.50 %            32     50.78%           45.72%
-dilithium5_sign/32_min             266 us          266 us           32   1.22116M        584.246/s
-dilithium5_sign/32_max            1712 us         1712 us           32   7.85984M       3.75566k/s
-dilithium2_sign/32_mean            413 us          413 us           32   1.92469M       4.31431k/s
-dilithium2_sign/32_median          239 us          239 us           32   1.10512M       4.18457k/s
-dilithium2_sign/32_stddev          393 us          393 us           32   1.83463M       2.77288k/s
-dilithium2_sign/32_cv            95.04 %         95.04 %            32     95.32%           64.27%
-dilithium2_sign/32_min             114 us          114 us           32     531.5k        548.719/s
-dilithium2_sign/32_max            1822 us         1822 us           32   8.53117M       8.78612k/s
-dilithium3_keygen_mean             100 us          100 us           32    450.02k       10.0107k/s
-dilithium3_keygen_median          98.4 us         98.4 us           32   450.223k        10.158k/s
-dilithium3_keygen_stddev          3.72 us         3.72 us           32   1.44564k        370.119/s
-dilithium3_keygen_cv              3.72 %          3.72 %            32      0.32%            3.70%
-dilithium3_keygen_min             95.9 us         95.9 us           32   443.754k       9.43455k/s
-dilithium3_keygen_max              106 us          106 us           32   452.294k       10.4222k/s
-dilithium3_sign/32_mean            511 us          511 us           32   2.38786M        2.9922k/s
-dilithium3_sign/32_median          346 us          346 us           32   1.60917M       2.89361k/s
-dilithium3_sign/32_stddev          370 us          370 us           32   1.73198M       1.82606k/s
-dilithium3_sign/32_cv            72.38 %         72.38 %            32     72.53%           61.03%
-dilithium3_sign/32_min             171 us          171 us           32   798.767k        611.443/s
-dilithium3_sign/32_max            1636 us         1635 us           32   7.65597M       5.86292k/s
-dilithium3_verify/32_mean          104 us          104 us           32   472.594k       9.60074k/s
-dilithium3_verify/32_median        102 us          102 us           32   472.428k       9.82254k/s
-dilithium3_verify/32_stddev       3.54 us         3.55 us           32    870.197        322.901/s
-dilithium3_verify/32_cv           3.40 %          3.40 %            32      0.18%            3.36%
-dilithium3_verify/32_min           101 us          101 us           32   470.808k        9.0583k/s
-dilithium3_verify/32_max           110 us          110 us           32   474.024k       9.92375k/s
-dilithium5_keygen_mean             168 us          168 us           32   749.512k       5.96366k/s
-dilithium5_keygen_median           167 us          167 us           32   748.591k       6.00453k/s
-dilithium5_keygen_stddev          4.98 us         4.97 us           32   3.57104k        175.466/s
-dilithium5_keygen_cv              2.96 %          2.96 %            32      0.48%            2.94%
-dilithium5_keygen_min              162 us          162 us           32   743.167k       5.63682k/s
-dilithium5_keygen_max              177 us          177 us           32   757.093k       6.18287k/s
-dilithium2_verify/32_mean         64.0 us         64.0 us           32   292.642k        15.631k/s
-dilithium2_verify/32_median       62.9 us         62.9 us           32   292.392k       15.9072k/s
-dilithium2_verify/32_stddev       2.00 us         2.00 us           32    891.422        476.406/s
-dilithium2_verify/32_cv           3.12 %          3.12 %            32      0.30%            3.05%
-dilithium2_verify/32_min          62.4 us         62.4 us           32   291.515k       14.6913k/s
-dilithium2_verify/32_max          68.1 us         68.1 us           32   294.848k       16.0265k/s
-dilithium2_keygen_mean            59.0 us         59.0 us           32   269.516k       16.9619k/s
-dilithium2_keygen_median          58.4 us         58.4 us           32   269.005k       17.1373k/s
-dilithium2_keygen_stddev          1.96 us         1.96 us           32   2.73875k        546.274/s
-dilithium2_keygen_cv              3.31 %          3.31 %            32      1.02%            3.22%
-dilithium2_keygen_min             56.7 us         56.7 us           32   265.559k       15.6044k/s
-dilithium2_keygen_max             64.1 us         64.1 us           32   275.942k       17.6457k/s
-dilithium5_verify/32_mean          171 us          171 us           32    780.57k        5.8392k/s
-dilithium5_verify/32_median        168 us          168 us           32   780.972k       5.95881k/s
-dilithium5_verify/32_stddev       5.63 us         5.63 us           32   1.43262k        187.536/s
-dilithium5_verify/32_cv           3.28 %          3.28 %            32      0.18%            3.21%
-dilithium5_verify/32_min           167 us          167 us           32   778.381k       5.49484k/s
-dilithium5_verify/32_max           182 us          182 us           32   782.668k       6.00273k/s
-```
-
-### On ARM Cortex-A72 i.e. Raspberry Pi 4B
-
-Compiled with **gcc version 13.2.0 (Ubuntu 13.2.0-4ubuntu3)**.
-
-```bash
-$ uname -srm
-Linux 6.5.0-1008-raspi aarch64
-```
-
-```bash
-2023-12-24T15:13:38+05:30
-Running ./build/perf.out
-Run on (4 X 1800 MHz CPU s)
-CPU Caches:
-  L1 Data 32 KiB (x4)
-  L1 Instruction 48 KiB (x4)
-  L2 Unified 1024 KiB (x1)
-Load Average: 1.18, 1.24, 0.78
---------------------------------------------------------------------------------------------------
-Benchmark                            Time             CPU   Iterations     CYCLES items_per_second
---------------------------------------------------------------------------------------------------
-dilithium5_verify/32_mean          982 us          982 us           32   1.76352M       1.01874k/s
-dilithium5_verify/32_median        982 us          982 us           32   1.76347M       1.01877k/s
-dilithium5_verify/32_stddev      0.618 us        0.417 us           32      447.3       0.432759/s
-dilithium5_verify/32_cv           0.06 %          0.04 %            32      0.03%            0.04%
-dilithium5_verify/32_min           981 us          981 us           32   1.76263M       1.01761k/s
-dilithium5_verify/32_max           984 us          983 us           32   1.76433M        1.0195k/s
-dilithium3_verify/32_mean          627 us          627 us           32   1.12594M       1.59563k/s
-dilithium3_verify/32_median        627 us          627 us           32   1.12584M       1.59581k/s
-dilithium3_verify/32_stddev      0.369 us        0.267 us           32      385.4       0.678979/s
-dilithium3_verify/32_cv           0.06 %          0.04 %            32      0.03%            0.04%
-dilithium3_verify/32_min           626 us          626 us           32   1.12543M       1.59386k/s
-dilithium3_verify/32_max           628 us          627 us           32   1.12704M       1.59664k/s
-dilithium2_verify/32_mean          397 us          397 us           32   712.872k       2.51939k/s
-dilithium2_verify/32_median        397 us          397 us           32   712.921k       2.51999k/s
-dilithium2_verify/32_stddev       1.01 us        0.901 us           32    514.135        5.66412/s
-dilithium2_verify/32_cv           0.25 %          0.23 %            32      0.07%            0.22%
-dilithium2_verify/32_min           396 us          396 us           32   711.708k       2.49017k/s
-dilithium2_verify/32_max           402 us          402 us           32   713.909k       2.52477k/s
-dilithium2_keygen_mean             332 us          332 us           32   596.912k       3.00994k/s
-dilithium2_keygen_median           333 us          333 us           32   597.624k       3.00643k/s
-dilithium2_keygen_stddev          1.30 us         1.31 us           32   2.40391k        11.8347/s
-dilithium2_keygen_cv              0.39 %          0.39 %            32      0.40%            0.39%
-dilithium2_keygen_min              329 us          329 us           32   591.684k       2.98561k/s
-dilithium2_keygen_max              335 us          335 us           32   601.775k       3.03661k/s
-dilithium3_sign/32_mean           4059 us         4058 us           32   7.29006M        365.449/s
-dilithium3_sign/32_median         3304 us         3303 us           32   5.93442M        302.715/s
-dilithium3_sign/32_stddev         2724 us         2723 us           32   4.89362M        233.459/s
-dilithium3_sign/32_cv            67.10 %         67.11 %            32     67.13%           63.88%
-dilithium3_sign/32_min            1171 us         1171 us           32   2.10391M        71.6582/s
-dilithium3_sign/32_max           13957 us        13955 us           32   25.0762M        854.011/s
-dilithium5_sign/32_mean           6044 us         6043 us           32   10.8539M        270.538/s
-dilithium5_sign/32_median         4732 us         4732 us           32   8.49736M        211.344/s
-dilithium5_sign/32_stddev         4933 us         4932 us           32   8.86216M        184.414/s
-dilithium5_sign/32_cv            81.63 %         81.63 %            32     81.65%           68.17%
-dilithium5_sign/32_min            1722 us         1722 us           32   3.09382M        38.8392/s
-dilithium5_sign/32_max           25754 us        25747 us           32   46.2578M        580.602/s
-dilithium5_keygen_mean             869 us          869 us           32   1.56125M       1.15065k/s
-dilithium5_keygen_median           869 us          869 us           32    1.5609M       1.15112k/s
-dilithium5_keygen_stddev          2.55 us         2.30 us           32   3.61955k        3.03513/s
-dilithium5_keygen_cv              0.29 %          0.26 %            32      0.23%            0.26%
-dilithium5_keygen_min              865 us          865 us           32   1.55393M       1.14095k/s
-dilithium5_keygen_max              879 us          876 us           32   1.57077M       1.15633k/s
-dilithium3_keygen_mean             548 us          547 us           32   983.306k       1.82668k/s
-dilithium3_keygen_median           547 us          547 us           32   983.369k       1.82715k/s
-dilithium3_keygen_stddev         0.969 us        0.740 us           32    698.653        2.45958/s
-dilithium3_keygen_cv              0.18 %          0.14 %            32      0.07%            0.13%
-dilithium3_keygen_min              547 us          547 us           32   981.931k       1.81604k/s
-dilithium3_keygen_max              552 us          551 us           32   984.944k       1.82955k/s
-dilithium2_sign/32_mean           2253 us         2253 us           32   4.04616M         666.05/s
-dilithium2_sign/32_median         1763 us         1762 us           32   3.16635M        567.381/s
-dilithium2_sign/32_stddev         1738 us         1738 us           32   3.12125M        385.348/s
-dilithium2_sign/32_cv            77.14 %         77.13 %            32     77.14%           57.86%
-dilithium2_sign/32_min             782 us          782 us           32   1.40548M        109.753/s
-dilithium2_sign/32_max            9114 us         9111 us           32   16.3662M       1.27835k/s
-```
-
-### On Apple M1 Max
-
-Compiled with **Apple clang version 15.0.0 (clang-1500.1.0.2.5)**.
-
-```bash
-$ uname -srm
-Darwin 23.2.0 arm64
-```
-
-```bash
-2024-01-22T19:57:30+04:00
-Running ./build/bench.out
-Run on (10 X 24 MHz CPU s)
-CPU Caches:
-  L1 Data 64 KiB
-  L1 Instruction 128 KiB
-  L2 Unified 4096 KiB (x10)
-Load Average: 1.61, 1.96, 2.34
----------------------------------------------------------------------------------------
-Benchmark                            Time             CPU   Iterations items_per_second
----------------------------------------------------------------------------------------
-dilithium5_verify/32_mean          182 us          182 us           32       5.48988k/s
-dilithium5_verify/32_median        182 us          182 us           32       5.49471k/s
-dilithium5_verify/32_stddev      0.790 us        0.792 us           32         23.356/s
-dilithium5_verify/32_cv           0.43 %          0.43 %            32            0.43%
-dilithium5_verify/32_min           182 us          182 us           32       5.36387k/s
-dilithium5_verify/32_max           187 us          186 us           32        5.5007k/s
-dilithium3_keygen_mean             103 us          102 us           32       9.75627k/s
-dilithium3_keygen_median           103 us          103 us           32       9.75592k/s
-dilithium3_keygen_stddev         0.113 us        0.113 us           32        10.7959/s
-dilithium3_keygen_cv              0.11 %          0.11 %            32            0.11%
-dilithium3_keygen_min              102 us          102 us           32       9.72649k/s
-dilithium3_keygen_max              103 us          103 us           32       9.77192k/s
-dilithium2_sign/32_mean            389 us          388 us           32       3.60304k/s
-dilithium2_sign/32_median          308 us          308 us           32       3.28064k/s
-dilithium2_sign/32_stddev          224 us          224 us           32       2.13469k/s
-dilithium2_sign/32_cv            57.71 %         57.71 %            32           59.25%
-dilithium2_sign/32_min             125 us          125 us           32       1.10009k/s
-dilithium2_sign/32_max             910 us          909 us           32       7.99269k/s
-dilithium3_verify/32_mean          113 us          112 us           32       8.89718k/s
-dilithium3_verify/32_median        113 us          112 us           32        8.8974k/s
-dilithium3_verify/32_stddev      0.062 us        0.044 us           32        3.48072/s
-dilithium3_verify/32_cv           0.06 %          0.04 %            32            0.04%
-dilithium3_verify/32_min           112 us          112 us           32       8.89127k/s
-dilithium3_verify/32_max           113 us          112 us           32       8.90303k/s
-dilithium2_verify/32_mean         69.5 us         69.4 us           32       14.4038k/s
-dilithium2_verify/32_median       69.5 us         69.4 us           32       14.4049k/s
-dilithium2_verify/32_stddev      0.055 us        0.026 us           32        5.49004/s
-dilithium2_verify/32_cv           0.08 %          0.04 %            32            0.04%
-dilithium2_verify/32_min          69.4 us         69.4 us           32       14.3902k/s
-dilithium2_verify/32_max          69.7 us         69.5 us           32       14.4125k/s
-dilithium2_keygen_mean            60.7 us         60.6 us           32       16.4974k/s
-dilithium2_keygen_median          60.7 us         60.6 us           32       16.5101k/s
-dilithium2_keygen_stddev         0.489 us        0.482 us           32        130.751/s
-dilithium2_keygen_cv              0.81 %          0.80 %            32            0.79%
-dilithium2_keygen_min             59.8 us         59.8 us           32       16.1638k/s
-dilithium2_keygen_max             61.9 us         61.9 us           32       16.7339k/s
-dilithium5_sign/32_mean            786 us          785 us           32       1.79488k/s
-dilithium5_sign/32_median          574 us          573 us           32       1.74461k/s
-dilithium5_sign/32_stddev          560 us          559 us           32        943.588/s
-dilithium5_sign/32_cv            71.24 %         71.24 %            32           52.57%
-dilithium5_sign/32_min             287 us          287 us           32        368.016/s
-dilithium5_sign/32_max            2721 us         2717 us           32       3.48385k/s
-dilithium3_sign/32_mean            498 us          497 us           32       3.06659k/s
-dilithium3_sign/32_median          393 us          392 us           32        2.5494k/s
-dilithium3_sign/32_stddev          366 us          365 us           32       1.76289k/s
-dilithium3_sign/32_cv            73.44 %         73.44 %            32           57.49%
-dilithium3_sign/32_min             190 us          189 us           32         621.66/s
-dilithium3_sign/32_max            1611 us         1609 us           32       5.27815k/s
-dilithium5_keygen_mean             168 us          167 us           32       5.97094k/s
-dilithium5_keygen_median           168 us          168 us           32       5.96961k/s
-dilithium5_keygen_stddev         0.495 us        0.469 us           32        16.7342/s
-dilithium5_keygen_cv              0.30 %          0.28 %            32            0.28%
-dilithium5_keygen_min              167 us          166 us           32       5.94183k/s
-dilithium5_keygen_max              169 us          168 us           32       6.01249k/s
+Load Average: 0.66, 0.51, 0.68
+-------------------------------------------------------------------------------------------------
+Benchmark                           Time             CPU   Iterations     CYCLES items_per_second
+-------------------------------------------------------------------------------------------------
+ml_dsa_44_sign/32_mean            256 us          256 us           32   1.19738M       5.15337k/s
+ml_dsa_44_sign/32_median          208 us          208 us           32   975.694k       4.80075k/s
+ml_dsa_44_sign/32_stddev          153 us          153 us           32   718.524k       2.41135k/s
+ml_dsa_44_sign/32_cv            59.92 %         59.92 %            32     60.01%           46.79%
+ml_dsa_44_sign/32_min             111 us          111 us           32    519.64k       1.54879k/s
+ml_dsa_44_sign/32_max             646 us          646 us           32   3.02393M       9.00608k/s
+ml_dsa_65_sign/32_mean            528 us          528 us           32   2.47044M        2.7681k/s
+ml_dsa_65_sign/32_median          435 us          435 us           32   2.03615M       2.29703k/s
+ml_dsa_65_sign/32_stddev          323 us          323 us           32   1.50973M       1.77477k/s
+ml_dsa_65_sign/32_cv            61.17 %         61.16 %            32     61.11%           64.12%
+ml_dsa_65_sign/32_min             168 us          168 us           32   786.787k        689.632/s
+ml_dsa_65_sign/32_max            1450 us         1450 us           32   6.74411M       5.95098k/s
+ml_dsa_65_keygen_mean            96.4 us         96.4 us           32    445.21k       10.3759k/s
+ml_dsa_65_keygen_median          95.8 us         95.8 us           32   445.059k        10.434k/s
+ml_dsa_65_keygen_stddev          1.45 us         1.45 us           32    954.675        153.336/s
+ml_dsa_65_keygen_cv              1.51 %          1.51 %            32      0.21%            1.48%
+ml_dsa_65_keygen_min             95.0 us         95.0 us           32   443.683k       9.92974k/s
+ml_dsa_65_keygen_max              101 us          101 us           32    448.46k       10.5263k/s
+ml_dsa_44_verify/32_mean         63.0 us         63.0 us           32   292.696k        15.879k/s
+ml_dsa_44_verify/32_median       62.7 us         62.7 us           32    293.31k       15.9509k/s
+ml_dsa_44_verify/32_stddev       1.08 us         1.07 us           32   3.13005k        250.737/s
+ml_dsa_44_verify/32_cv           1.71 %          1.71 %            32      1.07%            1.58%
+ml_dsa_44_verify/32_min          62.5 us         62.5 us           32   275.657k       14.5621k/s
+ml_dsa_44_verify/32_max          68.7 us         68.7 us           32    294.23k       15.9932k/s
+ml_dsa_44_keygen_mean            57.3 us         57.3 us           32   265.696k       17.4677k/s
+ml_dsa_44_keygen_median          57.3 us         57.3 us           32   265.677k       17.4477k/s
+ml_dsa_44_keygen_stddev         0.715 us        0.714 us           32   2.68481k        218.859/s
+ml_dsa_44_keygen_cv              1.25 %          1.25 %            32      1.01%            1.25%
+ml_dsa_44_keygen_min             55.7 us         55.7 us           32   260.727k       17.1027k/s
+ml_dsa_44_keygen_max             58.5 us         58.5 us           32    271.89k         17.95k/s
+ml_dsa_87_verify/32_mean          167 us          167 us           32   772.107k       6.00369k/s
+ml_dsa_87_verify/32_median        166 us          166 us           32   772.107k       6.02761k/s
+ml_dsa_87_verify/32_stddev       1.68 us         1.68 us           32   3.49109k        60.0648/s
+ml_dsa_87_verify/32_cv           1.01 %          1.01 %            32      0.45%            1.00%
+ml_dsa_87_verify/32_min           164 us          164 us           32   765.234k       5.84894k/s
+ml_dsa_87_verify/32_max           171 us          171 us           32   777.966k       6.08969k/s
+ml_dsa_87_sign/32_mean            567 us          567 us           32   2.65035M       2.30625k/s
+ml_dsa_87_sign/32_median          450 us          450 us           32   2.10825M        2.2221k/s
+ml_dsa_87_sign/32_stddev          334 us          334 us           32   1.56144M       1.06567k/s
+ml_dsa_87_sign/32_cv            58.84 %         58.84 %            32     58.91%           46.21%
+ml_dsa_87_sign/32_min             260 us          260 us           32   1.21113M        632.573/s
+ml_dsa_87_sign/32_max            1581 us         1581 us           32   7.39516M        3.8513k/s
+ml_dsa_65_verify/32_mean          101 us          101 us           32   470.568k       9.86459k/s
+ml_dsa_65_verify/32_median        101 us          101 us           32   470.285k       9.89717k/s
+ml_dsa_65_verify/32_stddev      0.898 us        0.897 us           32   1.23881k        86.4831/s
+ml_dsa_65_verify/32_cv           0.89 %          0.88 %            32      0.26%            0.88%
+ml_dsa_65_verify/32_min           100 us          100 us           32   468.725k       9.66729k/s
+ml_dsa_65_verify/32_max           103 us          103 us           32   473.467k       9.95904k/s
+ml_dsa_87_keygen_mean             160 us          160 us           32   735.698k       6.23867k/s
+ml_dsa_87_keygen_median           160 us          160 us           32   735.071k       6.24064k/s
+ml_dsa_87_keygen_stddev          2.92 us         2.92 us           32   6.17827k        113.438/s
+ml_dsa_87_keygen_cv              1.82 %          1.82 %            32      0.84%            1.82%
+ml_dsa_87_keygen_min              155 us          155 us           32    723.74k       6.00106k/s
+ml_dsa_87_keygen_max              167 us          167 us           32   748.988k       6.44194k/s
 ```
 
 ## Usage
 
-Dilithium is a header-only C++ library which is fairly easy-to-use. Let's see how to get started using it.
+`ml-dsa` is a header-only C++20 library, mainly targeting 64 -bit desktop/ server grade platforms, which is also pretty easy to use. Let's see how to get started with it.
 
-- Clone Dilithium repository.
+- Clone `ml-dsa` repository.
 
 ```bash
 cd
 
 # Multi-step cloning and importing of submodules
-git clone https://github.com/itzmeanjan/dilithium.git && pushd dilithium && git submodule update --init && popd
+git clone https://github.com/itzmeanjan/ml-dsa.git && pushd ml-dsa && git submodule update --init && popd
 # Or do single step cloning and importing of submodules
-git clone https://github.com/itzmeanjan/dilithium.git --recurse-submodules
+git clone https://github.com/itzmeanjan/ml-dsa.git --recurse-submodules
+# Or clone and then run tests, which will automatically bring in dependencies
+git clone https://github.com/itzmeanjan/ml-dsa.git && pushd ml-dsa && make -j && popd
 ```
 
-- Write a program which makes use of Dilithium{2,3,5} {keygen, signing, verification} API ( all of these routines and constants, representing how many bytes of memory to allocate for holding public/ secret key and signature, live under `dilithium{2,3,5}::` namespace ), while importing proper header file.
-- Finally compile your program, while letting your compiler know where it can find Dilithium ( `./include` ) and Sha3 ( `./sha3/include` ) headers.
+- Write a program which makes use of ML-DSA{44, 65, 87} key generation, signing and verification API ( all of these functions and constants, representing how many bytes of memory to allocate for holding seeds, public/ secret key and signature, live under `ml_dsa_{44,65,87}::` namespace ), while importing proper header files.
 
-```bash
-# Assuming `dilithium` was cloned just under $HOME
 
-DILITHIUM_HEADERS=~/dilithium/include
-SHA3_HEADERS=~/dilithium/sha3/include
-
-g++ -std=c++20 -Wall -Wextra -pedantic -O3 -march=native -I $DILITHIUM_HEADERS -I $SHA3_HEADERS main.cpp
-```
-
-### Dilithium API Usage Flow
-
-Let's walk through an example, where I show you how to use Dilithium key generation, signing ( both deterministic and randomized ) and verification API for Dilithium2 instantiation. It should be pretty similar using other Dilithium instances.
-
-1) Let's begin by generating a Dilithium2 keypair, given 32 -bytes seed.
-
-```cpp
+```c++
 // main.cpp
 
-// In case interested in using Dilithium3 or Dilithium5 API, import "dilithium3.hpp" or "dilithium5.hpp" and use keygen/ sign/ verify functions living either under `dilithium3::` or `dilithium5::` namespace.
-#include "dilithium2.hpp"
-#include <array>
-#include "prng.hpp"
+// In case interested in using ML-DSA-65 or ML-DSA-87 API, import "ml_dsa_65.hpp" or "ml_dsa_87.hpp" 
+// and use keygen/ sign/ verify functions living either under `ml_dsa_65::` or `ml_dsa_87::` namespace.
+#include "ml_dsa/ml_dsa_44.hpp"
+#include "ml_dsa/internals/rng/prng.hpp"
 
 int main() {
-    std::array<uint8_t, 32> seed{};
-    std::array<uint8_t, dilithium2::PubKeyLen> pubkey{};
-    std::array<uint8_t, dilithium2::SecKeyLen> seckey{};
+    // --- --- --- Key Generation --- --- ---
 
-    // Sample seed bytes from PRNG
-    //
-    // Be careful, read API documentation in include/prng.hpp
-    // before you consider using it in production.
-    prng::prng_t prng;
+    std::array<uint8_t, ml_dsa_44::KeygenSeedByteLen> seed{};
+    std::array<uint8_t, ml_dsa_44::PubKeyByteLen> pubkey{};
+    std::array<uint8_t, ml_dsa_44::SecKeyByteLen> seckey{};
+
+    // PRNG.
+    // Be careful, read API documentation in `ml_dsa/internals/rng/prng.hpp` before you consider using it in production.
+    ml_dsa_prng::prng_t<128> prng;
     prng.read(seed);
 
-    dilithium2::keygen(seed, pubkey, seckey);
+    ml_dsa_44::keygen(seed, pubkey, seckey);
 
-    // ...
+    // --- --- --- Message Signing --- --- ---
+
+    std::array<uint8_t, ml_dsa_44::SigningSeedByteLen> rnd{};
+    std::array<uint8_t, ml_dsa_44::SigByteLen> sig{};
+
+    // 32 -bytes randomness, for default and recommended *hedged* message signing.
+    prng.read(rnd);
+    // For deterministic message signing, uncomment following statement, while commenting above statement.
+    // std::fill(rnd.begin(), rnd.end(), 0);
+
+    constexpr size_t msg_byte_len = 32; // message byte length can be >= 0
+    std::array<uint8_t, msg_byte_len> msg{};
+
+    // Sample a psuedo-random message, to be signed.
+    prng.read(msg);
+
+    ml_dsa_44::sign(rnd, seckey, msg, sig);
+
+    // --- --- --- Signature Verification --- --- ---
+
+    const bool is_valid = ml_dsa_44::verify(pubkey, msg, sig);
+    assert(is_valid);
 
     return 0;
 }
 ```
 
-2) Given a Dilithium2 secret key and non-empty message M, sign it, computing signature.
-
-```cpp
-int main() {
-  // Key Generation
-  // ...
-
-  std::array<uint8_t, 32> msg{};
-  std::array<uint8_t, dilithium2::SigLen> sig{};
-
-  // Sample a psuedo-random message, to be signed
-  prng.read(msg);
-
-  // Default behaviour is deterministic signing and you can safely pass
-  // an empty std::span (i.e. `{}`) for last parameter i.e. random seed.
-  dilithium2::sign(seckey, msg, sig, {});
-
-  // ...
-
-  return 0;
-}
-```
-
-3) In case you're interested in randomized signing, you may explicitly opt in ( at compile-time ) by passing **TRUTH** value for the only template parameter present in `sign` function definition, while also supplying a 64 -bytes uniform sampled random seed, when invoking `sign` procedure.
-
-```cpp
-int main() {
-  // Key Generation
-  // ...
-
-  // Deterministic Signing ( default )
-  // ...
-
-  // 64 -bytes random seed to be used for randomized
-  // message signing. We'll sample random seed bytes using PRNG.
-  std::array<uint8_t, 64> rnd_seed{};
-  prng.read(rnd_seed);
-
-  // You must pass a 64 -bytes random seed when you explicitly opt for randomized signing.
-  dilithium2::sign<true>(seckey, msg, sig, rnd_seed);
-
-  return 0;
-}
-```
-
-4) Verify signature, given public key, message M and the signature itself. It returns boolean truth value in case of successful signature verification otherwise it returns false.
-
-```cpp
-int main() {
-  // Key Generation
-  // ...
-
-  // Deterministic Signing ( default )
-  // ...
-
-  // Randomized Signing ( explicit )
-  // ...
-
-  const bool flg = dilithium2::verify(pubkey, msg, sig);
-  assert(flg);
-
-  return 0;
-}
-```
-
-I suggest you look at example [program](./examples/dilithium2.cpp), which demonstrates how to use Dilithium2 API, similarly you can use Dilithium{3,5} API.
+- Finally compile your program, while letting your compiler know where it can find `ml-dsa` and its dependency headers.
 
 ```bash
-$ g++ -std=c++20 -Wall -Wextra -pedantic -O3 -march=native -I ./include -I ./sha3/include examples/dilithium2.cpp && ./a.out
-Dilithium @ NIST security level 2
-seed      : e9ae2e74d3bc6e60b4966eb0da2f6d03c0d864ef7b001947d294d64cb90fd8c7
-pubkey    : 1587ba74cc89529d73cc656feed4787e7c3b81399f211eaa262fe7d2e6b4c1e36ab472cf5f3f86a34f24504168dd3d5fa5464b7baeef99cfcc0cd5327a58c7a14dd26b231c70587011e23536d6710bdc265d58dbc036f12c4d20c867b912929b2b4113319927d262b19faaa5a700464bc31fe5082c57d533075115f80adf74d6dbed2387391006c4a30d3fdb56bd536e6f28c0f0030f55cc5fa2fa8ad4ade48bc07b23e8be49bdd4b1af6965ce6621d9a4a0f6dc634161702b3436d18c52f45ef3df50bd56d8572e4c10db101ae8b035f25f4f94169306de474f5b63ef50765c55b8b1088ed524c95441a31a7e886166dc1bbe61ca5c43ec81e60087b749c1a1143439c7df852e49087cc9bf442ffa01e02e9c21ba734195561e764a0f8700313a6c7002728220e27a7cffbc123c77e41b8a34ebcc9b2c7137da55aedcc7e37f9ebb0d146c60ada1089a57ee3b8e9a2456daf8900b65f3c74fe0150331f0c6b13ec18a12e3033b74ca934dadcc8fc03d22277fec5baa6565340de50cd04656cf8482c13f696316ef5bdd049d81a8b9197ebb817f4da289efb839ddef0101e13b3c5a76411fa48a1899c6a3b3c9a01143f47dc1b215073298fae398edbda469bf9fa314886ed23984335647ff6dbde83844b26b997fbf65069b5e6b304b1934863ce9395f247501c7071d0519949adb6708b4bcfef36842073f435a22e83355a87662531e5fdf5ce985bc96b23f993046fb32819a14b3f9c8b68cf71b5d1841cdfc0197ed5c2751846504afc198652f41f611ab1e617606a8557f672e11bad50475fac511c83e2b8970b86e2e4e06d055f46adf218cfd8e7c711ba5a92acbd015cfb21ce41f751111a58115f78742c7f48ded07149e6d4e9f65e11a616443475a0d1f3a100ba3532d79b13393e3671dc97fc6e4befd4497b6d0c8c7be4a7f9d4a5eff849c6240c985c4fd6bd8b548ed9c1c382a4f60b046beec03a9f7f4e26056ccc90357e726b768bc7b6ce75f9ab447a07b60b97bc8a591736dcd023fb8473e8de0898f34393e5be897802f017d7be7fb4766f866520fe2a5032bdc630c453c7f00a48307465185b25e1061452399513f569bee79db2ad1dab0d6e513a5a9542a5b438cbc140e56ea7ce9f951d39b0a5de98df072197632683892b2741bac4d0059fd5dfad37a3e3e2a4e3726933c81a5b1dd9c7f1bb6104784457dda8888c30e95d3b6786038c3c9b970c6a24d4df85b966315855e4b00ef7a5a2e8e0ba64cfd76de2302077425a1f6deaebed670c3e7d144c74bc2068fbaa3cdb44a1ae98f912272c1d980dba976ca93206cce50a4128066411e7322c1a3e4ecdba2011a0f64284bb5551c840f9305233700cbd1cb4d387fdb6066c0cff6b8aece0af44a78f6c5054228664c29092081fb341761696a25ac8aceb360e7e6764230cf83bae14746f7f8b6569d88e01b604b3294286e922e2314dd180a82eae1d31af6c7eec71917acc18cb86c6f590db24d6653d39dc995b576088784a6f95bdb48dbd4edd6e1d8e936b27f7e9d8d5c59c0d54dc690c8c8e0cb2c06561b2a8b89fad0550a7c07a5c6165bb7dc3b72e7cc559bdf9259a9290d03dda1f57779b89bd46f801d24ebd6cb6d9924225d817b625afb42b405163494d005e5a5e49a87ba55482adb81dc0e07717d7d3278880233720aabadd9cef8638474f333a92dca085b22935add88ebc3f33a5db1f17db92f4b5c76cad1b51477dbd729bdbb86d40f762668969fdc92692451e816113bc44b6398d6535ffa81e4685457a9c8eb0058445e8dbc80e36fe62c7b4267d6a47ca466f50c1921bd3343e1f5d6e0dd86fb67e32a0bdee8
-seckey    : 1587ba74cc89529d73cc656feed4787e7c3b81399f211eaa262fe7d2e6b4c1e36b78b48676280afa460ce03472dc2c242fe85773d0c9a4d37c0e7dbeeb74d71949e8713ee92b14d4e205c90d1038c51eb7211e29fc6d426ce6d61e8ccaa83a7999226043286d193681149384e0424019120864104548a420dc088ad93861d1006502b231c4244818377024381208b22800818c10801080388d6444009ba48d0bb4641012685a320c5bb441003164db144209430989022822a42123398613324ccc10695000012298691817054cb88054302913340401033150002850083092004613c96cdba22c54143049a8451c1885ccc20cd930250b046c001121c908640b82018ca45060365213c75111b64c09b389501068022712e31830833848c216651b164d50b05044b401a2484114370ecb96890b950c03240e22c240d9022a84a23141248a64a24c5392502103919824420194691c350dd3340494c60140104091b084a31285000845d896700c1086d0468ada226dd2a448ca006449349040420c1c462903b140c8b08d63920ca21885cbc00d24b370e0805150004e12096401a16d82a88c0b80680ab36124992c1b276a081329d016109a329243462a042649e18841d30242d21042d1924419456914903021a565401862a0a881093551e2168e04b5045b04691a3312639030a1241011230c5416268a304102c8809bb6100bc564d3022188406c0448880a966c1932411419415c180e1ac5311194900012456018406322200aa16d1a8945942822c0444e13c8610b39258904605a183080a28921a5055a80050bc38051026811b24014460404310ea286218a8271622828cbc8680b32864bb251a0a64d10b491e400505b48528c943161a888838631132122d2100604c7259a408d8496085a4672da8824cc8261a286888b8228219088d9802c130766920089caa45092a601031080c1263159c680029488d4020808992840a68541800989082c9496288a22405a348258a44c1b474e990010c9260621194c94b0485098901226084a400ac0c87041004112445183228484024ac828084a366e64262688888d184320d990709aa4855100098c30121bb500000972e1461193444813821053128c5048492219690132108204255aa08821a4008ca84980305188321163b4492214129a9211a2184e93203280880081a4818a365114a14d94b00de81112a4b485babdc56b38e4c69a0abd9947d519682dfd173e67f3ab0a6d16dd0ac247dbc615e7bee38a02e30319f9e86d9e2d76db66c272c9ef24b9518e99a3644f47bd1bcf87affb98c9ad37c036bbab9b13cb9b56de08aa012826e59cb5db47b308df15c6b403138cf2bbfdc6a7e5e70e6b3b760107c1028b5618ffca98b08801b3fb30012ffd3fbd08fc965e1c861c41877ca19c1b132153c0aab53751468051ae961b1837cdecf9385af8e327d792552ecd5f935a39327e6203fa63029b7e3764001ce0fdd7930001f9ef0e9440754f7a6c2232666cb2fb85ed24db226e04286658e3403c9c414c8eb31663c75b047161a38dde38f6ede6326ddbf75172baba23a5dcb6f669445283eec5633dd37db584ec83a5cd2c7c12804a33325fa7e97d48de11300812a5e0a6d4eb6eb39e0bc69ad7228c09d9c56ead0848f66415c4242f85b4583a6290fc7b5763d6dc037066f76c7cb791a2b2a777ac0f5664be4b6abe397d15758dccd74cd1805344fd1a045b2dadf639157f0e06c5d9a0f62b4e64273d0529f2a9c97724e7d5e00fe26d76f9ab25d93a0dd1647bbd6841263729f90f4500efb15f55a02ea7f94affd0d365626ad7c53e03534d73023f712c8f718627bcfd2856082e17ba9efd7257d7655044385084e6eaded5276157393fbf9d3cba865afa0317afd68b72e888bdb04118f478b59a9f8479948faa94356ee4d260a3a807ae6db3b2c684041174184e033c061cfbe487fdf16f340d38e8de54a835f9a9c633e08d59298e227a64015e89d835c852f50edffbc0de2bcec72777399382c33bb32d4ffafc36e6dc43d847850c82000af4bd1955f7671424ec5b1cd40719f248d80625ccff03400f78570bbb774961443acfe78eaef57601e360f5403fcfc3daa9d4d4b5f85f2b9031033ef0b63adb5e2b7bca52b25ca20ae19123fb2b18d41aecc7dbd74ee496b38399f37e29d79e2db9412538bb4ef8c60e8ab16ffe7a0b5fe6ab9cd1abe56dea2f0fd2eb12d9d1c55c83fb3039e6ad4bac5cd110efb012ff49bed117036ac2b984fc211e29fccdbc1617b502f81d7f607448bd559e85b32f4fa4003e78cedac8dd8dc405ccf1999d216af8b1778f0425578ffec54455c020f6a1ae8e761025f14a8da7bd84eedc0e77a09466efa36d9dcab57a08c99a1a98d2a69c39fea365c4bf53709d54d08079b4d59f204976e498ec5800483e66e5e7529124e5bffe00250c1e766809bbc4769369c52ef35c618cbe739e3a12a55c30610c07410ed4b83b4a1982aa8f7ccb73acc15dfc1f17329dd4d9fa35b4ff439ec68dd4f5800e514159c3a83a22d0dc39b33b250c29a7c3ced2cc84c088a2a09489d117ec0926ebb98cf467b8eb483fca4f4766d8e03cb20f30bae6b0a548813b8d54d41b969234d07250098daeae931c83669451ff12b7dd5815f122381f85ac7de89b6e66134255e5b82876795965cd4d9c0409de6242ed38b13e12eda6ae7fda7e521beb528eba34e694f982ac0eb2e06888046566797c58bfe89e11bbff3c393bb9fb3a8c6f5b926b67dd06c254c576ca146de55ed87b628539c5a34ab2f1b5541b13682b809b8f3d831ac50c80556db0ae58f7993e9dc46aa20c42217eb9266bc3c13c4475705ecb7c12a237525a3b8a7d22c2087bd80687d225a01702eeda76d7bc51f7603bde890487cac304a59d701501fd30b741da3bb7bb520198db9558c55dfdeafd51e34be726786819bf30f2a4884cc221bf8ca43662a2ae9e080cb969b6aac2c585cce01e92cc81e5696b2e42d4fa675f863e114561b5d771d557ddca929dfd7e179b39fe66d71232667dd2f16b6a9cfd7cdd7ed0b9bfea72084b9b5ec769dd0f280eb1a2bd5d05bce845923fc383a21eb96a19ab0821a531abd21de82846206825b728beba454e0008bbfa5c03e3b753f9e81a297ac1ddd35e061d395ea10a05aea273f408c0ed6818b80b8f3e3a7f88ce6f27444749179075deefa00117ec8625dfb86e78063c5d1b0afbbd7fbdf2bb12bc42017342739a80abcbdb710ecba0e6d9250b11b55a3d173e7a0f8d1f90c50ad084929c4c0e8b8e2f3a7ada5e5e8cfe93aa19f6bddd840b7df529414ce885a4547dbba56f1e3f43c5e8b24c6f6a52cbed8b3d78d45a235a7540ae29c0d197036c612d113059a28735052007f734e4833552362924223097465c6ae1b212eaa7f3565186aa36944ba55384f3ef15f714c30b4dc946d987ca541f033049683b795620c7ba8c379652d404f0c8dd1b4b71ac224134c8782ea351d74529bdc039ad6cc3461a1826c6bcf60c066611158dd208aa72c1266a32f6de4d77cea857c2da77cd47
-message   : 3d507521c3fb52591006a02be88a103e71c8dbc480e569012151413f5e00a1d8
-signature : 7d6ccc43cc460718299032ad1051c6af240db4ab4292ac061149b1cac88bdf633d424d6ec6a2a50fa5a15652eb7b726146b2c7783721cb38f6c7f02959fdbc3361c03df15a0b0f7db17a8a24c59ee926509c66ebd560a1a3564e6420f4cb3f5ac92e15b8097fde1cd146fded46c809f90e9495717cbda9173a7b51de8d88a84f1f8d756720bb18bfc604c20cb7940870e7ee1561c495e9524d38de5ef51a0756c9fb2b1e12814ce8aa707309d5baa7e055ef73f7cd90059472305d9dcc5de047e951f973da2daedaebb1dd51ee5c62a20df03a4ed1fa29e2ce000cbe6dff4e4a843a2f70f8fe1429b2e50f18efaf8227d0cd0ca5c4a8c70cf443bb9fe3bd7139219214bf8fc7b1ab8899aeb2d9b4658856e73244a34398e2f461c2ee4e600fe11ebe581144035faf1d0a0914e6af013f122aa84b38a42fddea693ff1f5dd5010ac07d6107cc2b97b563a0b967e159a78ee742e46eb2c5d2d3f4366ffcc015e6236c19a6fa3a0f355724e5382af1f4f227d8e33ab9852229b58d5a6a524c2e095f65be8dd6c020604b42c052acb28fe054dc1d00e6807e77324dd19ae9635be83216ef982e89bbf7dfaf68f6a34bd0664bc185375c131dcdc38852cdf1effbe04fb2a778536efed88d84702e1db0dc192a19e188b2495f267b4d9a9d32d8739dc0a064b45be9979691db9d20ee74550bd1ed05ece852e1ff17a582602f20b561329ec4687c998603a2551bc63f9e72b3a73ea084bd3ba0b4af383636ed2e0dd6a0c6b084f4bfe5e25d89c15b207f92ec58fed737930be7ed13e5106dbb8f4d4e9550b5ab85cb227a8c6db974974403aa6c0ddba9109770e772ae1a9497918273bbc0916ff248fb68a38d296668b6adc0d738cb60f1dabbad544911ffeda34693279fd2ee8a43a34ddde37034abc4613d877aa7ebe57c651b53c05ab175c74acdfecb0472ca037c3e85934f2adcf8db25ee5accb4e1e8446746b263b9f6d1193dd7fb396bc08a40a031b8a3d78c4b39765c7758fdedfc5c02354ab5ac3892c38a1764329103c881f7d6a9b762491150a3a4ead940ec5cb5959779cbb2ca3326d6030086f8fce9ea80fe755d886eb74b54236faf8b6e3ff82978ee78e255eda2aa8e1d86a7941594ee654fde554292c3ac775f5437cdb52ea28faa0894d7d7edd83007a56e76e8addc8c613900f200aece90a9627b43eba7c53f806cfd89bd149ff67c395c5411ac5581604c204104f96f1c92a3425294c8b0b9918b511d3d152e7238a641aa3d7afafd43ff38213f44088355240f45bb9b35701034f5a0f295154d0218bc0cac3b17494620e7e53a6b1df05de58b55d5c009f9cde570d0c32b77227ae0c73d2b98e4ccc9a32fd0925e771759636fc3789e2942169a78ecc084ac4b71c684d95b229c262b33adbca454b93f4c1ac4d5bae33755cf084a85fd0dbb7d617b10d6591ff7448f6821361f6fe9f555584b0c02dc3d6649f2b4b7099b4b5d09e48d075437bdd92438a7093550063321b5d9c035e4ec2f5ef562fddd38cdb5d3b35b7666f20fe08d34db622aeb8aada1213f82a55de97129ee5d4895abf3863a14d278e6addac5ca76a99bf5c704de36ee083f460bafacc4f4b1ad5fd9b60e6158a1a773a76525070304e8ab3c10db566b0b6b72f8e882efd586ea536492f603300060f8abfe783e0d1790114293e01fe3c594d4a62aff5f22d5dcf586c4231afd4ef1566f2069962ff0d27fdf2f0494edcd13c928708aafa70aa24acd8addb1176b4bdc0461552b5d46fa3ddcc5de91cd6f55f424310665243ee5f65d2e78053bd70154de284d7b2f4724594109be6e091653b0131b161eab73cdfb7bbb8418f819bb3a49a8067c1b8fd30b5d61aa5309187328b2dc62d61f12062361d5f72234dbee11da5dbf57f32b068ef13c8da10b2f38714fc773fb753a6ac17e6fed27257079d903185f490b1236d5c834e2360ba6fd28df61e76525599739d19dd0c89229348c45ec5e5ca503313b776cabd0e19b6298828cdfd230c9dd233f0072cf07ce2ce45444f243bf610cac8871460570b8f9343ef5a33b537fae0756d32fac4e1478b4bcdd0f5a393981b89aa9fed8b84068fe836f1953244718b83a1964677062034ab4c2b9d79ce4a287eeb49d866ee335fa57952f08f20d34f4c10c0346e1d215851fe9d6083ca0a1528dc5efbe3ed6bc0ddac07f874239106bce60a1909cb367a1cb20408f7305af88d2f2dda5045682a6ded06287721ec958a1338f6181d763ee6e889e02200b6a15d1da1e476121bde926e6b5432422df1baee39a9230bb6588a9d6648566faf1f893b5447a36ce394a417d251feb4c2b89f4237001733fa3bac81ff8ad06c0bd43a01e0b9765af485f96e2bda4fa827d81b2761336ab93a804a159c07def22ca9d23cf19937786e9796047c6c9a54aef867ab3165aaccbe1ca75755465856a80185dc8a00eb0f3da916e9120cc1f086a84ef454f9003bf9a1480b03c4f4a231a2b5fdd7686272a24811e6baf7b3b2c8288aa3b16e03a92ae537bb3f5b06ae82ad578af6d9e09a4380212bda1609d5c7426211b9570253a91a49a3aff2a99039e948842ec59b2bb15169e7694793a05f1895f3a1b0fe328529a4e12574f48ed021fc23bea860bff95f96092b39d189817143c758126c71ebc042cfa38b04cffc84d38ffb420d95b03a1402ce0617cdd2e24fcbc0413bd239016443817ff8967f66dc3277f9b20c32bb5101160e6c5900b6a8f3804895168fc542ea38f31aa703aec0ec6993fa5a6c721b3f778a73e397742ee334d4839fe46b8efe05701b5ff6767a8af5d5716ad0f344a7536021b15d3eee9de5590789f2207a30879027effdd84f939cf14c9f6d2a0639aaf9bce25a85ca44e60292a44713742d10eaddc46f16d95435fa42d1d223dfbba7626e43bb58de83945d068e8a4d69fc3898ad6dd853a18d63796486f2c7fafc2b3a2968c746e5fe91ccc2e2e6ebee91695d3611bdb2224b272b49d03344c930b3398cb7100f1d41ffd7a277417a248bd20b55274822da1dc311d0e12ce6f849e4fafa85889fed2325b93651e1f0ece50a65da798e654fdd82a297b50e0bb24143bd73c68caa0612b64a4ae98e98410a0ed9e3e23c786db48aa3a65cb7053e3ec80cc1b3b05003e588596bc53e12d9a1434b686cd5b36dee4e5785cce41a52784805384b7f8714cc911c48748bac790008a4b2c13865886e1b9b537f317bd1c638e8901260295516b051b327e10799817cd390c1dd5f55c2d030bc06f37a55ae2ff860b14552d43d9a05090d2c46484d5e6b7173838b8fdaf2f4fe02030f171a222f415a737b848590a1a6abd7dddfeaf3042c2d666c757d9497b2bbc1c2c6d1e31215162d38444e70b4bbcad9eaf9fd00000000000000000012283847
-verified   : true
+# Assuming `ml-dsa` was cloned just under $HOME
+
+ML_DSA_HEADERS=~/ml-dsa/include
+SHA3_HEADERS=~/ml-dsa/sha3/include
+
+g++ -std=c++20 -Wall -Wextra -pedantic -O3 -march=native -I $ML_DSA_HEADERS -I $SHA3_HEADERS main.cpp
 ```
 
+ML-DSA Variant | Namespace | Header
+--- | --- | ---
+ML-DSA-44 Routines | ml_dsa_44:: | include/ml_dsa/ml_dsa_44.hpp
+ML-DSA-65 Routines | ml_dsa_65:: | include/ml_dsa/ml_dsa_65.hpp
+ML-DSA-87 Routines | ml_dsa_87:: | include/ml_dsa/ml_dsa_87.hpp
 
+See example [program](./examples/ml_dsa_44.cpp), which demonstrates how to use ML-DSA-44 API, similarly you can use ML-DSA-{65, 87} API.
+
+```bash
+$ g++ -std=c++20 -Wall -Wextra -pedantic -O3 -march=native -I ./include -I ./sha3/include examples/ml_dsa_44.cpp && ./a.out
+ML-DSA-44 @ NIST security level 2
+Seed      : afc6c351c70775e04b4ece579e72400afbb31fe8bad3d1d8ed0ba40526b0d528
+Pubkey    : 0405c237bfd3436898f31ffcd6e3510ca38b6dbe1772943a59ebabb83e7f3400ee064e5f4c63fc7347c4598011a638911e3a0815dc7f11b663006fd8a5871e1ec46d7f6230996c64eb9ae192aba4c5b3fc6cf8cf9b8e2af33ad46f39775c00e2437a5bc6a9f92839c8d09b755f003e5b59f798844965aff3ed2198282d933976a0bb65c62b3f7774f082037c7a23cd632c95765783ee7e95c3a750ab99a0f22aab658e434d60a1d17dd9ab9d37ea1c0b36b856abcf5028551799725bcc39226863f3971c5a9b98f3999c6763b221222e19deb63414e9fc56dad230fbaef157df3f23f9f229aa2bc22b2b445bf464bd5aee24d6b4a8ba1e916fc1e40ba61b405212584246f0888724b4f8f79449d9cb4757a91fd35775d7e08715cfce703fbe7d69cf260e9617601fff3945101934e9a979c47ebd88de30c7c434dfc9e955136063ab01654548bc9767faaaa7dd6bf6d79264217fc8187cc884cf96844d28c63e4334c35b1aa4fa80b37b1ea8a6aae40006112eaed4bfab952adc2621a00b090072108119985bb14485ce9a8193829f8d739081c632e665e9074a43c2f7ebc2207aae38d1b2ab101a09dc4df322c23035fc67258a67d644b12d1674af3ac151f64618f533ea85aedc3308e3d439003ee908e960f846852d61722f11cc24b8dce16a9a857a2fd407d90196558e01c3d32c65aea09acceab6f42a971f44608d67a432616793c57c7cdf4f8a2db115fa0ea14538399246755a3347bb54285b5a11b7f3672949b998f7ca54e7afae23b54babca52302b4318e7fb8c4daa92c9a74dac9c26738e47f4e094075b7a251e375038d9aa7ef821930feac261c83cdd7cde3c5aaeb21a9a17c1812983db7c0c1dba3d7b8a4790d4016b4f1688a75e6273cfbc13c73f5bb6f2ed1e368294ae1cd819877f9a2f91e51d459283a6bceb09ac2c3ba48a53da892082091a896c272aea9036d5045fc30f91384e613f427efd3bebbda5e4fe54b53ec123e048f5739f88bba2507295f476e0ef0208a5ee89845a7be33f269329aa74366ccb89473900367de9a63b3ccd6a88e5e3834b453bb5edf33301acdc2ac1e9884b5dfbf4ca39546062568bb6e58c77fbccf12294a518e624d4d1c2f6d806e4e27582c7756ba6301504af4e755266141f329dd67b4f89155dae840ccbe7cdae96830ff64c24eee30bee5a0ff55c4c8453fe63a75f7a6eb4588def226866c93f656db4c74d25fab26fe1dd07fb0dc1567f1887e63e90a00046f7cc31adf13b4454bae760709cb730e1ac774a7e7642651b4e631e2c10bec32d966fd9671030259c151cd39773381fb10ed25f4397bfc55258d55561f37e1901239cd05016a30fb95953e5644819ae3fc8c2c5df4fb33f6621fb5a8ac2a74b1cc57226b65fb35d3af3030233af845c2b3f78a20056d497352931777cb90350a6de9a4719585b8b5732526621cb77d9b41f3f54d05ee4df1e176c1bc0da781ccf4fa49bd5ec231834cb808b7dd97be8994c38ca1bbf176b9ed159d82d660ebc28511dd63bd4c38ff33cbaf8b15976fdd17f9e94dabeaa6336c2661677405764d25c7fc62f3e367426e286520e2d5be867cd069fcc6d9dd746fd18b76b4c47ab71b7f8218d2f2dfea0d23ef5cbdd3b5503f94f4828ab78a33d180bfcd24600ab51a4a6022df89a781865e3d597adf4a20e9dc5f02ff34ead0aa8baeee79e54c1ac10fc5c0852e82e41860c7b48af16120c977be7522bc9ad66563f74e76956ce6c5031eae8d5ff55964788332ac6971466bc426b82293f81227be20bfcaacd7700fd729c0c25dbeda4097da84b2edd565a49fcb2e8503a90d6fd13a6e17cd4beb322
+Seckey    : 0405c237bfd3436898f31ffcd6e3510ca38b6dbe1772943a59ebabb83e7f340094a5e972e060c891e14abc20bb2c74179a645564e462ef870305b86c9e0a0c0df4c1bef4a9b97b23bbc37e1c11c4e5b7d8c65bacf9ebbcca4ea7b7b09d5261f7399f9ef7160253f6badad2e4ef98bd0e89f980f725438cddecff945e366f6903112270012049db30620b146a41966110160e02b490089281a234881c3786ca983001370180128211982193360a41248520b2841aa16d61165024870d0c3191c48028192630d82672da221140920888288e03a3515c440e62928d1206495920604c8225100152a20208181211109505da046422231221849019964549046c1a266a18c160143524c0260e1bc281db1822030545044124a44251a18091190804c8044edb222edb36810b010a1a92709344129822651b03208210289422814298405a822d83102554966849b69100432d61047052064ea18650a1888cca344cd446210c816d1813910b9145912068e104202391440c8250244705c4428ccb345254860400144983846809a0655a0605481232000086d13020a31002a0228203a2110c0541149105c3c46ccc8650c9165141c064e30446184509083708e4281002999182b0491a9471dac68c14400520918dc0b07121371100854c111386e2166a23c40562c8201ab110194032c832220a976d9bc4301336306226520aa65004242e93266ce2460a8834288b2204913660d808460021018b9648d4269220b36013c34559068103c6019aa488c8960c0cc63150381161146603b7681a22080bc63124822de0202c83c03082c61100c31009008419b5840a49661b032183c251d1b61003152908940984826d9ca44004496ccaa220422228543886cb92710ac180992092d10062832232e4948d94946124122599466c88206652944d43265214998d0a832918206d11094911371290a6844194898a428c60124a60980404479220c8408b000c1aa1048c8444583849d030040a846c98306ec9b25189042e89c6208ab0211a25045244311b086a19229284023181822d1840518ca450db0646dc304459a204d21689d30061a2484ec8906122468104216d248048c344729bc06498048c522425c11200c436321bb06401170604390512a804d1266058226809a5888932300118021183495132490c09291a270420868001022002a040223241dc06221aa74d8cc8451ca9250a360ec09605d9a850d9462e6388710ba365149381022288eee511767dcd290bf6ee1519b9307c1deaf3331a49cd9f6a1335c0ed950974a87c2479bfe27dd681bc72836535914d75d0a715a6ed8fd58a5cae45b89550e486c6ab80e73e687f5c865a72c35f63d3a7116f417258645268ed26723127d2724fe5ff65db9a41ff1a13cfc4f6b182e932a0ef3f2cb5375bfd9bb0c602ace85ab7b85bec9f3368195cbc11b105eacd4f0c1da51653bb1b0cfbd4ce9c4670524bc735c02686c8fd2190c6cd0de7dda55cb90193d983ad33b589caa23ef051a5d3aaf23661e045f9e143ac3a2abef34aeac67d8ffb86d37db855b4477f9dae2b221c4e5f4bf8f591cf3f42e3a06acff9b70d06c90f7a3710e453f68c4afa12701255053a9658d9c6dfaf22e3943b33299c4708d8f24283cfd2ded96f5bbf6b7c0e9e1a8b7bea9273db4d8dffcca213e447e59a1f66bbe57741161bcd558f902c31715664608b67ef5aa44ff0cbbd4e6b2afbafb437719d5e5d3b04281ee8ed32fc6c00a502190007e85e843bca59ca0cd21ee269bce56cf15793c61d30f89840b3c39c6a5b5385773f76d24410cc6f080e766e841d0bc458103bbe4a89fedb3a755489032ac63441217984777476fbb5766cd4f9abbc46a0b0e899a968a7d20492c434c69b98ac3f888af7a186c29ee08b66659e9fbab15814d277e1b4b60c1ab83650646128a894552598e129c0d6bd3cd09636460144200d8c2f28331e17665c32fe20870eab70f3e439af45831b09a7dba48d0ec044836e29b830c4243e490a3a1f0a6e027123b8132d7653c24f3c7e7cea4ef624ca932324be4665fe441550108ffc025ebfbb9e097ab3a40f7a50f70d9c84d4c096d8e9e5906969a847db65f1ca313731f311a75ee84a7c33319c2444cc6f2b9a6907a2778d0dbd0b6c029042b2f3b179dc0c0bbb15413e68c3a5432eae76edc0fab8c0aac7ebf0cb9a8affe8ddc698729344642573b83934ecd46202bbe5bafba7cf69322fd4789f9db7ffd6a8a26e011ba1a3e13d36962f9f99661140c0dbee5d493686a57de3c4911094224d51e6f4cc1ff6e5de7817f8a7a2f0bd72d048f4f394868dc5aee4afbec2c5e90dcbeaff20d86edf496fc945818a4ce0e435f6d44c20d8b0d62ccfd611f184dcd4041ed74625a15b318850b82934ff5f2c8f76eb0568ae2885bef1660ef7385c70666fcce0c3f153da8e031ab05f3af2828c2d62a465cc2d02a0771a68898c2df7c3ccec26305694a665f0384ac42fa48f4f5e4bc473aaccb80f5da9e1e868bc0284c91f7fe8e1f0195066f05cdb1dac6d56a10c2323069f0765005c4d68e96e0b06ad8955f7f3a7d3ccf5f537a6aea40f7c9d7f4a9d17a0b7022ad79322a3b4aee04e8a7ea8bc70dbba245c4e1c1a74248c36df727c7349f09a392daaacd2190fd743cdd3fde0d6ddb6766734ac73c13434441f65713764458360fb905ac9ddbc0a151cde4938ad24ffb3c4fec13152e6937014c121001b4531d92898bc10d2881815080c50f120e1ca69033b302df5badbe5c7d8a7300cf8af1a1505d4d8ffde676eaf2125652e84407da961bfbf11382bde35f3bbd2a74d1b52424b95c76fbb71054263915812876583ebe748786445f4a7a88ea544e29216621daf16a2de80fc9c99b9b1128ae8b6a74914ffafd25ac6c2d33bf1d2e856e10c3c47741d2646ec5b1947d9371fa2fd824fe3593142bb6561d35a26b7ec23b28f922bbe73999ce80abff40847bdb8efe0e281b2aa2f15c9ad3712f243cc8dd6c157e4669d7f11d827e3c6920b91a5d27dd7137ec78aa54c6c7ff101064a3e86dd3ae1fcf8900c39cb8d13deb9345bb070752c08170bc9153037f21e4b5a9239ea1efb484745d42a8136e5fb52a3a9bebf1873af39854f0e377e7cb178183a3ed9d9a2f2a99056b0a05c03cd95c49fdad85f981b15376f01237e25ed77f5d66ed5da2c5d76814b9c16b2f177612241509cb71deb5d499335c15e8ba7472d648b1bfc316f77ad7e51cfed3e48d95395bebcf7cfdae63c22793b86955708f39dc6d219d11dfda22d799bbb577e6eb33ce827f99dbdf2759995a1534e4ca186ca4048c401dd531f360fb2f3b3ba114fd67a7f30a7f31e7596bcf104327165572f98decf5df3e3ab62dc7b6ee08aafe8eefc710ec5fb11ff640dacb6cd19a112b1551c26f6c04b976f1020b4dce029489aa47ec5487eb5d4912902ece656f9ddb313557560c2ca016740b8dfa651ebd26233b9150c9ceb8706fa404a61b80ae2a1b89741c5b133ef9424a828402c8a80340f91c686c312f268ee455745f2096223a6ad4304e3c2945b1d4ce2897c58655baf0afb9333c1f723df36c583b69a1aa2d491095ef2794d
+Message   : 8a556fe4a5e29a37e80f2ad8f3f8679f1cd3f22b1532bd171373f76aa1402158
+Signature : 21ac8a09005d0101947b64865daf8559c175722647248ad3d8897d78ba0ea81e49d1130e9f830e9fbed5b1f4dd37517d5571bd70ba47494ab05fe4ec1a67e7343c929ea956638ca501f1b6ef21887b094ece20782410349b2dca72173ef1ba6e8384bdf83d97c2cfece5b3e083eb9165052ca04c1f921867999465d8bcee76df4bc8db038f90b6be7219cf1225e40ccb3e4bbfce01c823f3631a03dc04324053591b9a9460799a882eeb4aec3338dd7d7fe25b047350f94bb547ce9d33a60d41c4200af881a24be6759c2e0e9c204b95460c0597190b571220ff3db6881ea82b91766936dbf2016985a15f0b502e690cbfbd5c1d4a1634146347ac556657de1d54fb2f2c40b6cee3ceaf9118670afa14b707a4dea5c0a7cb2da67ffb29d32a045cbad61b5f96ac5715172bdba6f99b2452260205c59e90bb012577b3b5a4e5aa90e5f5edeef93c70e4ad8ca2552dbeb78d2aca528da4083f52bb57eb11e1e6c1d25c4307a949a7d1172e6a7d496a3c419627b7b26797cc07778cf5db5807dfd68c8e4893323fc0d39f9a25997493cb088e74ec8539f54b1eb988329c2c23310d671bb20c7f2bbadd7bc315f322b1d863674a796b519a52433545e3d428b83743d5edde7882f0048a2133d270bd836b62acd7f6715c8875af4de8d3aff0100bf386d241f6007ca363ade61052415951ab93f2a078ea8510dc951de2c22c604f944838c08122bb52eee5b3590518811b5a718ed54e45eac2b937a66e96e678295e648525187c07ec3a7580a2c30bd35fb95b497032876e3be1b98c8044f65873091b8de16b0ec312e853d9347e669b3ed53083e1f0dd69cbbd6d8d0dc81510df83cac2202435c17481f86aceef80ceae04859b0b1a4c63052202ccfdc2df0698297066c0cb7b32b446830a7fcb040b1563b43b72e6b69a8245d5f5a3b37d89fead3783ac7a64bedd6d2e24811489d134a68ecb55856698643aebb3fcfc8ccb3bb4b2d4f7803146baf8f11a644adce99a4ebc700993bf1425372538fb23edce62934dac6676c5ef97d3f9b05ef7a7cbd4fd54faacf368cacdebd01a8e0db394a42a973d3856c5a93d84b1a8287ae42d9a67a48340b4261c5ca7a72bb50f7a5edbaaaeeb8fb4bcd3edf5cb57c9bba1b8a46c179a880f62a8e4b7438ffbeb0c9520e3bda2d889d9ce575ae44c6f54653817fe6e5497c96dcf422e8296833af9358980592a905a26a1242d143be7c2b0a0fab5306942316dab224c93b451b42e0681fe589811fac5c27461a9b001682f3b737fefc2dabd9985f44ef099d39c09bf9df742cd87d64cc724a12fb38b4849093182270c34f9e863a8d63cccb724c8dba45172528ba308764e8ab15fd295f3656c5fb7f989c1df829e3356233bb81d90f57bd707688922c1adfcc0e157a5b23de37f4b46c1972482abc7380e45c6332d66b33518db901ed9a158f69bf650d1fb87021f4756934b5af82e1e8f60e6dff7e6c60fd4529160bfcacfde14552741d15458c1985491b2fc5d58a95b322083ef0ef9c09d99ee6227a4d58372650d5771fe9465000eab53d1a304a3711d0e9c695c0044450a318e7b0b30ffdde0fc551bd1aa7a757ae3326b7241575afb4ccc1c9fe357766474c02ce3a819e898ea883b62c657d5adea98e1033c85212d628059e55f512e2f70d3d41705b66420d98e68bca4ed4835798bb69eb36db77a6cf41bb2cd6ac2775532c309375230010e8b51a418d1fddcbd7e832a3c63096ff49a72dc201df38f8a777a1c7020d281139cff300726c4022dc8cf391eb9e7470353a636e7473ac3d69bc7b369bb5f0f427588eb7f1b104b51de3e2491b34c96c11c988b13c9c1821a4b552135e91dfacd4bbce7470be044a39b4fb712820312ead2e37943e61df1520a3c949998881ea8ce8bd9bfa7712bf269428a9cdaf31344d6117f8a2bb9cffd7bc65422bedc15c9df31c3565ab14fd7a2ede211db28036a675768192bdefd3e5daca8f9e1dc6879544e8e2c5c5364e8730c9e9d927b42a6f4e4b338db0979832cb57bb6d2df262d1303a90be408cc4cc599e00ff232fc56011199c80fae882e2215e3d56bc4870dd38c456884be9851d74bf590e30296ec63ec2d1b5035e925576da75e651734ecb8d833a040548c8cad1da19c45e8af09f9e317974a6130e65fdb53b47e21249f8f1917be9343745d9cdf6372239e82977750049066653352c54776d6cb76f116a7e813e07adbb9a1b22359e2153304fbf663b66e04fb839b4cec729ad3eb256ee7c4d590c53259e220a27559660437ff85575195174b2cfb73cd136c4b3b6d7c1f9344248e270f1484a08db82715857af9f7c3d5a0545ec0a9f9b8ee819450c5f6861814b8191bd590b1bcf366b173c84eacab317df4f5df6968757f51e3853993bdc41232117dc47c4b2a7eeb75016af941158ad1199aeed114af1b60cc10203f8bea42ae522e42ee0549ba1b114efb712eb785b482c639707ef3c1ca0513e00c8731fdbe19e54461ce99ea798ae232175108ef0a16fd3d5427a0f2d83fe5c99ca1299b3f356d9acf546b2a4e065baa2e3deab7868d1049e5f656306accaea3154afb11ef0ebac1bba37e164592b8634cf8dd8b9f2bb21153bb60c2638c4cc691cc8d16a7359a7b69bbdf7127c067da1c0ff4127ac368d86c3f8939740597145e121df57adbf7efeec9b91ce1a3c4ef89fbf8b050f9b5e994fff2b2eb5cfb6dee6b3bc45b567d36f3114ec2415870d8f09d83f48c55584d2279c083affd4dd3011fa0aed0d2759a8c69a6212ea32704a4b0f4eacf158ea3fb5d7d8d6c63d01efa964370a1f65082c3944b4524a3fb69ff5698fe0c9d9b7813f619d4802bb8713808a715639bfad50a7c359228b5ea02f0e776183adc93f9309576f8f215a58b68198c3b2af16bf095fd13f1204b34699addfe0882b52227f3e44f8a74519076e4c968b489f299964bc1d6dba1408f7e78635184ef614ddeaa44f02575c58f22990f48b3146b7f1c130323a66228ec363894b41ffbd81dd8fbf95171a513dfc014e017a31d9e5767fccf7cd2c1b14cd39a2e6feed4311579809dea3efccc374600745e9fd60dbf75e4b195f8d6342276cb7900bea531d0d71ff1ff9c307898614b22c355d9c362e66d4cdcf10f2fcd0c25b8f642e8dd50aa6c30eb40c6944a869f705f0e61bb3fa9d28323889794a45870d3aa848e889b7fbe010527c786b87f9686f9b29402612bdcfd4f10f53161bbd5cd601f46112e5f92907636bb2aeafc647baec193d958e6ed16a1741d97d9737f13cc9102101b225758829495a3aab6c3d4d6d8dadde2f3171823494b737c808390a5b3bfcfd3ebfe071f4a4c4f6673c0f0f8fe1d444a6e757ea6a9d4e4000000000000000000000000000000000000000000001425303a
+Verified   : true
+```
 
 > [!CAUTION]
-> Before you consider using Psuedo Random Number Generator which comes with this library implementation, I strongly advice you to go through [include/prng.hpp](./include/prng.hpp).
+> Before you consider using Psuedo Random Number Generator which comes with this library implementation, I strongly advice you to go through [include/ml_dsa/internals/rng/prng.hpp](./include/ml_dsa/internals/rng/prng.hpp).
 
 > [!NOTE]
-> Looking at the API documentation, in header files, can give you a good idea of how to use Dilithium API. Note, this library doesn't expose any raw pointer based interface, rather everything is wrapped under statically defined `std::span` - which one can easily create from `std::{array, vector}`. I opt for using statically defined `std::span` based function interfaces because we always know, at compile-time, how many bytes the seeds/ keys/ signatures are, for various different Dilithium instantiations. *This gives much better type safety and compile-time error reporting.*
+> Looking at the API documentation, in header files i.e. `include/ml_dsa/ml_dsa_{44,65,87}.hpp`, can give you a good idea of how to use ML-DSA API. Note, this library doesn't expose any raw pointer -based interface, rather *almost* everything is wrapped under statically defined `std::span` - which one can easily create from `std::{array, vector}`. I opt for using statically defined `std::span` -based function interfaces, because we always know, at compile-time, how many bytes the seeds/ keys/ signatures are, for various different ML-DSA instantiations. *This gives much better type safety and compile-time error reporting.*
