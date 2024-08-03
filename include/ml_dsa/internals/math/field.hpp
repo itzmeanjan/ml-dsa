@@ -50,6 +50,18 @@ public:
   // Modulo Multiplication
   inline constexpr zq_t operator*(const zq_t rhs) const
   {
+#ifdef __SIZEOF_INT128__
+    __extension__ using uint128_t = unsigned __int128;
+
+    const uint64_t t = static_cast<uint64_t>(this->v) * static_cast<uint64_t>(rhs.v); // (23+23) significant bits, from LSB
+    const uint128_t tR = static_cast<uint128_t>(t) * static_cast<uint128_t>(R);       // (23+23+24) significant bits, from LSB
+
+    const uint64_t res = static_cast<uint64_t>(tR >> 46); // 24 significant bits, from LSB
+    const uint64_t resQ = res * static_cast<uint64_t>(Q); // (24+23) significant bits, from LSB
+
+    const uint32_t reduced = reduce_once(static_cast<uint32_t>(t - resQ));
+    return reduced;
+#else
     const uint64_t t0 = static_cast<uint64_t>(this->v);
     const uint64_t t1 = static_cast<uint64_t>(rhs.v);
     const uint64_t t2 = t0 * t1;
@@ -101,6 +113,7 @@ public:
 
     const uint32_t t7 = reduce_once(t6);
     return zq_t(t7);
+#endif
   }
   inline constexpr void operator*=(const zq_t rhs) { *this = *this * rhs; }
 
@@ -175,8 +188,7 @@ private:
     return t5;
   }
 
-  // Given a 32 -bit unsigned integer `v` such that `v` ∈ [0, 2*Q), this routine can be invoked for reducing `v` modulo
-  // prime Q.
+  // Given a 32 -bit unsigned integer `v` such that `v` ∈ [0, 2*Q), this routine can be invoked for reducing `v` modulo prime Q.
   static inline constexpr uint32_t reduce_once(const uint32_t val)
   {
     const uint32_t t0 = val - Q;
