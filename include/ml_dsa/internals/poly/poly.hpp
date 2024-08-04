@@ -127,17 +127,18 @@ use_hint(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyh,
 }
 
 // Given a degree-255 polynomial, this routine counts number of coefficients having value 1.
+// Note, following implementation makes an assumption, coefficieints of input polynomial must be either 0 or 1.
+// In case, one invokes this function with arbitrary polynomial, expect wrong result.
 static inline constexpr size_t
 count_1s(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 {
-  constexpr auto one = ml_dsa_field::zq_t::one();
-  size_t cnt = 0;
+  size_t count = 0;
 
-  for (size_t i = 0; i < poly.size(); i++) {
-    cnt += 1 * (poly[i] == one);
+  for (auto coeff : poly) {
+    count += coeff.raw();
   }
 
-  return cnt;
+  return count;
 }
 
 // Given a degree-255 polynomial, this routine shifts each coefficient leftwards, by d bits.
