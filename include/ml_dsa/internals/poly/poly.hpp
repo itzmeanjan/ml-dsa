@@ -83,10 +83,18 @@ infinity_norm(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
   auto res = ml_dsa_field::zq_t::zero();
 
   for (size_t i = 0; i < poly.size(); i++) {
+#ifdef __clang__
+    if (poly[i] > qby2) {
+      res = std::max(res, -poly[i]);
+    } else {
+      res = std::max(res, poly[i]);
+    }
+#else
     const bool flg = poly[i] > qby2;
     const ml_dsa_field::zq_t br[]{ poly[i], -poly[i] };
 
     res = std::max(res, br[flg]);
+#endif
   }
 
   return res;
