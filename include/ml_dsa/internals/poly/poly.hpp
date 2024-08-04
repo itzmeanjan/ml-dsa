@@ -45,6 +45,9 @@ sub_from_x(std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 {
   constexpr ml_dsa_field::zq_t x_cap(x);
 
+#if defined __clang__
+#pragma clang loop unroll(enable) vectorize(enable) interleave(enable)
+#endif
   for (size_t i = 0; i < poly.size(); i++) {
     poly[i] = x_cap - poly[i];
   }
