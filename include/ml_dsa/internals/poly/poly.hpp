@@ -28,6 +28,10 @@ power2round(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
 static inline constexpr void
 mul(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polya, std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyb, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> polyc)
 {
+#if (not defined __clang__) && (defined __GNUG__)
+#pragma GCC unroll 16
+#pragma GCC ivdep
+#endif
   for (size_t i = 0; i < polya.size(); i++) {
     polyc[i] = polya[i] * polyb[i];
   }
