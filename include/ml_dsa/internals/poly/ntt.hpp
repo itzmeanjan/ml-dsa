@@ -67,6 +67,9 @@ static constexpr auto ζ_NEG_EXP = []() {
 static inline constexpr void
 ntt(std::span<ml_dsa_field::zq_t, N> poly)
 {
+#if (not defined __clang__) && (defined __GNUG__)
+#pragma GCC unroll 8
+#endif
   for (int64_t l = LOG2N - 1; l >= 0; l--) {
     const size_t len = 1ul << l;
     const size_t lenx2 = len << 1;
@@ -76,6 +79,10 @@ ntt(std::span<ml_dsa_field::zq_t, N> poly)
       const size_t k_now = k_beg + (start >> (l + 1));
       const ml_dsa_field::zq_t ζ_exp = ζ_EXP[k_now];
 
+#if (not defined __clang__) && (defined __GNUG__)
+#pragma GCC unroll 4
+#pragma GCC ivdep
+#endif
       for (size_t i = start; i < start + len; i++) {
         auto tmp = ζ_exp * poly[i + len];
 
@@ -97,6 +104,9 @@ ntt(std::span<ml_dsa_field::zq_t, N> poly)
 static inline constexpr void
 intt(std::span<ml_dsa_field::zq_t, N> poly)
 {
+#if (not defined __clang__) && (defined __GNUG__)
+#pragma GCC unroll 8
+#endif
   for (size_t l = 0; l < LOG2N; l++) {
     const size_t len = 1ul << l;
     const size_t lenx2 = len << 1;
@@ -106,6 +116,10 @@ intt(std::span<ml_dsa_field::zq_t, N> poly)
       const size_t k_now = k_beg - (start >> (l + 1));
       const ml_dsa_field::zq_t neg_ζ_exp = ζ_NEG_EXP[k_now];
 
+#if (not defined __clang__) && (defined __GNUG__)
+#pragma GCC unroll 4
+#pragma GCC ivdep
+#endif
       for (size_t i = start; i < start + len; i++) {
         const auto tmp = poly[i];
 
