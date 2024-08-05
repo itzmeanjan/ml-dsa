@@ -19,7 +19,7 @@ static constexpr size_t RND_BYTE_LEN = 32;
 //
 // See algorithm 1 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t k, size_t l, size_t d, uint32_t η>
-static inline void
+static inline constexpr void
 keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
        std::span<uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
        std::span<uint8_t, ml_dsa_utils::sec_key_len(k, l, η, d)> seckey)
@@ -117,7 +117,7 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
 //
 // See algorithm 2 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t k, size_t l, size_t d, uint32_t η, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω, size_t λ>
-static inline void
+static inline constexpr void
 sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
      std::span<const uint8_t, ml_dsa_utils::sec_key_len(k, l, η, d)> seckey,
      std::span<const uint8_t> msg,
@@ -187,7 +187,6 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   std::array<uint8_t, (2 * λ) / std::numeric_limits<uint8_t>::digits> c_tilda{};
   auto c_tilda_span = std::span(c_tilda);
   auto c1_tilda = c_tilda_span.template first<32>();
-  auto c2_tilda = c_tilda_span.template last<32>();
 
   while (!has_signed) {
     std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> y{};
@@ -293,7 +292,7 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 //
 // See algorithm 3 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t k, size_t l, size_t d, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω, size_t λ>
-static inline bool
+static inline constexpr bool
 verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t, ml_dsa_utils::sig_len(k, l, γ1, ω, λ)> sig)
   requires(ml_dsa_params::check_verify_params(k, l, d, γ1, γ2, τ, β, ω, λ))
 {
@@ -308,7 +307,6 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey, std::sp
 
   auto c_tilda = sig.template first<sigoff1 - sigoff0>();
   auto c1_tilda = c_tilda.template first<32>();
-  auto c2_tilda = c_tilda.template last<32>();
   auto z_encoded = sig.template subspan<sigoff1, sigoff2 - sigoff1>();
   auto h_encoded = sig.template subspan<sigoff2, sigoff3 - sigoff2>();
 

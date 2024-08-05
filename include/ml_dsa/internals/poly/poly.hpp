@@ -28,6 +28,10 @@ power2round(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
 static inline constexpr void
 mul(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polya, std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyb, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> polyc)
 {
+#if (not defined __clang__) && (defined __GNUG__)
+#pragma GCC unroll 16
+#pragma GCC ivdep
+#endif
   for (size_t i = 0; i < polya.size(); i++) {
     polyc[i] = polya[i] * polyb[i];
   }
@@ -41,6 +45,9 @@ sub_from_x(std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 {
   constexpr ml_dsa_field::zq_t x_cap(x);
 
+#if defined __clang__
+#pragma clang loop unroll(enable) vectorize(enable) interleave(enable)
+#endif
   for (size_t i = 0; i < poly.size(); i++) {
     poly[i] = x_cap - poly[i];
   }
@@ -76,10 +83,18 @@ infinity_norm(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
   auto res = ml_dsa_field::zq_t::zero();
 
   for (size_t i = 0; i < poly.size(); i++) {
+#ifdef __clang__
+    if (poly[i] > qby2) {
+      res = std::max(res, -poly[i]);
+    } else {
+      res = std::max(res, poly[i]);
+    }
+#else
     const bool flg = poly[i] > qby2;
     const ml_dsa_field::zq_t br[]{ poly[i], -poly[i] };
 
     res = std::max(res, br[flg]);
+#endif
   }
 
   return res;
@@ -112,17 +127,18 @@ use_hint(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyh,
 }
 
 // Given a degree-255 polynomial, this routine counts number of coefficients having value 1.
+// Note, following implementation makes an assumption, coefficieints of input polynomial must be either 0 or 1.
+// In case, one invokes this function with arbitrary polynomial, expect wrong result.
 static inline constexpr size_t
 count_1s(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 {
-  constexpr auto one = ml_dsa_field::zq_t::one();
-  size_t cnt = 0;
+  size_t count = 0;
 
-  for (size_t i = 0; i < poly.size(); i++) {
-    cnt += 1 * (poly[i] == one);
+  for (auto coeff : poly) {
+    count += coeff.raw();
   }
 
-  return cnt;
+  return count;
 }
 
 // Given a degree-255 polynomial, this routine shifts each coefficient leftwards, by d bits.

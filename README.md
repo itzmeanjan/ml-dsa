@@ -14,10 +14,10 @@ ML-DSA offers following three algorithms.
 Algorithm | What does it do ?
 --- | --:
 KeyGen | It takes a 32 -bytes seed, which is used for *deterministically* computing a ML-DSA keypair i.e. both public key and secret key.
-Sign | It takes a 32 -bytes seed, a ML-DSA secret key and a N (>=0) -bytes message as input, producing ML-DSA signature bytes. For default and recommended **hedged** message signing, one must provide with 32B random seed. For deterministic message signing, one should simply fill seed with 32 zero bytes.
+Sign | It takes a 32 -bytes seed, a ML-DSA secret key and a N (>=0) -bytes message as input, producing ML-DSA signature bytes. For default and recommended **hedged** message signing, one must provide with 32B random seed. For **deterministic** message signing, one should simply fill seed with 32 zero bytes.
 Verify | It takes a ML-DSA public key, N (>=0) -bytes message and ML-DSA signature, returning boolean value, denoting status of successful signature verification operation.
 
-Here I'm maintaining `ml-dsa` as a header-only, easy-to-use C++20 library, implementing NIST FIPS 204 ML-DSA, supporting ML-DSA-{44, 65, 87} parameter sets, as defined in table 1 of ML-DSA draft standard. For more details see [below](#usage).
+Here I'm maintaining `ml-dsa` as a C++20 header-only constexpr library, implementing NIST FIPS 204 ML-DSA, supporting ML-DSA-{44, 65, 87} parameter sets, as defined in table 1 of ML-DSA draft standard. For more details on using this library, see [below](#usage).
 
 > [!NOTE]
 > Find ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd, which you should refer to when understanding intricate details of this implementation.
@@ -149,92 +149,92 @@ Linux 6.8.0-39-generic x86_64
 ```
 
 ```bash
-2024-08-01T21:31:03+05:30
+2024-08-05T11:18:02+05:30
 Running ./build/perf.out
-Run on (16 X 399.747 MHz CPU s)
+Run on (16 X 400.497 MHz CPU s)
 CPU Caches:
   L1 Data 48 KiB (x8)
   L1 Instruction 32 KiB (x8)
   L2 Unified 1280 KiB (x8)
   L3 Unified 18432 KiB (x1)
-Load Average: 0.66, 0.51, 0.68
+Load Average: 1.34, 1.24, 1.07
 -------------------------------------------------------------------------------------------------
 Benchmark                           Time             CPU   Iterations     CYCLES items_per_second
 -------------------------------------------------------------------------------------------------
-ml_dsa_44_sign/32_mean            256 us          256 us           32   1.19738M       5.15337k/s
-ml_dsa_44_sign/32_median          208 us          208 us           32   975.694k       4.80075k/s
-ml_dsa_44_sign/32_stddev          153 us          153 us           32   718.524k       2.41135k/s
-ml_dsa_44_sign/32_cv            59.92 %         59.92 %            32     60.01%           46.79%
-ml_dsa_44_sign/32_min             111 us          111 us           32    519.64k       1.54879k/s
-ml_dsa_44_sign/32_max             646 us          646 us           32   3.02393M       9.00608k/s
-ml_dsa_65_sign/32_mean            528 us          528 us           32   2.47044M        2.7681k/s
-ml_dsa_65_sign/32_median          435 us          435 us           32   2.03615M       2.29703k/s
-ml_dsa_65_sign/32_stddev          323 us          323 us           32   1.50973M       1.77477k/s
-ml_dsa_65_sign/32_cv            61.17 %         61.16 %            32     61.11%           64.12%
-ml_dsa_65_sign/32_min             168 us          168 us           32   786.787k        689.632/s
-ml_dsa_65_sign/32_max            1450 us         1450 us           32   6.74411M       5.95098k/s
-ml_dsa_65_keygen_mean            96.4 us         96.4 us           32    445.21k       10.3759k/s
-ml_dsa_65_keygen_median          95.8 us         95.8 us           32   445.059k        10.434k/s
-ml_dsa_65_keygen_stddev          1.45 us         1.45 us           32    954.675        153.336/s
-ml_dsa_65_keygen_cv              1.51 %          1.51 %            32      0.21%            1.48%
-ml_dsa_65_keygen_min             95.0 us         95.0 us           32   443.683k       9.92974k/s
-ml_dsa_65_keygen_max              101 us          101 us           32    448.46k       10.5263k/s
-ml_dsa_44_verify/32_mean         63.0 us         63.0 us           32   292.696k        15.879k/s
-ml_dsa_44_verify/32_median       62.7 us         62.7 us           32    293.31k       15.9509k/s
-ml_dsa_44_verify/32_stddev       1.08 us         1.07 us           32   3.13005k        250.737/s
-ml_dsa_44_verify/32_cv           1.71 %          1.71 %            32      1.07%            1.58%
-ml_dsa_44_verify/32_min          62.5 us         62.5 us           32   275.657k       14.5621k/s
-ml_dsa_44_verify/32_max          68.7 us         68.7 us           32    294.23k       15.9932k/s
-ml_dsa_44_keygen_mean            57.3 us         57.3 us           32   265.696k       17.4677k/s
-ml_dsa_44_keygen_median          57.3 us         57.3 us           32   265.677k       17.4477k/s
-ml_dsa_44_keygen_stddev         0.715 us        0.714 us           32   2.68481k        218.859/s
-ml_dsa_44_keygen_cv              1.25 %          1.25 %            32      1.01%            1.25%
-ml_dsa_44_keygen_min             55.7 us         55.7 us           32   260.727k       17.1027k/s
-ml_dsa_44_keygen_max             58.5 us         58.5 us           32    271.89k         17.95k/s
-ml_dsa_87_verify/32_mean          167 us          167 us           32   772.107k       6.00369k/s
-ml_dsa_87_verify/32_median        166 us          166 us           32   772.107k       6.02761k/s
-ml_dsa_87_verify/32_stddev       1.68 us         1.68 us           32   3.49109k        60.0648/s
-ml_dsa_87_verify/32_cv           1.01 %          1.01 %            32      0.45%            1.00%
-ml_dsa_87_verify/32_min           164 us          164 us           32   765.234k       5.84894k/s
-ml_dsa_87_verify/32_max           171 us          171 us           32   777.966k       6.08969k/s
-ml_dsa_87_sign/32_mean            567 us          567 us           32   2.65035M       2.30625k/s
-ml_dsa_87_sign/32_median          450 us          450 us           32   2.10825M        2.2221k/s
-ml_dsa_87_sign/32_stddev          334 us          334 us           32   1.56144M       1.06567k/s
-ml_dsa_87_sign/32_cv            58.84 %         58.84 %            32     58.91%           46.21%
-ml_dsa_87_sign/32_min             260 us          260 us           32   1.21113M        632.573/s
-ml_dsa_87_sign/32_max            1581 us         1581 us           32   7.39516M        3.8513k/s
-ml_dsa_65_verify/32_mean          101 us          101 us           32   470.568k       9.86459k/s
-ml_dsa_65_verify/32_median        101 us          101 us           32   470.285k       9.89717k/s
-ml_dsa_65_verify/32_stddev      0.898 us        0.897 us           32   1.23881k        86.4831/s
-ml_dsa_65_verify/32_cv           0.89 %          0.88 %            32      0.26%            0.88%
-ml_dsa_65_verify/32_min           100 us          100 us           32   468.725k       9.66729k/s
-ml_dsa_65_verify/32_max           103 us          103 us           32   473.467k       9.95904k/s
-ml_dsa_87_keygen_mean             160 us          160 us           32   735.698k       6.23867k/s
-ml_dsa_87_keygen_median           160 us          160 us           32   735.071k       6.24064k/s
-ml_dsa_87_keygen_stddev          2.92 us         2.92 us           32   6.17827k        113.438/s
-ml_dsa_87_keygen_cv              1.82 %          1.82 %            32      0.84%            1.82%
-ml_dsa_87_keygen_min              155 us          155 us           32    723.74k       6.00106k/s
-ml_dsa_87_keygen_max              167 us          167 us           32   748.988k       6.44194k/s
+ml_dsa_44_verify/32_mean         62.3 us         62.3 us           32   270.887k       16.0698k/s
+ml_dsa_44_verify/32_median       63.1 us         63.1 us           32    270.89k       15.8604k/s
+ml_dsa_44_verify/32_stddev       1.60 us         1.60 us           32    624.918        421.113/s
+ml_dsa_44_verify/32_cv           2.56 %          2.56 %            32      0.23%            2.62%
+ml_dsa_44_verify/32_min          58.2 us         58.2 us           32   269.723k       15.4084k/s
+ml_dsa_44_verify/32_max          64.9 us         64.9 us           32   272.841k       17.1813k/s
+ml_dsa_87_keygen_mean             163 us          163 us           32   698.496k       6.15064k/s
+ml_dsa_87_keygen_median           163 us          163 us           32   698.116k       6.15115k/s
+ml_dsa_87_keygen_stddev          5.35 us         5.35 us           32   4.08823k        204.362/s
+ml_dsa_87_keygen_cv              3.29 %          3.29 %            32      0.59%            3.32%
+ml_dsa_87_keygen_min              150 us          150 us           32   690.372k       5.77973k/s
+ml_dsa_87_keygen_max              173 us          173 us           32   706.344k       6.67045k/s
+ml_dsa_65_verify/32_mean          103 us          103 us           32   443.358k       9.68297k/s
+ml_dsa_65_verify/32_median        103 us          103 us           32   443.689k       9.66634k/s
+ml_dsa_65_verify/32_stddev       3.04 us         3.04 us           32   1.28769k        282.649/s
+ml_dsa_65_verify/32_cv           2.94 %          2.94 %            32      0.29%            2.92%
+ml_dsa_65_verify/32_min          99.0 us         99.0 us           32   440.394k       9.09262k/s
+ml_dsa_65_verify/32_max           110 us          110 us           32   445.528k        10.102k/s
+ml_dsa_87_sign/32_mean            609 us          609 us           32    2.6577M       2.18941k/s
+ml_dsa_87_sign/32_median          610 us          610 us           32   2.66831M       1.64061k/s
+ml_dsa_87_sign/32_stddev          325 us          325 us           32   1.39882M       1.18589k/s
+ml_dsa_87_sign/32_cv            53.28 %         53.28 %            32     52.63%           54.16%
+ml_dsa_87_sign/32_min             243 us          243 us           32   1.09957M        695.404/s
+ml_dsa_87_sign/32_max            1438 us         1438 us           32   6.19204M       4.10823k/s
+ml_dsa_87_verify/32_mean          169 us          169 us           32   721.896k       5.93997k/s
+ml_dsa_87_verify/32_median        169 us          169 us           32   721.902k        5.9345k/s
+ml_dsa_87_verify/32_stddev       5.59 us         5.58 us           32   1.45918k        196.633/s
+ml_dsa_87_verify/32_cv           3.31 %          3.31 %            32      0.20%            3.31%
+ml_dsa_87_verify/32_min           155 us          155 us           32   719.374k       5.57533k/s
+ml_dsa_87_verify/32_max           179 us          179 us           32   724.646k       6.45852k/s
+ml_dsa_65_sign/32_mean            487 us          487 us           32   2.12482M       3.13727k/s
+ml_dsa_65_sign/32_median          372 us          372 us           32   1.60891M       2.69802k/s
+ml_dsa_65_sign/32_stddev          384 us          384 us           32   1.70012M       1.81803k/s
+ml_dsa_65_sign/32_cv            78.82 %         78.82 %            32     80.01%           57.95%
+ml_dsa_65_sign/32_min             162 us          162 us           32   724.192k        606.363/s
+ml_dsa_65_sign/32_max            1649 us         1649 us           32   7.44815M       6.16409k/s
+ml_dsa_44_sign/32_mean            289 us          289 us           32   1.26354M       4.94307k/s
+ml_dsa_44_sign/32_median          202 us          202 us           32   885.986k       4.96339k/s
+ml_dsa_44_sign/32_stddev          210 us          210 us           32   908.538k        2.5997k/s
+ml_dsa_44_sign/32_cv            72.84 %         72.84 %            32     71.90%           52.59%
+ml_dsa_44_sign/32_min             106 us          106 us           32   474.061k        948.065/s
+ml_dsa_44_sign/32_max            1055 us         1055 us           32   4.37527M       9.41556k/s
+ml_dsa_65_keygen_mean             101 us          101 us           32    433.69k       9.93793k/s
+ml_dsa_65_keygen_median          99.6 us         99.6 us           32   433.649k       10.0425k/s
+ml_dsa_65_keygen_stddev          3.12 us         3.12 us           32    973.148         303.96/s
+ml_dsa_65_keygen_cv              3.10 %          3.09 %            32      0.22%            3.06%
+ml_dsa_65_keygen_min             93.8 us         93.8 us           32   431.835k       9.32141k/s
+ml_dsa_65_keygen_max              107 us          107 us           32   435.258k       10.6581k/s
+ml_dsa_44_keygen_mean            59.4 us         59.4 us           32   255.647k       16.8513k/s
+ml_dsa_44_keygen_median          59.8 us         59.8 us           32   255.181k       16.7347k/s
+ml_dsa_44_keygen_stddev          1.65 us         1.64 us           32   3.67228k          469.9/s
+ml_dsa_44_keygen_cv              2.77 %          2.77 %            32      1.44%            2.79%
+ml_dsa_44_keygen_min             56.7 us         56.7 us           32   250.237k       16.1611k/s
+ml_dsa_44_keygen_max             61.9 us         61.9 us           32    263.83k       17.6413k/s
 ```
 
 ## Usage
 
-`ml-dsa` is a header-only C++20 library, mainly targeting 64 -bit desktop/ server grade platforms, which is also pretty easy to use. Let's see how to get started with it.
+`ml-dsa` is a header-only C++20 constexpr library, mainly targeting 64 -bit desktop/ server grade platforms, which is also pretty easy to use. Let's see how to get started with it.
 
 - Clone `ml-dsa` repository.
 
 ```bash
 cd
 
-# Multi-step cloning and importing of submodules
+# Multi-step cloning and importing of submodules.
 git clone https://github.com/itzmeanjan/ml-dsa.git && pushd ml-dsa && git submodule update --init && popd
-# Or do single step cloning and importing of submodules
+# Or do single step cloning and importing of submodules.
 git clone https://github.com/itzmeanjan/ml-dsa.git --recurse-submodules
-# Or clone and then run tests, which will automatically bring in dependencies
+# Or clone and then run tests, which will automatically bring in dependencies.
 git clone https://github.com/itzmeanjan/ml-dsa.git && pushd ml-dsa && make -j && popd
 ```
 
-- Write a program which makes use of ML-DSA{44, 65, 87} key generation, signing and verification API ( all of these functions and constants, representing how many bytes of memory to allocate for holding seeds, public/ secret key and signature, live under `ml_dsa_{44,65,87}::` namespace ), while importing proper header files.
+- Write a program which makes use of ML-DSA-{44, 65, 87} key generation, signing and verification API ( all of these functions and constants, representing how many bytes of memory to allocate for holding seeds, public/ secret key and signature, live under `ml_dsa_{44,65,87}::` namespace ), while importing proper header files.
 
 
 ```c++
@@ -302,6 +302,61 @@ ML-DSA Variant | Namespace | Header
 ML-DSA-44 Routines | ml_dsa_44:: | include/ml_dsa/ml_dsa_44.hpp
 ML-DSA-65 Routines | ml_dsa_65:: | include/ml_dsa/ml_dsa_65.hpp
 ML-DSA-87 Routines | ml_dsa_87:: | include/ml_dsa/ml_dsa_87.hpp
+
+---
+
+✨
+
+All the functions, in this ML-DSA header-only library, are implemented as `constexpr` functions. Hence you should be able to evaluate ML-DSA key generation, signing and verification at compile-time itself, given that all inputs are known at compile-time, of course.
+
+I present you with following demonstration program, which generates a ML-DSA-44 keypair, signs a message, producing a ML-DSA-44 signature and finally verifies the signature - all at program compile-time. Notice, the static assertion.
+
+```c++
+// compile_time_ml_dsa_44.cpp
+//
+// Compile and run this program with
+// $ g++ -std=c++20 -Wall -Wextra -pedantic -fconstexpr-ops-limit=125000000 -I include -I sha3/include compile_time_ml_dsa_44.cpp && ./a.out
+// or
+// $ clang++ -std=c++20 -Wall -Wextra -pedantic -fconstexpr-steps=19000000 -I include -I sha3/include compile_time_ml_dsa_44.cpp && ./a.out
+
+#include "ml_dsa/ml_dsa_44.hpp"
+
+// Compile-time
+//
+// - Generation of a new keypair, given seed
+// - Signing of a known message
+// - Verification of signature
+//
+// for ML-DSA-44, using KAT no. (1). See kats/ml_dsa_44.kat.
+constexpr auto
+ml_dsa_44_keygen_sign_verify() -> auto
+{
+  // 7c9935a0b07694aa0c6d10e4db6b1add2fd81a25ccb148032dcd739936737f2d
+  constexpr std::array<uint8_t, ml_dsa_44::KeygenSeedByteLen> ξ = { 124, 153, 53, 160, 176, 118, 148, 170, 12, 109, 16,  228, 219, 107, 26,  221, 47,  216, 26, 37,  204, 177, 72,  3,   45, 205, 115, 153, 54,  115, 127, 45 };
+  // 0000000000000000000000000000000000000000000000000000000000000000
+  constexpr std::array<uint8_t, ml_dsa_44::SigningSeedByteLen> rnd{};
+  // d81c4d8d734fcbfbeade3d3f8a039faa2a2c9957e835ad55b22e75bf57bb556ac8
+  constexpr std::array<uint8_t, 33> msg = { 216, 28,  77, 141, 115, 79,  203, 251, 234, 222, 61,  63, 138, 3,  159, 170, 42, 44,  153, 87, 232, 53,  173, 85,  178, 46,  117, 191, 87, 187, 85, 106, 200 };
+
+  std::array<uint8_t, ml_dsa_44::PubKeyByteLen> pkey{};
+  std::array<uint8_t, ml_dsa_44::SecKeyByteLen> skey{};
+  std::array<uint8_t, ml_dsa_44::SigByteLen> sig{};
+
+  ml_dsa_44::keygen(ξ, pkey, skey);
+  ml_dsa_44::sign(rnd, skey, msg, sig);
+  return ml_dsa_44::verify(pkey, msg, sig);
+}
+
+int
+main()
+{
+  // Notice static_assert, yay !
+  static_assert(ml_dsa_44_keygen_sign_verify() == true, "Must be able to generate a new keypair, sign a message and verify the signature at program compile-time !");
+  return 0;
+}
+```
+
+---
 
 See example [program](./examples/ml_dsa_44.cpp), which demonstrates how to use ML-DSA-44 API, similarly you can use ML-DSA-{65, 87} API.
 
