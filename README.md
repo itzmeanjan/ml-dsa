@@ -14,10 +14,10 @@ ML-DSA offers following three algorithms.
 Algorithm | What does it do ?
 --- | --:
 KeyGen | It takes a 32 -bytes seed, which is used for *deterministically* computing a ML-DSA keypair i.e. both public key and secret key.
-Sign | It takes a 32 -bytes seed, a ML-DSA secret key and a N (>=0) -bytes message as input, producing ML-DSA signature bytes. For default and recommended **hedged** message signing, one must provide with 32B random seed. For deterministic message signing, one should simply fill seed with 32 zero bytes.
+Sign | It takes a 32 -bytes seed, a ML-DSA secret key and a N (>=0) -bytes message as input, producing ML-DSA signature bytes. For default and recommended **hedged** message signing, one must provide with 32B random seed. For **deterministic** message signing, one should simply fill seed with 32 zero bytes.
 Verify | It takes a ML-DSA public key, N (>=0) -bytes message and ML-DSA signature, returning boolean value, denoting status of successful signature verification operation.
 
-Here I'm maintaining `ml-dsa` as a header-only, easy-to-use C++20 library, implementing NIST FIPS 204 ML-DSA, supporting ML-DSA-{44, 65, 87} parameter sets, as defined in table 1 of ML-DSA draft standard. For more details see [below](#usage).
+Here I'm maintaining `ml-dsa` as a C++20 header-only constexpr library, implementing NIST FIPS 204 ML-DSA, supporting ML-DSA-{44, 65, 87} parameter sets, as defined in table 1 of ML-DSA draft standard. For more details on using this library, see [below](#usage).
 
 > [!NOTE]
 > Find ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd, which you should refer to when understanding intricate details of this implementation.
@@ -219,22 +219,22 @@ ml_dsa_87_keygen_max              167 us          167 us           32   748.988k
 
 ## Usage
 
-`ml-dsa` is a header-only C++20 library, mainly targeting 64 -bit desktop/ server grade platforms, which is also pretty easy to use. Let's see how to get started with it.
+`ml-dsa` is a header-only C++20 constexpr library, mainly targeting 64 -bit desktop/ server grade platforms, which is also pretty easy to use. Let's see how to get started with it.
 
 - Clone `ml-dsa` repository.
 
 ```bash
 cd
 
-# Multi-step cloning and importing of submodules
+# Multi-step cloning and importing of submodules.
 git clone https://github.com/itzmeanjan/ml-dsa.git && pushd ml-dsa && git submodule update --init && popd
-# Or do single step cloning and importing of submodules
+# Or do single step cloning and importing of submodules.
 git clone https://github.com/itzmeanjan/ml-dsa.git --recurse-submodules
-# Or clone and then run tests, which will automatically bring in dependencies
+# Or clone and then run tests, which will automatically bring in dependencies.
 git clone https://github.com/itzmeanjan/ml-dsa.git && pushd ml-dsa && make -j && popd
 ```
 
-- Write a program which makes use of ML-DSA{44, 65, 87} key generation, signing and verification API ( all of these functions and constants, representing how many bytes of memory to allocate for holding seeds, public/ secret key and signature, live under `ml_dsa_{44,65,87}::` namespace ), while importing proper header files.
+- Write a program which makes use of ML-DSA-{44, 65, 87} key generation, signing and verification API ( all of these functions and constants, representing how many bytes of memory to allocate for holding seeds, public/ secret key and signature, live under `ml_dsa_{44,65,87}::` namespace ), while importing proper header files.
 
 
 ```c++
@@ -302,6 +302,61 @@ ML-DSA Variant | Namespace | Header
 ML-DSA-44 Routines | ml_dsa_44:: | include/ml_dsa/ml_dsa_44.hpp
 ML-DSA-65 Routines | ml_dsa_65:: | include/ml_dsa/ml_dsa_65.hpp
 ML-DSA-87 Routines | ml_dsa_87:: | include/ml_dsa/ml_dsa_87.hpp
+
+---
+
+✨
+
+All the functions, in this ML-DSA header-only library, are implemented as `constexpr` functions. Hence you should be able to evaluate ML-DSA key generation, signing and verification at compile-time itself, given that all inputs are known at compile-time, of course.
+
+I present you with following demonstration program, which generates a ML-DSA-44 keypair, signs a message, producing a ML-DSA-44 signature and finally verifies the signature - all at program compile-time. Notice, the static assertion.
+
+```c++
+// compile_time_ml_dsa_44.cpp
+//
+// Compile and run this program with
+// $ g++ -std=c++20 -Wall -Wextra -pedantic -fconstexpr-ops-limit=125000000 -I include -I sha3/include compile_time_ml_dsa_44.cpp && ./a.out
+// or
+// $ clang++ -std=c++20 -Wall -Wextra -pedantic -fconstexpr-steps=19000000 -I include -I sha3/include compile_time_ml_dsa_44.cpp && ./a.out
+
+#include "ml_dsa/ml_dsa_44.hpp"
+
+// Compile-time
+//
+// - Generation of a new keypair, given seed
+// - Signing of a known message
+// - Verification of signature
+//
+// for ML-DSA-44, using KAT no. (1). See kats/ml_dsa_44.kat.
+constexpr auto
+ml_dsa_44_keygen_sign_verify() -> auto
+{
+  // 7c9935a0b07694aa0c6d10e4db6b1add2fd81a25ccb148032dcd739936737f2d
+  constexpr std::array<uint8_t, ml_dsa_44::KeygenSeedByteLen> ξ = { 124, 153, 53, 160, 176, 118, 148, 170, 12, 109, 16,  228, 219, 107, 26,  221, 47,  216, 26, 37,  204, 177, 72,  3,   45, 205, 115, 153, 54,  115, 127, 45 };
+  // 0000000000000000000000000000000000000000000000000000000000000000
+  constexpr std::array<uint8_t, ml_dsa_44::SigningSeedByteLen> rnd{};
+  // d81c4d8d734fcbfbeade3d3f8a039faa2a2c9957e835ad55b22e75bf57bb556ac8
+  constexpr std::array<uint8_t, 33> msg = { 216, 28,  77, 141, 115, 79,  203, 251, 234, 222, 61,  63, 138, 3,  159, 170, 42, 44,  153, 87, 232, 53,  173, 85,  178, 46,  117, 191, 87, 187, 85, 106, 200 };
+
+  std::array<uint8_t, ml_dsa_44::PubKeyByteLen> pkey{};
+  std::array<uint8_t, ml_dsa_44::SecKeyByteLen> skey{};
+  std::array<uint8_t, ml_dsa_44::SigByteLen> sig{};
+
+  ml_dsa_44::keygen(ξ, pkey, skey);
+  ml_dsa_44::sign(rnd, skey, msg, sig);
+  return ml_dsa_44::verify(pkey, msg, sig);
+}
+
+int
+main()
+{
+  // Notice static_assert, yay !
+  static_assert(ml_dsa_44_keygen_sign_verify() == true, "Must be able to generate a new keypair, sign a message and verify the signature at program compile-time !");
+  return 0;
+}
+```
+
+---
 
 See example [program](./examples/ml_dsa_44.cpp), which demonstrates how to use ML-DSA-44 API, similarly you can use ML-DSA-{65, 87} API.
 
