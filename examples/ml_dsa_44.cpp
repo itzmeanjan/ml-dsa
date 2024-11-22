@@ -1,5 +1,6 @@
 #include "ml_dsa/ml_dsa_44.hpp"
 #include "ml_dsa/internals/rng/prng.hpp"
+#include <iomanip>
 #include <cassert>
 #include <iostream>
 #include <vector>
