@@ -4,8 +4,8 @@
 #include "ml_dsa/internals/utility/params.hpp"
 #include "ntt.hpp"
 #include "poly.hpp"
-#include "shake128.hpp"
-#include "shake256.hpp"
+#include "sha3/shake128.hpp"
+#include "sha3/shake256.hpp"
 #include <cstdint>
 #include <limits>
 

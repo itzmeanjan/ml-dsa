@@ -1,5 +1,5 @@
 #pragma once
-#include "shake256.hpp"
+#include "sha3/shake256.hpp"
 #include <limits>
 #include <random>
 
