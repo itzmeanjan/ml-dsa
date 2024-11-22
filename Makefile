@@ -24,6 +24,7 @@ BUILD_DIR := build
 
 include tests/test.mk
 include benchmarks/bench.mk
+include examples/example.mk
 
 $(SHA3_INC_DIR):
 	git submodule update --init sha3
