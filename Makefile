@@ -16,7 +16,8 @@ LINK_OPT_FLAGS := -flto
 
 I_FLAGS := -I ./include
 SHA3_INC_DIR := ./sha3/include
-DEP_IFLAGS := -I $(SHA3_INC_DIR)
+RANDOMSHAKE_INC_DIR := ./RandomShake/include
+DEP_IFLAGS := -I $(SHA3_INC_DIR) -I $(RANDOMSHAKE_INC_DIR)
 
 SRC_DIR := include
 ML_DSA_SOURCES := $(shell find $(SRC_DIR) -name '*.hpp')
@@ -26,7 +27,10 @@ include tests/test.mk
 include benchmarks/bench.mk
 include examples/example.mk
 
-$(SHA3_INC_DIR):
+$(RANDOMSHAKE_INC_DIR):
+	git submodule update --init --recursive RandomShake
+
+$(SHA3_INC_DIR): $(RANDOMSHAKE_INC_DIR)
 	git submodule update --init sha3
 
 $(GTEST_PARALLEL): $(SHA3_INC_DIR)
@@ -37,5 +41,5 @@ clean: ## Remove build directory
 	rm -rf $(BUILD_DIR)
 
 .PHONY: format
-format: $(ML_DSA_SOURCES) $(TEST_SOURCES) $(TEST_HEADERS) $(BENCHMARK_SOURCES) $(BENCHMARK_HEADERS) ## Format source code
+format: $(ML_DSA_SOURCES) $(TEST_SOURCES) $(TEST_HEADERS) $(BENCHMARK_SOURCES) $(BENCHMARK_HEADERS) $(EXAMPLE_SOURCES) $(EXAMPLE_HEADERS) ## Format source code
 	clang-format -i $^

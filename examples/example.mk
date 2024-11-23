@@ -8,7 +8,7 @@ EXAMPLE_EXECS := $(addprefix $(EXAMPLE_BUILD_DIR)/, $(notdir $(EXAMPLE_SOURCES:.
 $(EXAMPLE_BUILD_DIR):
 	mkdir -p $@
 
-$(EXAMPLE_BUILD_DIR)/%.exe: $(EXAMPLE_DIR)/%.cpp $(EXAMPLE_BUILD_DIR) $(SHA3_INC_DIR)
+$(EXAMPLE_BUILD_DIR)/%.exe: $(EXAMPLE_DIR)/%.cpp $(EXAMPLE_BUILD_DIR) $(SHA3_INC_DIR) $(RANDOMSHAKE_INC_DIR)
 	$(CXX) $(CXX_DEFS) $(CXX_FLAGS) $(WARN_FLAGS) $(RELEASE_FLAGS) $(I_FLAGS) $(DEP_IFLAGS) $< -o $@
 
 example: $(EXAMPLE_EXECS) ## Build and run example program, demonstrating usage of ML-DSA API
