@@ -10,8 +10,8 @@ ml_dsa_65_keygen(benchmark::State& state)
   std::array<uint8_t, ml_dsa_65::PubKeyByteLen> pubkey{};
   std::array<uint8_t, ml_dsa_65::SecKeyByteLen> seckey{};
 
-  ml_dsa_prng::prng_t<192> prng;
-  prng.read(seed);
+  randomshake::randomshake_t<192> csprng;
+  csprng.generate(seed);
 
   for (auto _ : state) {
     ml_dsa_65::keygen(seed, pubkey, seckey);
@@ -40,10 +40,10 @@ ml_dsa_65_sign(benchmark::State& state)
   std::array<uint8_t, ml_dsa_65::SigningSeedByteLen> rnd{};
   std::array<uint8_t, ml_dsa_65::SigByteLen> sig{};
 
-  ml_dsa_prng::prng_t<192> prng;
-  prng.read(seed);
-  prng.read(rnd);
-  prng.read(msg_span);
+  randomshake::randomshake_t<192> csprng;
+  csprng.generate(seed);
+  csprng.generate(rnd);
+  csprng.generate(msg_span);
 
   ml_dsa_65::keygen(seed, pubkey, seckey);
 
@@ -76,10 +76,10 @@ ml_dsa_65_verify(benchmark::State& state)
   std::array<uint8_t, ml_dsa_65::SigningSeedByteLen> rnd{};
   std::array<uint8_t, ml_dsa_65::SigByteLen> sig{};
 
-  ml_dsa_prng::prng_t<192> prng;
-  prng.read(seed);
-  prng.read(rnd);
-  prng.read(msg_span);
+  randomshake::randomshake_t<192> csprng;
+  csprng.generate(seed);
+  csprng.generate(rnd);
+  csprng.generate(msg_span);
 
   ml_dsa_65::keygen(seed, pubkey, seckey);
   ml_dsa_65::sign(rnd, seckey, msg_span, sig);

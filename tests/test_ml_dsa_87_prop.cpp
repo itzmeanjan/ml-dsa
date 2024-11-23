@@ -1,4 +1,5 @@
 #include "ml_dsa/ml_dsa_87.hpp"
+#include "randomshake/randomshake.hpp"
 #include "test_helper.hpp"
 #include <cassert>
 #include <gtest/gtest.h>
@@ -29,10 +30,10 @@ test_ml_dsa_87_signing(const size_t mlen)
   auto msg_span = std::span(msg);
   auto msg_copy_span = std::span(msg_copy);
 
-  ml_dsa_prng::prng_t<256> prng;
-  prng.read(seed);
-  prng.read(msg_span);
-  prng.read(rnd);
+  randomshake::randomshake_t<256> csprng;
+  csprng.generate(seed);
+  csprng.generate(msg_span);
+  csprng.generate(rnd);
 
   ml_dsa_87::keygen(seed, pkey, skey);       // Generate a valid ML-DSA-87 keypair
   ml_dsa_87::sign(rnd, skey, msg_span, sig); // Sign a random message with ML-DSA-87 secret ket

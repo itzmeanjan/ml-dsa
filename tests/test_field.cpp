@@ -1,4 +1,5 @@
 #include "ml_dsa/internals/math/field.hpp"
+#include "randomshake/randomshake.hpp"
 #include <gtest/gtest.h>
 
 // Test functional correctness of ML-DSA prime field operations, by running through fairly large number of rounds of
@@ -8,11 +9,11 @@ TEST(ML_DSA, ArithmeticOverZq)
   constexpr size_t itr_cnt = 1ul << 20;
   constexpr auto zero = ml_dsa_field::zq_t::zero();
 
-  ml_dsa_prng::prng_t<256> prng;
+  randomshake::randomshake_t<256> csprng;
 
   for (size_t i = 0; i < itr_cnt; i++) {
-    const auto a = ml_dsa_field::zq_t::random(prng);
-    const auto b = ml_dsa_field::zq_t::random(prng);
+    const auto a = ml_dsa_field::zq_t::random(csprng);
+    const auto b = ml_dsa_field::zq_t::random(csprng);
 
     // Addition, Subtraction and Negation
     const auto c = a + b;

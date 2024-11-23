@@ -1,7 +1,7 @@
 #include "ml_dsa/ml_dsa_44.hpp"
-#include "ml_dsa/internals/rng/prng.hpp"
-#include <iomanip>
+#include "randomshake/randomshake.hpp"
 #include <cassert>
+#include <iomanip>
 #include <iostream>
 #include <vector>
 
@@ -21,7 +21,7 @@ to_hex(std::span<const uint8_t> bytes)
 
 // Compile it with
 //
-// g++ -std=c++20 -Wall -Wextra -pedantic -O3 -march=native -I ./include -I ./sha3/include examples/ml_dsa_44.cpp
+// g++ -std=c++20 -Wall -Wextra -pedantic -O3 -march=native -I ./include -I ./sha3/include -I ./RandomShake/include examples/ml_dsa_44.cpp
 int
 main()
 {
@@ -42,14 +42,14 @@ main()
   auto seckey_span = std::span<uint8_t, ml_dsa_44::SecKeyByteLen>(seckey);
   auto sig_span = std::span<uint8_t, ml_dsa_44::SigByteLen>(sig);
 
-  ml_dsa_prng::prng_t<128> prng;
+  randomshake::randomshake_t<128> csprng;
 
-  prng.read(seed_span);
-  prng.read(msg_span);
+  csprng.generate(seed_span);
+  csprng.generate(msg_span);
 
   // Filling `rnd` with random bytes, invokes default and recommended "hedged" version of signing.
   // While filling it with 0, invokes "deterministic" signing mode.
-  prng.read(rnd_span);
+  csprng.generate(rnd_span);
 
   ml_dsa_44::keygen(seed_span, pubkey_span, seckey_span);
   ml_dsa_44::sign(rnd_span, seckey_span, msg_span, sig_span);

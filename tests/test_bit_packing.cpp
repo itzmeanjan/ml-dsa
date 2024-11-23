@@ -1,4 +1,5 @@
 #include "ml_dsa/internals/poly/bit_packing.hpp"
+#include "randomshake/randomshake.hpp"
 #include <gtest/gtest.h>
 
 // Check for functional correctness of
@@ -17,10 +18,10 @@ test_encode_decode()
   std::array<ml_dsa_field::zq_t, ml_dsa_ntt::N> polyb{};
   std::array<uint8_t, poly_byte_len> poly_bytes{};
 
-  ml_dsa_prng::prng_t<256> prng;
+  randomshake::randomshake_t<256> csprng;
 
   for (size_t i = 0; i < ml_dsa_ntt::N; i++) {
-    polya[i] = ml_dsa_field::zq_t::random(prng);
+    polya[i] = ml_dsa_field::zq_t::random(csprng);
   }
 
   ml_dsa_bit_packing::encode<sbw>(polya, poly_bytes);
