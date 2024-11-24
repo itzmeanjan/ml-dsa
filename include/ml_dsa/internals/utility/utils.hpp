@@ -6,7 +6,7 @@ namespace ml_dsa_utils {
 
 // Compile-time compute how many bytes to reserve for storing serialized ML-DSA public key, for given parameter set.
 //
-// See table 1, 2 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See table 1, 2 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
 static inline constexpr size_t
 pub_key_len(const size_t k, const size_t d)
 {
@@ -17,7 +17,7 @@ pub_key_len(const size_t k, const size_t d)
 
 // Compile-time compute how many bytes to reserve for storing serialized ML-DSA secret key, for given parameter set.
 //
-// See table 1, 2 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See table 1, 2 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
 static inline constexpr size_t
 sec_key_len(const size_t k, const size_t l, const uint32_t η, const size_t d)
 {
@@ -28,7 +28,7 @@ sec_key_len(const size_t k, const size_t l, const uint32_t η, const size_t d)
 
 // Compile-time compute how many bytes to reserve for storing serialized ML-DSA signature, for specified parameter set.
 //
-// See table 1, 2 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See table 1, 2 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
 static inline constexpr size_t
 sig_len(const size_t k, const size_t l, const uint32_t γ1, const size_t ω, const size_t λ)
 {

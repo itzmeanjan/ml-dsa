@@ -1,4 +1,5 @@
 #include "ml_dsa/internals/math/reduction.hpp"
+#include "randomshake/randomshake.hpp"
 #include <gtest/gtest.h>
 #include <tuple>
 
@@ -11,10 +12,10 @@ TEST(ML_DSA, Power2Round)
   constexpr size_t d = 13;
   constexpr ml_dsa_field::zq_t two_to_d(1u << d);
 
-  ml_dsa_prng::prng_t<256> prng;
+  randomshake::randomshake_t<256> csprng;
 
   for (size_t i = 0; i < itr_cnt; i++) {
-    const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(prng);
+    const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(csprng);
 
     ml_dsa_field::zq_t high, low;
     std::tie(high, low) = ml_dsa_reduction::power2round<d>(r);
@@ -30,10 +31,10 @@ template<uint32_t alpha, uint32_t z, size_t rounds = 65536ul>
 static void
 test_decompose()
 {
-  ml_dsa_prng::prng_t<256> prng;
+  randomshake::randomshake_t<256> csprng;
 
   for (size_t i = 0; i < rounds; i++) {
-    const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(prng);
+    const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(csprng);
     constexpr ml_dsa_field::zq_t elem_z{ z };
 
     const ml_dsa_field::zq_t h = ml_dsa_reduction::make_hint<alpha>(elem_z, r);

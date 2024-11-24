@@ -11,9 +11,8 @@ namespace ml_dsa_reduction {
 //
 // This routine is used for compressing public key.
 //
-// See algorithm 29 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.ipd.
-// This implementation collects some ideas from
-// https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23.
+// See algorithm 35 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
+// This implementation collects some ideas from https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23.
 template<size_t d>
 static inline constexpr std::pair<ml_dsa_field::zq_t, ml_dsa_field::zq_t>
 power2round(const ml_dsa_field::zq_t r)
@@ -36,7 +35,7 @@ power2round(const ml_dsa_field::zq_t r)
 //
 // If r1 = (q - 1)/ α then r1 = 0; r0 = r0 - 1
 //
-// See algorithm 30 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 36 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
 static inline constexpr std::pair<ml_dsa_field::zq_t, ml_dsa_field::zq_t>
 decompose(const ml_dsa_field::zq_t r)
@@ -61,7 +60,7 @@ decompose(const ml_dsa_field::zq_t r)
 }
 
 // Given an element ∈ Z_q, this routine extracts out high order bits of r.
-// See algorithm 31 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 37 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
 static inline constexpr ml_dsa_field::zq_t
 highbits(const ml_dsa_field::zq_t r)
@@ -71,7 +70,7 @@ highbits(const ml_dsa_field::zq_t r)
 }
 
 // Given an element ∈ Z_q, this routine extracts out low order bits of r.
-// See algorithm 32 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 38 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
 static inline constexpr ml_dsa_field::zq_t
 lowbits(const ml_dsa_field::zq_t r)
@@ -84,7 +83,7 @@ lowbits(const ml_dsa_field::zq_t r)
 // bits of `r + z` just using `r` and `h`.
 //
 // This hint is essentially the “carry” caused by `z` in the addition. Note, `z` is small.
-// See algorithm 33 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 39 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
 static inline constexpr ml_dsa_field::zq_t
 make_hint(const ml_dsa_field::zq_t z, const ml_dsa_field::zq_t r)
@@ -96,7 +95,7 @@ make_hint(const ml_dsa_field::zq_t z, const ml_dsa_field::zq_t r)
 }
 
 // 1 -bit hint ( read `h` ) is used to recover higher order bits of `r + z`.
-// See algorithm 34 of ML-DSA algorithm https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 40 of ML-DSA algorithm https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
 static inline constexpr ml_dsa_field::zq_t
 use_hint(const ml_dsa_field::zq_t h, const ml_dsa_field::zq_t r)

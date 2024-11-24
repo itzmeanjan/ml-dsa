@@ -11,7 +11,7 @@ namespace ml_dsa_bit_packing {
 // Given a degree-255 polynomial, where significant portion of each coefficient ∈ [0, 2^sbw), this
 // routine serializes the polynomial to a byte array of length 32 * sbw -bytes.
 //
-// See algorithm 10 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 16 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t sbw>
 static inline constexpr void
 encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_t, (ml_dsa_ntt::N * sbw) / std::numeric_limits<uint8_t>::digits> arr)
@@ -155,8 +155,8 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_
 // Given a byte array of length 32 * sbw -bytes, this routine extracts out 256 coefficients of a degree-255
 // polynomial s.t. significant portion of each coefficient ∈ [0, 2^sbw).
 //
-// This is just the opposite of above `encode` routine.
-// See algorithm 12 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// This function reverses what `encode` does.
+// See algorithm 18 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t sbw>
 static inline constexpr void
 decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
@@ -289,7 +289,7 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
 
 // Given a vector of hint bits ( of dimension k x 1 ), this routine encodes hint bits into (ω + k) -bytes.
 //
-// See algorithm 14 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 20 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t ω>
 static inline constexpr void
 encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::span<uint8_t, ω + k> arr)
@@ -320,7 +320,7 @@ encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::
 // Returns boolean result denoting status of decoding of byte serialized hint bits.
 // For example, say return value is true, it denotes that decoding has failed.
 //
-// See algorithm 15 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 21 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t ω>
 static inline constexpr bool
 decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h)

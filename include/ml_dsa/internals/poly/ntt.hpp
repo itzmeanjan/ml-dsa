@@ -63,7 +63,7 @@ static constexpr auto ζ_NEG_EXP = []() {
 // Note, this routine mutates input i.e. it's an in-place NTT implementation.
 //
 // Implementation inspired from https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L95-L129.
-// See algorithm 35 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 41 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
 static inline constexpr void
 ntt(std::span<ml_dsa_field::zq_t, N> poly)
 {
@@ -100,7 +100,7 @@ ntt(std::span<ml_dsa_field::zq_t, N> poly)
 // Note, this routine mutates input i.e. it's an in-place iNTT implementation.
 //
 // Implementation inspired from https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L131-L172.
-// See algorithm 36 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 42 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
 static inline constexpr void
 intt(std::span<ml_dsa_field::zq_t, N> poly)
 {

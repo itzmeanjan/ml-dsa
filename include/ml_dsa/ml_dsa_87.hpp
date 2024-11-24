@@ -3,7 +3,7 @@
 
 namespace ml_dsa_87 {
 
-// See table 1 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd
+// See table 1 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204
 static constexpr size_t d = 13;
 static constexpr uint32_t τ = 60;
 static constexpr uint32_t γ1 = 1u << 19;
@@ -30,7 +30,7 @@ static constexpr size_t SigningSeedByteLen = ml_dsa::RND_BYTE_LEN;
 // Byte length ( = 4627 ) of ML-DSA-87 signature.
 static constexpr size_t SigByteLen = ml_dsa_utils::sig_len(k, l, γ1, ω, λ);
 
-// Given a 32 -bytes seed, this routine can be used for generating a fresh ML-DSA-87 keypair.
+// Given a 32 -bytes seed, this routine can be used for generating a fresh ML-DSA-87 keypair, in deterministic fashion.
 constexpr void
 keygen(std::span<const uint8_t, KeygenSeedByteLen> ξ, std::span<uint8_t, PubKeyByteLen> pubkey, std::span<uint8_t, SecKeyByteLen> seckey)
 {
@@ -38,23 +38,28 @@ keygen(std::span<const uint8_t, KeygenSeedByteLen> ξ, std::span<uint8_t, PubKey
 }
 
 // Given a 32 -bytes seed `rnd` and ML-DSA-87 secret key, this routine can be used for signing any arbitrary (>=0)
-// length message M, producing a ML-DSA-87 signature S.
+// length message M, while also including an optional context (whose length must be capped at 255 -bytes),
+// producing a ML-DSA-87 signature S.
 //
 // Default (and recommended) signing mode is "hedged" i.e. using 32B input randomness for signing, results into
 // randomized signature. For "deterministic" signing mode, simply fill `rnd` with zero bytes.
-constexpr void
-sign(std::span<const uint8_t, SigningSeedByteLen> rnd, std::span<const uint8_t, SecKeyByteLen> seckey, std::span<const uint8_t> msg, std::span<uint8_t, SigByteLen> sig)
+constexpr bool
+sign(std::span<const uint8_t, SigningSeedByteLen> rnd,
+     std::span<const uint8_t, SecKeyByteLen> seckey,
+     std::span<const uint8_t> msg,
+     std::span<const uint8_t> ctx,
+     std::span<uint8_t, SigByteLen> sig)
 {
-  ml_dsa::sign<k, l, d, η, γ1, γ2, τ, β, ω, λ>(rnd, seckey, msg, sig);
+  return ml_dsa::sign<k, l, d, η, γ1, γ2, τ, β, ω, λ>(rnd, seckey, msg, ctx, sig);
 }
 
-// Given a ML-DSA-87 public key, a message M and a signature S, this routine can be used for verifying if the signature
-// is valid for the provided message or not, returning truth value only in case of successful signature verification,
-// otherwise false is returned.
+// Given a ML-DSA-87 public key, a message M, an optional context C (of length at max 255 -bytes) and a signature S,
+// this routine can be used for verifying if the signature is valid for the provided message or not, returning truth
+// value only in case of successful signature verification, otherwise false is returned.
 constexpr bool
-verify(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t, SigByteLen> sig)
+verify(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t> ctx, std::span<const uint8_t, SigByteLen> sig)
 {
-  return ml_dsa::verify<k, l, d, γ1, γ2, τ, β, ω, λ>(pubkey, msg, sig);
+  return ml_dsa::verify<k, l, d, γ1, γ2, τ, β, ω, λ>(pubkey, msg, ctx, sig);
 }
 
 }

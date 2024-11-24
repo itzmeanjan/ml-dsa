@@ -10,15 +10,16 @@ ml_dsa_87_keygen(benchmark::State& state)
   std::array<uint8_t, ml_dsa_87::PubKeyByteLen> pubkey{};
   std::array<uint8_t, ml_dsa_87::SecKeyByteLen> seckey{};
 
-  ml_dsa_prng::prng_t<256> prng;
-  prng.read(seed);
+  randomshake::randomshake_t<256> csprng;
+  csprng.generate(seed);
 
   for (auto _ : state) {
-    ml_dsa_87::keygen(seed, pubkey, seckey);
-
     benchmark::DoNotOptimize(seed);
     benchmark::DoNotOptimize(pubkey);
     benchmark::DoNotOptimize(seckey);
+
+    ml_dsa_87::keygen(seed, pubkey, seckey);
+
     benchmark::ClobberMemory();
   }
 
@@ -40,25 +41,30 @@ ml_dsa_87_sign(benchmark::State& state)
   std::array<uint8_t, ml_dsa_87::SigningSeedByteLen> rnd{};
   std::array<uint8_t, ml_dsa_87::SigByteLen> sig{};
 
-  ml_dsa_prng::prng_t<256> prng;
-  prng.read(seed);
-  prng.read(rnd);
-  prng.read(msg_span);
+  randomshake::randomshake_t<256> csprng;
+  csprng.generate(seed);
+  csprng.generate(rnd);
+  csprng.generate(msg_span);
 
   ml_dsa_87::keygen(seed, pubkey, seckey);
 
+  bool has_signed = true;
   for (auto _ : state) {
-    ml_dsa_87::sign(rnd, seckey, msg_span, sig);
-
+    benchmark::DoNotOptimize(has_signed);
     benchmark::DoNotOptimize(rnd);
     benchmark::DoNotOptimize(seckey);
     benchmark::DoNotOptimize(msg_span);
     benchmark::DoNotOptimize(sig);
+
+    has_signed &= ml_dsa_87::sign(rnd, seckey, msg_span, {}, sig);
+
     benchmark::ClobberMemory();
   }
 
+  assert(has_signed);
+  assert(ml_dsa_87::verify(pubkey, msg_span, {}, sig));
+
   state.SetItemsProcessed(state.iterations());
-  assert(ml_dsa_87::verify(pubkey, msg_span, sig));
 }
 
 // Benchmark performance of ML-DSA-87 signature verification algorithm.
@@ -76,23 +82,28 @@ ml_dsa_87_verify(benchmark::State& state)
   std::array<uint8_t, ml_dsa_87::SigningSeedByteLen> rnd{};
   std::array<uint8_t, ml_dsa_87::SigByteLen> sig{};
 
-  ml_dsa_prng::prng_t<256> prng;
-  prng.read(seed);
-  prng.read(rnd);
-  prng.read(msg_span);
+  randomshake::randomshake_t<256> csprng;
+  csprng.generate(seed);
+  csprng.generate(rnd);
+  csprng.generate(msg_span);
 
   ml_dsa_87::keygen(seed, pubkey, seckey);
-  ml_dsa_87::sign(rnd, seckey, msg_span, sig);
+  const bool has_signed = ml_dsa_87::sign(rnd, seckey, msg_span, {}, sig);
+  assert(has_signed);
 
+  bool has_verified = true;
   for (auto _ : state) {
-    bool is_valid = ml_dsa_87::verify(pubkey, msg_span, sig);
-
-    benchmark::DoNotOptimize(is_valid);
+    benchmark::DoNotOptimize(has_verified);
     benchmark::DoNotOptimize(pubkey);
     benchmark::DoNotOptimize(msg_span);
     benchmark::DoNotOptimize(sig);
+
+    has_verified &= ml_dsa_87::verify(pubkey, msg_span, {}, sig);
+
     benchmark::ClobberMemory();
   }
+
+  assert(has_verified);
 
   state.SetItemsProcessed(state.iterations());
 }
