@@ -4,6 +4,7 @@
 #include "ml_dsa/internals/utility/params.hpp"
 #include "ntt.hpp"
 #include <algorithm>
+#include <numeric>
 
 // Degree-255 polynomial arithmetic
 namespace ml_dsa_poly {
@@ -132,13 +133,7 @@ use_hint(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyh,
 static inline constexpr size_t
 count_1s(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 {
-  size_t count = 0;
-
-  for (auto coeff : poly) {
-    count += coeff.raw();
-  }
-
-  return count;
+  return std::accumulate(poly.begin(), poly.end(), 0ul, [](auto acc, auto cur) -> auto { return acc + cur.raw(); });
 }
 
 // Given a degree-255 polynomial, this routine shifts each coefficient leftwards, by d bits.
