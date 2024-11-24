@@ -41,8 +41,8 @@ test_ml_dsa_65_signing(const size_t mlen, const size_t ctx_len)
   csprng.generate(rnd);
   csprng.generate(ctx_span);
 
-  ml_dsa_65::keygen(seed, pkey, skey);                 // Generate a valid ML-DSA-65 keypair
-  ml_dsa_65::sign(rnd, skey, msg_span, ctx_span, sig); // Sign a random message with ML-DSA-65 secret ket
+  ml_dsa_65::keygen(seed, pkey, skey);                              // Generate a valid ML-DSA-65 keypair
+  EXPECT_TRUE(ml_dsa_65::sign(rnd, skey, msg_span, ctx_span, sig)); // Sign a random message with ML-DSA-65 secret ket
 
   std::copy(sig.begin(), sig.end(), sig_copy.begin());
   std::copy(pkey.begin(), pkey.end(), pkey_copy.begin());

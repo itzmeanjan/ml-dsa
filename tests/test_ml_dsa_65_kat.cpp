@@ -88,13 +88,14 @@ TEST(ML_DSA, ML_DSA_65_KnownAnswerTests)
 
       // Keygen -> Sign -> Verify
       ml_dsa_65::keygen(seed, computed_pkey, computed_skey);
-      ml_dsa_65::sign(rnd, computed_skey, msg_span, ctx_span, computed_sig);
+      const auto has_signed = ml_dsa_65::sign(rnd, computed_skey, msg_span, ctx_span, computed_sig);
       const auto is_valid = ml_dsa_65::verify(computed_pkey, msg_span, ctx_span, computed_sig);
 
       // Check if computed public key, secret key and signature matches expected ones, from KAT file.
       EXPECT_EQ(pkey, computed_pkey);
       EXPECT_EQ(skey, computed_skey);
       EXPECT_EQ(sig, computed_sig);
+      EXPECT_TRUE(has_signed);
       EXPECT_TRUE(is_valid);
 
       std::string empty_line;
