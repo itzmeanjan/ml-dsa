@@ -12,7 +12,7 @@
 //
 // In case when signature is not mutated ( the good case ), it should be able to verify successfully.
 // While in the case when random bit flip is introduced in signature/ public key/ message ( the bad case ) verification algorithm must fail.
-inline void
+static void
 test_ml_dsa_87_signing(const size_t mlen, const size_t ctx_len)
 {
   assert(ctx_len < 256);
@@ -70,7 +70,9 @@ test_ml_dsa_87_signing(const size_t mlen, const size_t ctx_len)
 
 TEST(ML_DSA, ML_DSA_87_KeygenSignVerifyFlow)
 {
-  for (size_t mlen = 0, ctx_len = 0; mlen < 33; mlen++, ctx_len = (ctx_len + 1) % 256) {
-    test_ml_dsa_87_signing(mlen, ctx_len);
+  for (size_t mlen = 0; mlen < 33; mlen++) {
+    for (size_t ctx_len = 0; ctx_len < 256; ctx_len++) {
+      test_ml_dsa_87_signing(mlen, ctx_len);
+    }
   }
 }

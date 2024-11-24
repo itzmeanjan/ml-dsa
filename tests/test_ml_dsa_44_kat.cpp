@@ -8,7 +8,7 @@
 using namespace std::literals;
 
 // Use ML-DSA-44 known answer tests to ensure functional correctness and compatibility of this ML-DSA library
-// implementation with ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// implementation with ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 TEST(ML_DSA, ML_DSA_44_KnownAnswerTests)
 {
   const std::string kat_file = "./kats/ml_dsa_44.kat";

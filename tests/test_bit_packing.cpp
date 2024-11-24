@@ -8,7 +8,7 @@
 // - decoding of polynomial from byte array
 template<size_t sbw>
 static void
-test_encode_decode()
+test_encode_decode_of_polynomials()
   requires(ml_dsa_params::check_sbw(sbw))
 {
   constexpr size_t poly_byte_len = (sbw * ml_dsa_ntt::N) / 8;
@@ -32,15 +32,39 @@ test_encode_decode()
   }
 }
 
-TEST(ML_DSA, PolynomialEncodingDecoding)
+TEST(ML_DSA, PolynomialEncodingDecodingWithSignificantBitWidth3)
 {
-  test_encode_decode<3>();
-  test_encode_decode<4>();
-  test_encode_decode<6>();
-  test_encode_decode<10>();
-  test_encode_decode<13>();
-  test_encode_decode<18>();
-  test_encode_decode<20>();
+  test_encode_decode_of_polynomials<3>();
+}
+
+TEST(ML_DSA, PolynomialEncodingDecodingWithSignificantBitWidth4)
+{
+  test_encode_decode_of_polynomials<4>();
+}
+
+TEST(ML_DSA, PolynomialEncodingDecodingWithSignificantBitWidth6)
+{
+  test_encode_decode_of_polynomials<6>();
+}
+
+TEST(ML_DSA, PolynomialEncodingDecodingWithSignificantBitWidth10)
+{
+  test_encode_decode_of_polynomials<10>();
+}
+
+TEST(ML_DSA, PolynomialEncodingDecodingWithSignificantBitWidth13)
+{
+  test_encode_decode_of_polynomials<13>();
+}
+
+TEST(ML_DSA, PolynomialEncodingDecodingWithSignificantBitWidth18)
+{
+  test_encode_decode_of_polynomials<18>();
+}
+
+TEST(ML_DSA, PolynomialEncodingDecodingWithSignificantBitWidth20)
+{
+  test_encode_decode_of_polynomials<20>();
 }
 
 // Generates random hint bit polynomial vector of dimension k x 1, with <= ω coefficients set to 1.
@@ -66,7 +90,7 @@ generate_random_hint_bits(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly)
 // Test functional correctness of encoding and decoding of hint bit polynomial vector.
 template<size_t k, size_t ω>
 static void
-test_encode_decode_hint_bits()
+test_encode_decode_of_hint_polynomial()
 {
   constexpr size_t hint_byte_len = ω + k;
 
@@ -93,9 +117,17 @@ test_encode_decode_hint_bits()
   EXPECT_FALSE(std::equal(h0.begin(), h0.end(), h2.begin()));
 }
 
-TEST(ML_DSA, HintBitPolynomialEncodingDecoding)
+TEST(ML_DSA, HintBitPolynomialEncodingDecodingFor_ML_DSA_44)
 {
-  test_encode_decode_hint_bits<4, 80>();
-  test_encode_decode_hint_bits<6, 55>();
-  test_encode_decode_hint_bits<8, 75>();
+  test_encode_decode_of_hint_polynomial<4, 80>();
+}
+
+TEST(ML_DSA, HintBitPolynomialEncodingDecodingFor_ML_DSA_65)
+{
+  test_encode_decode_of_hint_polynomial<6, 55>();
+}
+
+TEST(ML_DSA, HintBitPolynomialEncodingDecodingFor_ML_DSA_87)
+{
+  test_encode_decode_of_hint_polynomial<8, 75>();
 }

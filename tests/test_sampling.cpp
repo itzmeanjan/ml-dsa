@@ -21,9 +21,17 @@ test_sample_in_ball()
   EXPECT_EQ(sqrd_norm, ml_dsa_field::zq_t(τ));
 }
 
-TEST(ML_DSA, HashingToABall)
+TEST(ML_DSA, SampleInBallFor_ML_DSA_44)
 {
   test_sample_in_ball<39u, 128u>();
+}
+
+TEST(ML_DSA, SampleInBallFor_ML_DSA_65)
+{
   test_sample_in_ball<49u, 192u>();
+}
+
+TEST(ML_DSA, SampleInBallFor_ML_DSA_87)
+{
   test_sample_in_ball<60u, 256u>();
 }
