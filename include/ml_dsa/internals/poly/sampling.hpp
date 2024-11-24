@@ -143,10 +143,10 @@ static inline constexpr void
 expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_γ1(γ1))
 {
-  constexpr size_t gbw = std::bit_width(2 * γ1 - 1u);
+  constexpr size_t γ1_bitwidth = std::bit_width(γ1);
 
   std::array<uint8_t, seed.size() + 2> msg{};
-  std::array<uint8_t, (ml_dsa_ntt::N * gbw) / std::numeric_limits<uint8_t>::digits> buf{};
+  std::array<uint8_t, (ml_dsa_ntt::N * γ1_bitwidth) / std::numeric_limits<uint8_t>::digits> buf{};
 
   auto msg_span = std::span(msg);
   auto buf_span = std::span(buf);
@@ -165,18 +165,18 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
     hasher.finalize();
     hasher.squeeze(buf_span);
 
-    ml_dsa_bit_packing::decode<gbw>(buf, poly_t(vec.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_bit_packing::decode<γ1_bitwidth>(buf_span, poly_t(vec.subspan(off, ml_dsa_ntt::N)));
     ml_dsa_poly::sub_from_x<γ1>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
-// Given a 32 -bytes seed, this routine creates a degree-255 polynomial with τ -many coefficients set to +/- 1, while
-// remaining (256 - τ) -many set to 0.
+// Given a (λ/4) -bytes seed, this routine creates a degree-255 polynomial with τ -many coefficients set to +/- 1, while
+// remaining (256 - τ) -many set to 0 s.t. λ = bit-security level of ML-DSA.
 //
 // See algorithm 23 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
-template<uint32_t τ>
+template<uint32_t τ, size_t λ>
 static inline constexpr void
-sample_in_ball(std::span<const uint8_t, 32> seed, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
+sample_in_ball(std::span<const uint8_t, (2 * λ) / std::numeric_limits<uint8_t>::digits> seed, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
   requires(ml_dsa_params::check_τ(τ))
 {
   std::array<uint8_t, 8> tau_bits{};

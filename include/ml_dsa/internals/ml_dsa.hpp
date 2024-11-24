@@ -5,6 +5,9 @@
 #include "ml_dsa/internals/utility/params.hpp"
 #include "ml_dsa/internals/utility/utils.hpp"
 #include <algorithm>
+#include <array>
+#include <cstdint>
+#include <limits>
 
 // ML-DSA FIPS 204
 namespace ml_dsa {
@@ -25,11 +28,14 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
        std::span<uint8_t, ml_dsa_utils::sec_key_len(k, l, η, d)> seckey)
   requires(ml_dsa_params::check_keygen_params(k, l, d, η))
 {
+  constexpr std::array<uint8_t, 2> domain_separator{ k, l };
+
   std::array<uint8_t, 32 + 64 + 32> seed_hash{};
   auto seed_hash_span = std::span(seed_hash);
 
   shake256::shake256_t hasher;
   hasher.absorb(ξ);
+  hasher.absorb(domain_separator);
   hasher.finalize();
   hasher.squeeze(seed_hash_span);
 
@@ -117,13 +123,17 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
 //
 // See algorithm 2 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t k, size_t l, size_t d, uint32_t η, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω, size_t λ>
-static inline constexpr void
+static inline constexpr bool
 sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
      std::span<const uint8_t, ml_dsa_utils::sec_key_len(k, l, η, d)> seckey,
      std::span<const uint8_t> msg,
+     std::span<const uint8_t> ctx,
      std::span<uint8_t, ml_dsa_utils::sig_len(k, l, γ1, ω, λ)> sig)
   requires(ml_dsa_params::check_signing_params(k, l, d, η, γ1, γ2, τ, β, ω, λ))
 {
+  if (ctx.size() > std::numeric_limits<uint8_t>::max()) {
+    return false;
+  }
   constexpr uint32_t t0_rng = 1u << (d - 1);
 
   constexpr size_t eta_bw = std::bit_width(2 * η);
@@ -147,8 +157,12 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   std::array<uint8_t, 64> mu{};
   auto mu_span = std::span(mu);
 
+  const std::array<uint8_t, 2> domain_separator{ 0, static_cast<uint8_t>(ctx.size()) };
+
   shake256::shake256_t hasher;
   hasher.absorb(tr);
+  hasher.absorb(domain_separator);
+  hasher.absorb(ctx);
   hasher.absorb(msg);
   hasher.finalize();
   hasher.squeeze(mu_span);
@@ -186,7 +200,6 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 
   std::array<uint8_t, (2 * λ) / std::numeric_limits<uint8_t>::digits> c_tilda{};
   auto c_tilda_span = std::span(c_tilda);
-  auto c1_tilda = c_tilda_span.template first<32>();
 
   while (!has_signed) {
     std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> y{};
@@ -219,7 +232,7 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 
     std::array<ml_dsa_field::zq_t, ml_dsa_ntt::N> c{};
 
-    ml_dsa_sampling::sample_in_ball<τ>(c1_tilda, c);
+    ml_dsa_sampling::sample_in_ball<τ, λ>(c_tilda_span, c);
     ml_dsa_ntt::ntt(c);
 
     ml_dsa_polyvec::mul_by_poly<l>(c, s1, z);
@@ -284,6 +297,8 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   ml_dsa_polyvec::encode<l, gamma1_bw>(z, sig.template subspan<sigoff1, sigoff2 - sigoff1>());
 
   ml_dsa_bit_packing::encode_hint_bits<k, ω>(h, sig.template subspan<sigoff2, sigoff3 - sigoff2>());
+
+  return has_signed;
 }
 
 // Given a ML-DSA public key, message (can be empty too) and serialized signature, this routine verifies the correctness
@@ -293,9 +308,16 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 // See algorithm 3 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
 template<size_t k, size_t l, size_t d, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω, size_t λ>
 static inline constexpr bool
-verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t, ml_dsa_utils::sig_len(k, l, γ1, ω, λ)> sig)
+verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
+       std::span<const uint8_t> msg,
+       std::span<const uint8_t> ctx,
+       std::span<const uint8_t, ml_dsa_utils::sig_len(k, l, γ1, ω, λ)> sig)
   requires(ml_dsa_params::check_verify_params(k, l, d, γ1, γ2, τ, β, ω, λ))
 {
+  if (ctx.size() > std::numeric_limits<uint8_t>::max()) {
+    return false;
+  }
+
   constexpr size_t t1_bw = std::bit_width(ml_dsa_field::Q) - d;
   constexpr size_t gamma1_bw = std::bit_width(γ1);
 
@@ -306,7 +328,6 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey, std::sp
   constexpr size_t sigoff3 = sig.size();
 
   auto c_tilda = sig.template first<sigoff1 - sigoff0>();
-  auto c1_tilda = c_tilda.template first<32>();
   auto z_encoded = sig.template subspan<sigoff1, sigoff2 - sigoff1>();
   auto h_encoded = sig.template subspan<sigoff2, sigoff3 - sigoff2>();
 
@@ -322,7 +343,7 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey, std::sp
   }
 
   std::array<ml_dsa_field::zq_t, ml_dsa_ntt::N> c{};
-  ml_dsa_sampling::sample_in_ball<τ>(c1_tilda, c);
+  ml_dsa_sampling::sample_in_ball<τ, λ>(c_tilda, c);
   ml_dsa_ntt::ntt(c);
 
   std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> z{};
@@ -356,8 +377,12 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey, std::sp
   hasher.finalize();
   hasher.squeeze(tr);
 
+  const std::array<uint8_t, 2> domain_separator{ 0, static_cast<uint8_t>(ctx.size()) };
+
   hasher.reset();
   hasher.absorb(tr);
+  hasher.absorb(domain_separator);
+  hasher.absorb(ctx);
   hasher.absorb(msg);
   hasher.finalize();
   hasher.squeeze(mu);

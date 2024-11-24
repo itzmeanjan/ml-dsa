@@ -42,19 +42,23 @@ keygen(std::span<const uint8_t, KeygenSeedByteLen> ξ, std::span<uint8_t, PubKey
 //
 // Default (and recommended) signing mode is "hedged" i.e. using 32B input randomness for signing, results into
 // randomized signature. For "deterministic" signing mode, simply fill `rnd` with zero bytes.
-constexpr void
-sign(std::span<const uint8_t, SigningSeedByteLen> rnd, std::span<const uint8_t, SecKeyByteLen> seckey, std::span<const uint8_t> msg, std::span<uint8_t, SigByteLen> sig)
+constexpr bool
+sign(std::span<const uint8_t, SigningSeedByteLen> rnd,
+     std::span<const uint8_t, SecKeyByteLen> seckey,
+     std::span<const uint8_t> msg,
+     std::span<const uint8_t> ctx,
+     std::span<uint8_t, SigByteLen> sig)
 {
-  ml_dsa::sign<k, l, d, η, γ1, γ2, τ, β, ω, λ>(rnd, seckey, msg, sig);
+  return ml_dsa::sign<k, l, d, η, γ1, γ2, τ, β, ω, λ>(rnd, seckey, msg, ctx, sig);
 }
 
 // Given a ML-DSA-44 public key, a message M and a signature S, this routine can be used for verifying if the signature
 // is valid for the provided message or not, returning truth value only in case of successful signature verification,
 // otherwise false is returned.
 constexpr bool
-verify(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t, SigByteLen> sig)
+verify(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t> ctx, std::span<const uint8_t, SigByteLen> sig)
 {
-  return ml_dsa::verify<k, l, d, γ1, γ2, τ, β, ω, λ>(pubkey, msg, sig);
+  return ml_dsa::verify<k, l, d, γ1, γ2, τ, β, ω, λ>(pubkey, msg, ctx, sig);
 }
 
 }
