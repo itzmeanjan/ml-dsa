@@ -65,7 +65,7 @@ check_matrix_dim(const size_t a_cols, const size_t b_rows)
 }
 
 // Compile-time executable constraints for ensuring that ML-DSA key generation algorithm is only invoked with arguments
-// suggested in table 1 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// suggested in table 1 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
 consteval bool
 check_keygen_params(const size_t k, const size_t l, const size_t d, const uint32_t η)
 {
@@ -75,7 +75,7 @@ check_keygen_params(const size_t k, const size_t l, const size_t d, const uint32
 }
 
 // Compile-time executable constraints for ensuring that ML-DSA signing algorithm is only invoked with arguments
-// suggested in table 1 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// suggested in table 1 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
 consteval bool
 check_signing_params(const size_t k,
                      const size_t l,
@@ -97,7 +97,7 @@ check_signing_params(const size_t k,
 }
 
 // Compile-time executable constraints for ensuring that ML-DSA verification algorithm is only invoked with arguments
-// suggested in table 1 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// suggested in table 1 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
 consteval bool
 check_verify_params(const size_t k,
                     const size_t l,

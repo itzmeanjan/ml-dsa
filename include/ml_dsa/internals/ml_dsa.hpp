@@ -20,7 +20,7 @@ static constexpr size_t RND_BYTE_LEN = 32;
 
 // Given seed ξ, this routine generates a public key and secret key pair, using deterministic key generation algorithm.
 //
-// See algorithm 1 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 1 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t η>
 static inline constexpr void
 keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
@@ -113,7 +113,8 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
   ml_dsa_polyvec::encode<k, d>(t0, seckey.template subspan<skoff5, skoff6 - skoff5>());
 }
 
-// Given a ML-DSA secret key and message (can be empty too), this routine computes a hedged/ deterministic signature.
+// Given a ML-DSA secret key, message (can be empty too) and context (optional, but if given, length must be capped at 255 -bytes),
+// this routine computes a hedged/ deterministic signature.
 //
 // Notice, first parameter of this function, `rnd`, which lets you pass 32 -bytes randomness for generating default
 // "hedged" signature. In case you don't need randomized message signature, you can instead fill `rnd` with zeros, and
@@ -121,7 +122,7 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
 //
 // Note, hedged signing is the default and recommended version.
 //
-// See algorithm 2 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 2 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t η, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω, size_t λ>
 static inline constexpr bool
 sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
@@ -301,11 +302,11 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   return has_signed;
 }
 
-// Given a ML-DSA public key, message (can be empty too) and serialized signature, this routine verifies the correctness
-// of signature, returning boolean result, denoting status of signature verification. For example, say it returns true,
-// it means signature is valid for given message and public key.
+// Given a ML-DSA public key, message (can be empty too), context (optional, but if given, length must be capped at 255 -bytes)
+// and serialized signature, this routine verifies validity of the signature, returning boolean result, denoting status
+// of signature verification. For example, say it returns true, it means signature is valid for given message and public key.
 //
-// See algorithm 3 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 3 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t γ1, uint32_t γ2, uint32_t τ, uint32_t β, size_t ω, size_t λ>
 static inline constexpr bool
 verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,

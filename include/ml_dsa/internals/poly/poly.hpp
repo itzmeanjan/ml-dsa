@@ -76,7 +76,7 @@ lowbits(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> src, std::span<ml_dsa
 
 // Computes infinity norm of a degree-255 polynomial.
 //
-// See line 462 of ML-DSA draft standard https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See section 2.3 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
 static inline constexpr ml_dsa_field::zq_t
 infinity_norm(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 {

@@ -17,7 +17,7 @@ using poly_t = std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N>;
 // Given a 32 -bytes uniform seed ρ, a k x l matrix is deterministically sampled ( using the method of rejection
 // sampling ), where each coefficient is a degree-255 polynomial ∈ R_q.
 //
-// See algorithm 26 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 32 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l>
 static inline constexpr void
 expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> mat)
@@ -68,7 +68,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
 //
 // Note, sampled polynomial coefficients are kept in canonical form.
 //
-// See algorithm 27 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 33 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t η, size_t k, uint16_t nonce>
 static inline constexpr void
 expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
@@ -137,7 +137,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
 // Given a 64 -bytes seed and 2 -bytes nonce, this routine does uniform sampling from output of Shake256 Xof, computing
 // a l x 1 vector of degree-255 polynomials s.t. each coefficient ∈ [-(γ1-1), γ1].
 //
-// See algorithm 28 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 34 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t γ1, size_t l>
 static inline constexpr void
 expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> vec)
@@ -171,9 +171,9 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
 }
 
 // Given a (λ/4) -bytes seed, this routine creates a degree-255 polynomial with τ -many coefficients set to +/- 1, while
-// remaining (256 - τ) -many set to 0 s.t. λ = bit-security level of ML-DSA.
+// remaining (256 - τ) -many set to 0 s.t. λ = bit-security level of the respective ML-DSA instantiation.
 //
-// See algorithm 23 of ML-DSA draft standard @ https://doi.org/10.6028/NIST.FIPS.204.ipd.
+// See algorithm 29 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t τ, size_t λ>
 static inline constexpr void
 sample_in_ball(std::span<const uint8_t, (2 * λ) / std::numeric_limits<uint8_t>::digits> seed, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
