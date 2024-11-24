@@ -52,6 +52,22 @@ TEST(ML_DSA, ML_DSA_44_KnownAnswerTests)
       const auto msg = ml_dsa_test_helper::from_hex(msg2);
       const auto msg_span = std::span(msg); // Message to be signed
 
+      std::string ctx_len0;
+      std::getline(file, ctx_len0);
+      size_t ctx_len = 0; // Context byte length
+
+      auto ctx_len1 = std::string_view(ctx_len0);
+      auto ctx_len2 = ctx_len1.substr(ctx_len1.find("="sv) + 2, ctx_len1.size());
+      std::from_chars(ctx_len2.data(), ctx_len2.data() + ctx_len2.size(), ctx_len);
+
+      std::string ctx0;
+      std::getline(file, ctx0);
+
+      auto ctx1 = std::string_view(ctx0);
+      auto ctx2 = ctx1.substr(ctx1.find("="sv) + 2, ctx1.size());
+      const auto ctx = ml_dsa_test_helper::from_hex(ctx2);
+      const auto ctx_span = std::span(ctx); // Optional context
+
       std::string rnd0;
       std::getline(file, rnd0);
 
@@ -72,8 +88,8 @@ TEST(ML_DSA, ML_DSA_44_KnownAnswerTests)
 
       // Keygen -> Sign -> Verify
       ml_dsa_44::keygen(seed, computed_pkey, computed_skey);
-      ml_dsa_44::sign(rnd, computed_skey, msg_span, computed_sig);
-      const auto is_valid = ml_dsa_44::verify(computed_pkey, msg_span, computed_sig);
+      ml_dsa_44::sign(rnd, computed_skey, msg_span, ctx_span, computed_sig);
+      const auto is_valid = ml_dsa_44::verify(computed_pkey, msg_span, ctx_span, computed_sig);
 
       // Check if computed public key, secret key and signature matches expected ones, from KAT file.
       EXPECT_EQ(pkey, computed_pkey);
