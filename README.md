@@ -19,11 +19,14 @@ Verify | It takes a ML-DSA public key, N (>=0) -bytes message, an optional conte
 
 Here I'm maintaining `ml-dsa` as a C++20 header-only `constexpr` library, implementing NIST FIPS 204 ML-DSA, supporting ML-DSA-{44, 65, 87} parameter sets, as defined in table 1 of ML-DSA standard. For more details on using this library, see [below](#usage). It shows following performance characteristics on desktop and server grade CPUs.
 
-ML-DSA-65 Algorithm | Time taken on "12th Gen Intel(R) Core(TM) i7-1260P" | Time taken on "Raspberry Pi 4B" | Time taken on "AWS EC2 Instance c8g.large"
---- | --: | --: | --:
-keygen | 94.4 us | 442.9 us | 143 us
-sign | 115.7 us | 2364.7 us | 427 us
-verify | 98.5 us | 492.1 us | 151 us
+ML-DSA-65 Algorithm | Time taken on "12th Gen Intel(R) Core(TM) i7-1260P" | Time taken on "AWS EC2 Instance c8g.large"
+--- | --: | --:
+keygen | 92.9 us | 126.2 us
+sign | 160.5 us | 231.7 us
+verify | 94.8 us | 134.4 us
+
+> [!NOTE]
+> All numbers in the table above represent the median time required to execute a specific algorithm, except for signing. In the case of signing, the number represents the minimum time required to sign a 32B message. To understand why this is done for signing, please refer to [this](#benchmarking) section.
 
 > [!NOTE]
 > Find ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204, which you should refer to when understanding intricate details of this implementation.
@@ -113,16 +116,10 @@ make perf -j       # If you have built google-benchmark library with libPFM supp
 > Ensure you've put all CPU cores on **performance** mode, before running benchmarks, follow guide @ https://github.com/google/benchmark/blob/main/docs/reducing_variance.md.
 
 ### On 12th Gen Intel(R) Core(TM) i7-1260P
-
-Benchmark result in JSON format @ [bench_result_on_Linux_6.11.0-9-generic_x86_64_with_g++_14.json](./bench_result_on_Linux_6.11.0-9-generic_x86_64_with_g++_14.json).
-
-### On Raspberry Pi 4B
-
-Benchmark result in JSON format @ [bench_result_on_Linux_6.6.51+rpt-rpi-v8_aarch64_with_g++_12.json](./bench_result_on_Linux_6.6.51+rpt-rpi-v8_aarch64_with_g++_12.json).
+Benchmark result in JSON format @ [bench_result_on_Linux_6.11.0-19-generic_x86_64_with_g++_14.json](./bench_result_on_Linux_6.11.0-19-generic_x86_64_with_g++_14.json).
 
 ### On AWS EC2 Instance `c8g.large` i.e. AWS Graviton4
-
-Benchmark result in JSON format @ [bench_result_on_Linux_6.8.0-1016-aws_aarch64_with_g++_13.json](./bench_result_on_Linux_6.8.0-1016-aws_aarch64_with_g++_13.json).
+Benchmark result in JSON format @ [bench_result_on_Linux_6.8.0-1021-aws_aarch64_with_g++_13.json](./bench_result_on_Linux_6.8.0-1021-aws_aarch64_with_g++_13.json).
 
 More about this EC2 instance @ https://aws.amazon.com/ec2/instance-types/c8g.
 

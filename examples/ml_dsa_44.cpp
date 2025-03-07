@@ -3,6 +3,8 @@
 #include <cassert>
 #include <iomanip>
 #include <iostream>
+#include <span>
+#include <sstream>
 #include <vector>
 
 // Given a bytearray of length N, this function converts it to human readable hex string of length 2*N | N >= 0.
