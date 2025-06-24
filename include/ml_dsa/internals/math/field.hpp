@@ -180,7 +180,7 @@ private:
     const uint32_t t0 = (hi << 13) - hi;
     const uint32_t t1 = t0 + lo;
     const bool flg0 = t0 > (u23_max - lo);
-    const uint32_t t2 = (-static_cast<uint32_t>(flg0)) & mask13;
+    const uint32_t t2 = (0u - static_cast<uint32_t>(flg0)) & mask13;
     const uint32_t t3 = t1 + t2;
     const uint32_t t4 = t3 & mask23;
 
@@ -192,7 +192,7 @@ private:
   static inline constexpr uint32_t reduce_once(const uint32_t val)
   {
     const uint32_t t0 = val - Q;
-    const uint32_t t1 = -(t0 >> 31);
+    const uint32_t t1 = 0u - (t0 >> 31);
     const uint32_t t2 = t1 & Q;
     const uint32_t t3 = t0 + t2;
 
