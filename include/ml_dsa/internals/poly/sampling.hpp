@@ -74,7 +74,7 @@ static inline constexpr void
 expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_eta(eta) && ml_dsa_params::check_nonce(nonce))
 {
-  constexpr auto eta = ml_dsa_field::zq_t(eta);
+  constexpr auto eta_value = ml_dsa_field::zq_t(eta);
 
   std::array<uint8_t, rho_prime.size() + 2> msg{};
   auto msg_span = std::span(msg);
@@ -103,27 +103,27 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
         const uint8_t t0 = buf_span[boff] & 0x0f;
         const uint8_t t1 = buf_span[boff] >> 4;
 
-        if constexpr (eta == 2u) {
+        if constexpr (eta_value == 2u) {
           const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
           const bool flg0 = t0 < 15;
 
-          vec[off + n] = eta - ml_dsa_field::zq_t(t2);
+          vec[off + n] = eta_value - ml_dsa_field::zq_t(t2);
           n += flg0 * 1;
 
           const uint32_t t3 = static_cast<uint32_t>(t1 % 5);
           const bool flg1 = (t1 < 15) & (n < ml_dsa_ntt::N);
-          const ml_dsa_field::zq_t br[]{ vec[off], eta - ml_dsa_field::zq_t(t3) };
+          const ml_dsa_field::zq_t br[]{ vec[off], eta_value - ml_dsa_field::zq_t(t3) };
 
           vec[off + flg1 * n] = br[flg1];
           n += flg1 * 1;
         } else {
           const bool flg0 = t0 < 9;
 
-          vec[off + n] = eta - ml_dsa_field::zq_t(static_cast<uint32_t>(t0));
+          vec[off + n] = eta_value - ml_dsa_field::zq_t(static_cast<uint32_t>(t0));
           n += flg0 * 1;
 
           const bool flg1 = (t1 < 9) & (n < ml_dsa_ntt::N);
-          const auto t2 = eta - ml_dsa_field::zq_t(static_cast<uint32_t>(t1));
+          const auto t2 = eta_value - ml_dsa_field::zq_t(static_cast<uint32_t>(t1));
           const ml_dsa_field::zq_t br[]{ vec[off], t2 };
 
           vec[off + flg1 * n] = br[flg1];
