@@ -10,8 +10,8 @@ static constexpr size_t LOG2N = 8;
 static constexpr size_t N = 1 << LOG2N;
 
 // First primitive 512 -th root of unity modulo q
-static constexpr ml_dsa_field::zq_t ζ(1753);
-static_assert((ζ ^ 512) == ml_dsa_field::zq_t::one(), "ζ must be 512th root of unity modulo Q");
+static constexpr ml_dsa_field::zq_t zeta(1753);
+static_assert((zeta ^ 512) == ml_dsa_field::zq_t::one(), "zeta must be 512th root of unity modulo Q");
 
 // Multiplicative inverse of N over Z_q
 static constexpr auto INV_N = ml_dsa_field::zq_t(N).inv();
@@ -35,23 +35,23 @@ bit_rev(const size_t v)
   return v_rev;
 }
 
-// Precomputed table of powers of ζ, used during polynomial evaluation.
-static constexpr auto ζ_EXP = []() {
+// Precomputed table of powers of ?, used during polynomial evaluation.
+static constexpr auto zeta_EXP = []() {
   std::array<ml_dsa_field::zq_t, N> res;
 
   for (size_t i = 0; i < N; i++) {
-    res[i] = ζ ^ bit_rev<LOG2N>(i);
+    res[i] = zeta ^ bit_rev<LOG2N>(i);
   }
 
   return res;
 }();
 
-// Precomputed table of negated powers of ζ, used during polynomial interpolation.
-static constexpr auto ζ_NEG_EXP = []() {
+// Precomputed table of negated powers of ?, used during polynomial interpolation.
+static constexpr auto zeta_NEG_EXP = []() {
   std::array<ml_dsa_field::zq_t, N> res;
 
   for (size_t i = 0; i < N; i++) {
-    res[i] = -ζ_EXP[i];
+    res[i] = -zeta_EXP[i];
   }
 
   return res;
@@ -77,14 +77,14 @@ ntt(std::span<ml_dsa_field::zq_t, N> poly)
 
     for (size_t start = 0; start < poly.size(); start += lenx2) {
       const size_t k_now = k_beg + (start >> (l + 1));
-      const ml_dsa_field::zq_t ζ_exp = ζ_EXP[k_now];
+      const ml_dsa_field::zq_t zeta_exp = zeta_EXP[k_now];
 
 #if (not defined __clang__) && (defined __GNUG__)
 #pragma GCC unroll 4
 #pragma GCC ivdep
 #endif
       for (size_t i = start; i < start + len; i++) {
-        auto tmp = ζ_exp * poly[i + len];
+        auto tmp = zeta_exp * poly[i + len];
 
         poly[i + len] = poly[i] - tmp;
         poly[i] += tmp;
@@ -114,7 +114,7 @@ intt(std::span<ml_dsa_field::zq_t, N> poly)
 
     for (size_t start = 0; start < poly.size(); start += lenx2) {
       const size_t k_now = k_beg - (start >> (l + 1));
-      const ml_dsa_field::zq_t neg_ζ_exp = ζ_NEG_EXP[k_now];
+      const ml_dsa_field::zq_t neg_zeta_exp = zeta_NEG_EXP[k_now];
 
 #if (not defined __clang__) && (defined __GNUG__)
 #pragma GCC unroll 4
@@ -125,7 +125,7 @@ intt(std::span<ml_dsa_field::zq_t, N> poly)
 
         poly[i] += poly[i + len];
         poly[i + len] = tmp - poly[i + len];
-        poly[i + len] *= neg_ζ_exp;
+        poly[i + len] *= neg_zeta_exp;
       }
     }
   }

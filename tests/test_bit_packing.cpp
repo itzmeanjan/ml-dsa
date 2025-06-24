@@ -67,8 +67,8 @@ TEST(ML_DSA, PolynomialEncodingDecodingWithSignificantBitWidth20)
   test_encode_decode_of_polynomials<20>();
 }
 
-// Generates random hint bit polynomial vector of dimension k x 1, with <= ω coefficients set to 1.
-template<size_t k, size_t ω>
+// Generates random hint bit polynomial vector of dimension k x 1, with <= omega coefficients set to 1.
+template<size_t k, size_t omega>
 static void
 generate_random_hint_bits(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly)
 {
@@ -81,18 +81,18 @@ generate_random_hint_bits(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly)
   std::mt19937_64 gen(rd());
   std::uniform_int_distribution<size_t> dis{ frm, to };
 
-  for (size_t i = 0; i < ω; i++) {
+  for (size_t i = 0; i < omega; i++) {
     const size_t idx = dis(gen);
     poly[idx] = ml_dsa_field::zq_t::one();
   }
 }
 
 // Test functional correctness of encoding and decoding of hint bit polynomial vector.
-template<size_t k, size_t ω>
+template<size_t k, size_t omega>
 static void
 test_encode_decode_of_hint_polynomial()
 {
-  constexpr size_t hint_byte_len = ω + k;
+  constexpr size_t hint_byte_len = omega + k;
 
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h0{};
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h1{};
@@ -101,18 +101,18 @@ test_encode_decode_of_hint_polynomial()
   std::array<uint8_t, hint_byte_len> hint_poly_bytes0{};
   std::array<uint8_t, hint_byte_len> hint_poly_bytes1{};
 
-  generate_random_hint_bits<k, ω>(h0);
+  generate_random_hint_bits<k, omega>(h0);
 
-  ml_dsa_bit_packing::encode_hint_bits<k, ω>(h0, hint_poly_bytes0);
+  ml_dsa_bit_packing::encode_hint_bits<k, omega>(h0, hint_poly_bytes0);
 
   std::copy(hint_poly_bytes0.begin(), hint_poly_bytes0.end(), hint_poly_bytes1.begin());
   hint_poly_bytes1[hint_byte_len - 1] = ~hint_poly_bytes1[hint_byte_len - 1];
 
-  const bool failed0 = ml_dsa_bit_packing::decode_hint_bits<k, ω>(hint_poly_bytes0, h1);
+  const bool failed0 = ml_dsa_bit_packing::decode_hint_bits<k, omega>(hint_poly_bytes0, h1);
   EXPECT_FALSE(failed0);
   EXPECT_TRUE(std::equal(h0.begin(), h0.end(), h1.begin()));
 
-  const bool failed1 = ml_dsa_bit_packing::decode_hint_bits<k, ω>(hint_poly_bytes1, h2);
+  const bool failed1 = ml_dsa_bit_packing::decode_hint_bits<k, omega>(hint_poly_bytes1, h2);
   EXPECT_TRUE(failed1);
   EXPECT_FALSE(std::equal(h0.begin(), h0.end(), h2.begin()));
 }

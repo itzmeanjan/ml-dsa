@@ -61,7 +61,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
   }
 }
 
-// Uniform rejection sampling k -many degree-255 polynomials s.t. each coefficient of those polynomials ∈ [-η, η].
+// Uniform rejection sampling k -many degree-255 polynomials s.t. each coefficient of those polynomials ∈ [-eta, eta].
 //
 // Sampling is performed deterministically, by seeding Shake256 Xof with 64 -bytes seed and two nonce bytes, whose
 // starting value is provided ( see template parameter ). Consecutive nonces are computed by adding 1 to previous value.
@@ -69,12 +69,12 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
 // Note, sampled polynomial coefficients are kept in canonical form.
 //
 // See algorithm 33 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
-template<uint32_t η, size_t k, uint16_t nonce>
+template<uint32_t eta, size_t k, uint16_t nonce>
 static inline constexpr void
 expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
-  requires(ml_dsa_params::check_η(η) && ml_dsa_params::check_nonce(nonce))
+  requires(ml_dsa_params::check_eta(eta) && ml_dsa_params::check_nonce(nonce))
 {
-  constexpr auto eta = ml_dsa_field::zq_t(η);
+  constexpr auto eta = ml_dsa_field::zq_t(eta);
 
   std::array<uint8_t, rho_prime.size() + 2> msg{};
   auto msg_span = std::span(msg);
@@ -103,7 +103,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
         const uint8_t t0 = buf_span[boff] & 0x0f;
         const uint8_t t1 = buf_span[boff] >> 4;
 
-        if constexpr (η == 2u) {
+        if constexpr (eta == 2u) {
           const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
           const bool flg0 = t0 < 15;
 
@@ -135,18 +135,18 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
 }
 
 // Given a 64 -bytes seed and 2 -bytes nonce, this routine does uniform sampling from output of Shake256 Xof, computing
-// a l x 1 vector of degree-255 polynomials s.t. each coefficient ∈ [-(γ1-1), γ1].
+// a l x 1 vector of degree-255 polynomials s.t. each coefficient ∈ [-(gamma1-1), gamma1].
 //
 // See algorithm 34 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
-template<uint32_t γ1, size_t l>
+template<uint32_t gamma1, size_t l>
 static inline constexpr void
 expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> vec)
-  requires(ml_dsa_params::check_γ1(γ1))
+  requires(ml_dsa_params::check_gamma1(gamma1))
 {
-  constexpr size_t γ1_bitwidth = std::bit_width(γ1);
+  constexpr size_t gamma1_bitwidth = std::bit_width(gamma1);
 
   std::array<uint8_t, seed.size() + 2> msg{};
-  std::array<uint8_t, (ml_dsa_ntt::N * γ1_bitwidth) / std::numeric_limits<uint8_t>::digits> buf{};
+  std::array<uint8_t, (ml_dsa_ntt::N * gamma1_bitwidth) / std::numeric_limits<uint8_t>::digits> buf{};
 
   auto msg_span = std::span(msg);
   auto buf_span = std::span(buf);
@@ -165,19 +165,19 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
     hasher.finalize();
     hasher.squeeze(buf_span);
 
-    ml_dsa_bit_packing::decode<γ1_bitwidth>(buf_span, poly_t(vec.subspan(off, ml_dsa_ntt::N)));
-    ml_dsa_poly::sub_from_x<γ1>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_bit_packing::decode<gamma1_bitwidth>(buf_span, poly_t(vec.subspan(off, ml_dsa_ntt::N)));
+    ml_dsa_poly::sub_from_x<gamma1>(poly_t(vec.subspan(off, ml_dsa_ntt::N)));
   }
 }
 
-// Given a (λ/4) -bytes seed, this routine creates a degree-255 polynomial with τ -many coefficients set to +/- 1, while
-// remaining (256 - τ) -many set to 0 s.t. λ = bit-security level of the respective ML-DSA instantiation.
+// Given a (lambda/4) -bytes seed, this routine creates a degree-255 polynomial with tau -many coefficients set to +/- 1, while
+// remaining (256 - tau) -many set to 0 s.t. lambda = bit-security level of the respective ML-DSA instantiation.
 //
 // See algorithm 29 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
-template<uint32_t τ, size_t λ>
+template<uint32_t tau, size_t lambda>
 static inline constexpr void
-sample_in_ball(std::span<const uint8_t, (2 * λ) / std::numeric_limits<uint8_t>::digits> seed, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
-  requires(ml_dsa_params::check_τ(τ))
+sample_in_ball(std::span<const uint8_t, (2 * lambda) / std::numeric_limits<uint8_t>::digits> seed, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
+  requires(ml_dsa_params::check_tau(tau))
 {
   std::array<uint8_t, 8> tau_bits{};
   std::array<uint8_t, shake256::RATE / std::numeric_limits<uint8_t>::digits> buf{};
@@ -190,7 +190,7 @@ sample_in_ball(std::span<const uint8_t, (2 * λ) / std::numeric_limits<uint8_t>:
   hasher.finalize();
   hasher.squeeze(tau_bits_span);
 
-  constexpr size_t frm = ml_dsa_ntt::N - τ;
+  constexpr size_t frm = ml_dsa_ntt::N - tau;
   size_t i = frm;
 
   while (i < ml_dsa_ntt::N) {

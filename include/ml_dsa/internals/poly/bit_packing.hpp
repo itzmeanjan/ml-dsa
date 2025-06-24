@@ -287,12 +287,12 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
   }
 }
 
-// Given a vector of hint bits ( of dimension k x 1 ), this routine encodes hint bits into (ω + k) -bytes.
+// Given a vector of hint bits ( of dimension k x 1 ), this routine encodes hint bits into (omega + k) -bytes.
 //
 // See algorithm 20 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
-template<size_t k, size_t ω>
+template<size_t k, size_t omega>
 static inline constexpr void
-encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::span<uint8_t, ω + k> arr)
+encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::span<uint8_t, omega + k> arr)
 {
   std::fill(arr.begin(), arr.end(), 0);
 
@@ -310,20 +310,20 @@ encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::
       idx += 1ul * flg;
     }
 
-    arr[ω + i] = idx;
+    arr[omega + i] = idx;
   }
 }
 
 // Given a serialized byte array holding hint bits, this routine unpacks hint bits into a vector ( of dimension k x 1 )
-// of degree-255 polynomials s.t. <= ω many hint bits are set.
+// of degree-255 polynomials s.t. <= omega many hint bits are set.
 //
 // Returns boolean result denoting status of decoding of byte serialized hint bits.
 // For example, say return value is true, it denotes that decoding has failed.
 //
 // See algorithm 21 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
-template<size_t k, size_t ω>
+template<size_t k, size_t omega>
 static inline constexpr bool
-decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h)
+decode_hint_bits(std::span<const uint8_t, omega + k> arr, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h)
 {
   std::fill(h.begin(), h.end(), ml_dsa_field::zq_t::zero());
 
@@ -333,13 +333,13 @@ decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<ml_dsa_field::z
   for (size_t i = 0; i < k; i++) {
     const size_t off = i * ml_dsa_ntt::N;
 
-    const bool flg0 = arr[ω + i] < idx;
-    const bool flg1 = arr[ω + i] > ω;
+    const bool flg0 = arr[omega + i] < idx;
+    const bool flg1 = arr[omega + i] > omega;
     const bool flg2 = flg0 | flg1;
 
     failed |= flg2;
 
-    const size_t till = arr[ω + i];
+    const size_t till = arr[omega + i];
     for (size_t j = idx; !failed && (j < till); j++) {
       const bool flg0 = j > idx;
       const bool flg1 = flg0 & (arr[j] <= arr[j - flg0 * 1]);
@@ -349,10 +349,10 @@ decode_hint_bits(std::span<const uint8_t, ω + k> arr, std::span<ml_dsa_field::z
       h[off + arr[j]] = ml_dsa_field::zq_t::one();
     }
 
-    idx = arr[ω + i];
+    idx = arr[omega + i];
   }
 
-  for (size_t i = idx; i < ω; i++) {
+  for (size_t i = idx; i < omega; i++) {
     const bool flg = arr[i] != 0;
     failed |= flg;
   }
