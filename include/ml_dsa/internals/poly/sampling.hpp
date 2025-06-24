@@ -103,7 +103,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
         const uint8_t t0 = buf_span[boff] & 0x0f;
         const uint8_t t1 = buf_span[boff] >> 4;
 
-        if constexpr (eta_value == 2u) {
+        if constexpr (eta == 2u) {
           const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
           const bool flg0 = t0 < 15;
 
