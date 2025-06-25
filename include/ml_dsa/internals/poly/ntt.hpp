@@ -35,7 +35,7 @@ bit_rev(const size_t v)
   return v_rev;
 }
 
-// Precomputed table of powers of ?, used during polynomial evaluation.
+// Precomputed table of powers of zeta, used during polynomial evaluation.
 static constexpr auto zeta_EXP = []() {
   std::array<ml_dsa_field::zq_t, N> res;
 
@@ -46,7 +46,7 @@ static constexpr auto zeta_EXP = []() {
   return res;
 }();
 
-// Precomputed table of negated powers of ?, used during polynomial interpolation.
+// Precomputed table of negated powers of zeta, used during polynomial interpolation.
 static constexpr auto zeta_NEG_EXP = []() {
   std::array<ml_dsa_field::zq_t, N> res;
 
