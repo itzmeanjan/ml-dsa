@@ -31,9 +31,9 @@ power2round(const ml_dsa_field::zq_t r)
 
 // Given an element of Z_q, this routine computes high and low order bits s.t.
 //
-// `r mod^+ q = r1 * α + r0 | -α/2 < r0 <= α/2`
+// `r mod^+ q = r1 * alpha + r0 | -alpha/2 < r0 <= alpha/2`
 //
-// If r1 = (q - 1)/ α then r1 = 0; r0 = r0 - 1
+// If r1 = (q - 1)/ alpha then r1 = 0; r0 = r0 - 1
 //
 // See algorithm 36 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
