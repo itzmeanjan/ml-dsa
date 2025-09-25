@@ -158,3 +158,53 @@ TEST(ML_DSA, ML_DSA_44_Sign_ACVP_KnownAnswerTests)
 
   file.close();
 }
+
+// Use ML-DSA-44 verify known answer tests (KATs) from NIST ACVP Server to ensure functional correctness and compatibility
+// of this ML-DSA library implementation with ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
+TEST(ML_DSA, ML_DSA_44_Verify_ACVP_KnownAnswerTests)
+{
+  const std::string kat_file = "./kats/ml_dsa_44_verify.acvp.kat";
+  std::fstream file(kat_file);
+
+  while (true) {
+    std::string msg_line;
+
+    if (!std::getline(file, msg_line).eof()) {
+      std::string pkey_line;
+      std::string skey_line;
+      std::string ctx_line;
+      std::string sig_line;
+      std::string testPassed_line;
+      std::string reason_line;
+
+      std::getline(file, pkey_line);
+      std::getline(file, skey_line);
+      std::getline(file, ctx_line);
+      std::getline(file, sig_line);
+      std::getline(file, testPassed_line);
+      std::getline(file, reason_line);
+
+      const auto msg = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(msg_line);
+      const auto pkey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::PubKeyByteLen>(pkey_line);
+      const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SecKeyByteLen>(skey_line);
+      const auto ctx = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(ctx_line);
+      const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SigByteLen>(sig_line);
+      const auto test_passed = testPassed_line.substr(testPassed_line.find("="sv) + 2, testPassed_line.size()) == "True";
+
+      const auto is_valid = ml_dsa_44::verify(pkey, msg, ctx, sig);
+
+      if (test_passed) {
+        EXPECT_TRUE(is_valid);
+      } else {
+        EXPECT_FALSE(is_valid);
+      }
+
+      std::string empty_line;
+      std::getline(file, empty_line);
+    } else {
+      break;
+    }
+  }
+
+  file.close();
+}
