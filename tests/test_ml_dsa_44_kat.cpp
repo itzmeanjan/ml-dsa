@@ -74,3 +74,42 @@ TEST(ML_DSA, ML_DSA_44_KnownAnswerTests)
 
   file.close();
 }
+
+// Use ML-DSA-44 key generation known answer tests (KATs) from NIST ACVP Server to ensure functional correctness and compatibility
+// of this ML-DSA library implementation with ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
+TEST(ML_DSA, ML_DSA_44_Keygen_ACVP_KnownAnswerTests)
+{
+  const std::string kat_file = "./kats/ml_dsa_44_keygen.acvp.kat";
+  std::fstream file(kat_file);
+
+  while (true) {
+    std::string seed_line;
+
+    if (!std::getline(file, seed_line).eof()) {
+      std::string pkey_line;
+      std::string skey_line;
+
+      std::getline(file, pkey_line);
+      std::getline(file, skey_line);
+
+      const auto seed = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::KeygenSeedByteLen>(seed_line);
+      const auto pkey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::PubKeyByteLen>(pkey_line);
+      const auto skey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SecKeyByteLen>(skey_line);
+
+      std::array<uint8_t, ml_dsa_44::PubKeyByteLen> computed_pkey{};
+      std::array<uint8_t, ml_dsa_44::SecKeyByteLen> computed_skey{};
+
+      ml_dsa_44::keygen(seed, computed_pkey, computed_skey);
+
+      EXPECT_EQ(pkey, computed_pkey);
+      EXPECT_EQ(skey, computed_skey);
+
+      std::string empty_line;
+      std::getline(file, empty_line);
+    } else {
+      break;
+    }
+  }
+
+  file.close();
+}
