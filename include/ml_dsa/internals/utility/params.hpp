@@ -88,12 +88,12 @@ check_signing_params(const size_t k,
                      const size_t omega,
                      const size_t lambda)
 {
-  return ((k == 4) && (l == 4) && (d == 13) && (eta == 2) && (gamma1 == (1u << 17)) && (gamma2 == ((ml_dsa_field::Q - 1) / 88)) && (tau == 39) && (beta == tau * eta) && (omega == 80) &&
-          (lambda == 128)) || // ML-DSA-44
-         ((k == 6) && (l == 5) && (d == 13) && (eta == 4) && (gamma1 == (1u << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 49) && (beta == tau * eta) && (omega == 55) &&
-          (lambda == 192)) || // ML-DSA-65
-         ((k == 8) && (l == 7) && (d == 13) && (eta == 2) && (gamma1 == (1u << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 60) && (beta == tau * eta) && (omega == 75) &&
-          (lambda == 256)); // ML-DSA-87
+  return ((k == 4) && (l == 4) && (d == 13) && (eta == 2) && (gamma1 == (1u << 17)) && (gamma2 == ((ml_dsa_field::Q - 1) / 88)) && (tau == 39) && (beta == tau * eta) &&
+          (omega == 80) && (lambda == 128)) || // ML-DSA-44
+         ((k == 6) && (l == 5) && (d == 13) && (eta == 4) && (gamma1 == (1u << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 49) && (beta == tau * eta) &&
+          (omega == 55) && (lambda == 192)) || // ML-DSA-65
+         ((k == 8) && (l == 7) && (d == 13) && (eta == 2) && (gamma1 == (1u << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 60) && (beta == tau * eta) &&
+          (omega == 75) && (lambda == 256)); // ML-DSA-87
 }
 
 // Compile-time executable constraints for ensuring that ML-DSA verification algorithm is only invoked with arguments

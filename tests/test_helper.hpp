@@ -10,8 +10,7 @@
 namespace ml_dsa_test_helper {
 
 // Given a hex encoded string of length 2*L, this routine can be used for parsing it as a byte array of length L.
-//
-// Note, template parameter and return type. Compare it with next function definition.
+// This is supposed to be used with hex strings for which we know the size at program compile-time.
 template<size_t L>
 static inline std::array<uint8_t, L>
 from_hex(std::string_view bytes)
@@ -37,8 +36,8 @@ from_hex(std::string_view bytes)
 }
 
 // Given a hex encoded string of length 2*L, this routine can be used for parsing it as a byte array of length L.
-//
-// Note, no template type required and return type is different from above function definition.
+// This is supposed to be used with hex strings for which we don't know the size at compile-time. That is why
+// it returns a dynamically allocated vector of bytes.
 static inline std::vector<uint8_t>
 from_hex(std::string_view hex)
 {
@@ -60,6 +59,50 @@ from_hex(std::string_view hex)
 
   return res;
 }
+
+// Given a string of following format, this function can extract and parse the hex string portion,
+// returning a byte array of requested length.
+//
+// DATA = 010203....0d0e0f
+template<size_t byte_len>
+static inline std::array<uint8_t, byte_len>
+extract_and_parse_fixed_length_hex_string(std::string_view in_str)
+{
+  using namespace std::literals;
+
+  const auto hex_str = in_str.substr(in_str.find("="sv) + 2, in_str.size());
+  return from_hex<byte_len>(hex_str);
+};
+
+// Given a string of following format, this function can extract and parse the hex string portion,
+// returning a byte array of requested length.
+//
+// DATA = 010203....0d0e0f
+static inline std::vector<uint8_t>
+extract_and_parse_variable_length_hex_string(std::string_view in_str)
+{
+  using namespace std::literals;
+
+  const auto hex_str = in_str.substr(in_str.find("="sv) + 2, in_str.size());
+  return from_hex(hex_str);
+};
+
+// Given a string of following format, this function can extract and parse the integer portion,
+// returning an integer value.
+//
+// MSG_LENGTH = 33
+static inline size_t
+extract_and_parse_integer(std::string_view in_str)
+{
+  using namespace std::literals;
+
+  size_t int_val = 0;
+
+  auto int_val_str = in_str.substr(in_str.find("="sv) + 2, in_str.size());
+  std::from_chars(int_val_str.data(), int_val_str.data() + int_val_str.size(), int_val);
+
+  return int_val;
+};
 
 // Given a byte array, this routine randomly selects a bit and flips it. This routine is used for generating faulty data
 // during testing.

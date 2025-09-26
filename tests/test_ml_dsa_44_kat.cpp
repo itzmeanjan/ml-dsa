@@ -15,72 +15,39 @@ TEST(ML_DSA, ML_DSA_44_KnownAnswerTests)
   std::fstream file(kat_file);
 
   while (true) {
-    std::string seed0;
+    std::string seed_line;
 
-    if (!std::getline(file, seed0).eof()) {
-      auto seed1 = std::string_view(seed0);
-      auto seed2 = seed1.substr(seed1.find("="sv) + 2, seed1.size());
-      const auto seed = ml_dsa_test_helper::from_hex<ml_dsa_44::KeygenSeedByteLen>(seed2);
+    if (!std::getline(file, seed_line).eof()) {
+      std::string pkey_line;
+      std::string skey_line;
+      std::string mlen_line;
+      std::string msg_line;
+      std::string ctx_len_line;
+      std::string ctx_line;
+      std::string rnd_line;
+      std::string sig_line;
 
-      std::string pkey0;
-      std::getline(file, pkey0);
+      std::getline(file, pkey_line);
+      std::getline(file, skey_line);
+      std::getline(file, mlen_line);
+      std::getline(file, msg_line);
+      std::getline(file, ctx_len_line);
+      std::getline(file, ctx_line);
+      std::getline(file, rnd_line);
+      std::getline(file, sig_line);
 
-      auto pkey1 = std::string_view(pkey0);
-      auto pkey2 = pkey1.substr(pkey1.find("="sv) + 2, pkey1.size());
-      const auto pkey = ml_dsa_test_helper::from_hex<ml_dsa_44::PubKeyByteLen>(pkey2); // Expected public key
+      const auto seed = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::KeygenSeedByteLen>(seed_line);
+      const auto pkey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::PubKeyByteLen>(pkey_line);
+      const auto skey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SecKeyByteLen>(skey_line);
+      const auto mlen = ml_dsa_test_helper::extract_and_parse_integer(mlen_line);
+      const auto msg = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(msg_line);
+      const auto ctx_len = ml_dsa_test_helper::extract_and_parse_integer(ctx_len_line);
+      const auto ctx = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(ctx_line);
+      const auto rnd = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SigningSeedByteLen>(rnd_line);
+      const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SigByteLen>(sig_line);
 
-      std::string skey0;
-      std::getline(file, skey0);
-
-      auto skey1 = std::string_view(skey0);
-      auto skey2 = skey1.substr(skey1.find("="sv) + 2, skey1.size());
-      const auto skey = ml_dsa_test_helper::from_hex<ml_dsa_44::SecKeyByteLen>(skey2); // Expected secret key
-
-      std::string mlen0;
-      std::getline(file, mlen0);
-      size_t mlen = 0; // Message byte length
-
-      auto mlen1 = std::string_view(mlen0);
-      auto mlen2 = mlen1.substr(mlen1.find("="sv) + 2, mlen1.size());
-      std::from_chars(mlen2.data(), mlen2.data() + mlen2.size(), mlen);
-
-      std::string msg0;
-      std::getline(file, msg0);
-
-      auto msg1 = std::string_view(msg0);
-      auto msg2 = msg1.substr(msg1.find("="sv) + 2, msg1.size());
-      const auto msg = ml_dsa_test_helper::from_hex(msg2);
-      const auto msg_span = std::span(msg); // Message to be signed
-
-      std::string ctx_len0;
-      std::getline(file, ctx_len0);
-      size_t ctx_len = 0; // Context byte length
-
-      auto ctx_len1 = std::string_view(ctx_len0);
-      auto ctx_len2 = ctx_len1.substr(ctx_len1.find("="sv) + 2, ctx_len1.size());
-      std::from_chars(ctx_len2.data(), ctx_len2.data() + ctx_len2.size(), ctx_len);
-
-      std::string ctx0;
-      std::getline(file, ctx0);
-
-      auto ctx1 = std::string_view(ctx0);
-      auto ctx2 = ctx1.substr(ctx1.find("="sv) + 2, ctx1.size());
-      const auto ctx = ml_dsa_test_helper::from_hex(ctx2);
-      const auto ctx_span = std::span(ctx); // Optional context
-
-      std::string rnd0;
-      std::getline(file, rnd0);
-
-      auto rnd1 = std::string_view(rnd0);
-      auto rnd2 = rnd1.substr(rnd1.find("="sv) + 2, rnd1.size());
-      const auto rnd = ml_dsa_test_helper::from_hex<ml_dsa_44::SigningSeedByteLen>(rnd2); // Randomness for "randomized" message signing
-
-      std::string sig0;
-      std::getline(file, sig0);
-
-      auto sig1 = std::string_view(sig0);
-      auto sig2 = sig1.substr(sig1.find("="sv) + 2, sig1.size());
-      const auto sig = ml_dsa_test_helper::from_hex<ml_dsa_44::SigByteLen>(sig2); // Expected signature
+      EXPECT_EQ(mlen, msg.size());
+      EXPECT_EQ(ctx_len, ctx.size());
 
       std::array<uint8_t, ml_dsa_44::PubKeyByteLen> computed_pkey{};
       std::array<uint8_t, ml_dsa_44::SecKeyByteLen> computed_skey{};
@@ -88,8 +55,8 @@ TEST(ML_DSA, ML_DSA_44_KnownAnswerTests)
 
       // Keygen -> Sign -> Verify
       ml_dsa_44::keygen(seed, computed_pkey, computed_skey);
-      const auto has_signed = ml_dsa_44::sign(rnd, computed_skey, msg_span, ctx_span, computed_sig);
-      const auto is_valid = ml_dsa_44::verify(computed_pkey, msg_span, ctx_span, computed_sig);
+      const auto has_signed = ml_dsa_44::sign(rnd, computed_skey, msg, ctx, computed_sig);
+      const auto is_valid = ml_dsa_44::verify(computed_pkey, msg, ctx, computed_sig);
 
       // Check if computed public key, secret key and signature matches expected ones, from KAT file.
       EXPECT_EQ(pkey, computed_pkey);
@@ -97,6 +64,229 @@ TEST(ML_DSA, ML_DSA_44_KnownAnswerTests)
       EXPECT_EQ(sig, computed_sig);
       EXPECT_TRUE(has_signed);
       EXPECT_TRUE(is_valid);
+
+      std::string empty_line;
+      std::getline(file, empty_line);
+    } else {
+      break;
+    }
+  }
+
+  file.close();
+}
+
+// Use ML-DSA-44 key generation known answer tests (KATs) from NIST ACVP Server to ensure functional correctness and compatibility
+// of this ML-DSA library implementation with ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
+TEST(ML_DSA, ML_DSA_44_Keygen_ACVP_KnownAnswerTests)
+{
+  const std::string kat_file = "./kats/ml_dsa_44_keygen.acvp.kat";
+  std::fstream file(kat_file);
+
+  while (true) {
+    std::string seed_line;
+
+    if (!std::getline(file, seed_line).eof()) {
+      std::string pkey_line;
+      std::string skey_line;
+
+      std::getline(file, pkey_line);
+      std::getline(file, skey_line);
+
+      const auto seed = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::KeygenSeedByteLen>(seed_line);
+      const auto pkey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::PubKeyByteLen>(pkey_line);
+      const auto skey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SecKeyByteLen>(skey_line);
+
+      std::array<uint8_t, ml_dsa_44::PubKeyByteLen> computed_pkey{};
+      std::array<uint8_t, ml_dsa_44::SecKeyByteLen> computed_skey{};
+
+      ml_dsa_44::keygen(seed, computed_pkey, computed_skey);
+
+      EXPECT_EQ(pkey, computed_pkey);
+      EXPECT_EQ(skey, computed_skey);
+
+      std::string empty_line;
+      std::getline(file, empty_line);
+    } else {
+      break;
+    }
+  }
+
+  file.close();
+}
+
+// Use ML-DSA-44 sign known answer tests (KATs) from NIST ACVP Server to ensure functional correctness and compatibility
+// of this ML-DSA library implementation with ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
+TEST(ML_DSA, ML_DSA_44_Sign_ACVP_KnownAnswerTests)
+{
+  const std::string kat_file = "./kats/ml_dsa_44_sign.acvp.kat";
+  std::fstream file(kat_file);
+
+  while (true) {
+    std::string msg_line;
+
+    if (!std::getline(file, msg_line).eof()) {
+      std::string pkey_line;
+      std::string skey_line;
+      std::string ctx_line;
+      std::string rnd_line;
+      std::string sig_line;
+
+      std::getline(file, pkey_line);
+      std::getline(file, skey_line);
+      std::getline(file, ctx_line);
+      std::getline(file, rnd_line);
+      std::getline(file, sig_line);
+
+      const auto msg = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(msg_line);
+      const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::PubKeyByteLen>(pkey_line);
+      const auto skey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SecKeyByteLen>(skey_line);
+      const auto ctx = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(ctx_line);
+      const auto rnd = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SigningSeedByteLen>(rnd_line);
+      const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SigByteLen>(sig_line);
+
+      std::array<uint8_t, ml_dsa_44::SigByteLen> computed_sig{};
+      ml_dsa_44::sign(rnd, skey, msg, ctx, computed_sig);
+
+      EXPECT_EQ(sig, computed_sig);
+
+      std::string empty_line;
+      std::getline(file, empty_line);
+    } else {
+      break;
+    }
+  }
+
+  file.close();
+}
+
+// Use ML-DSA-44 sign_internal known answer tests (KATs) from NIST ACVP Server to ensure functional correctness and compatibility
+// of this ML-DSA library implementation with ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
+TEST(ML_DSA, ML_DSA_44_Sign_Internal_ACVP_KnownAnswerTests)
+{
+  const std::string kat_file = "./kats/ml_dsa_44_sign_internal.acvp.kat";
+  std::fstream file(kat_file);
+
+  while (true) {
+    std::string mu_line;
+
+    if (!std::getline(file, mu_line).eof()) {
+      std::string pkey_line;
+      std::string skey_line;
+      std::string rnd_line;
+      std::string sig_line;
+
+      std::getline(file, pkey_line);
+      std::getline(file, skey_line);
+      std::getline(file, rnd_line);
+      std::getline(file, sig_line);
+
+      const auto mu = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::MessageRepresentativeByteLen>(mu_line);
+      const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::PubKeyByteLen>(pkey_line);
+      const auto skey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SecKeyByteLen>(skey_line);
+      const auto rnd = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SigningSeedByteLen>(rnd_line);
+      const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SigByteLen>(sig_line);
+
+      std::array<uint8_t, ml_dsa_44::SigByteLen> computed_sig{};
+      ml_dsa_44::sign_internal(rnd, skey, mu, computed_sig);
+
+      EXPECT_EQ(sig, computed_sig);
+
+      std::string empty_line;
+      std::getline(file, empty_line);
+    } else {
+      break;
+    }
+  }
+
+  file.close();
+}
+
+// Use ML-DSA-44 verify known answer tests (KATs) from NIST ACVP Server to ensure functional correctness and compatibility
+// of this ML-DSA library implementation with ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
+TEST(ML_DSA, ML_DSA_44_Verify_ACVP_KnownAnswerTests)
+{
+  const std::string kat_file = "./kats/ml_dsa_44_verify.acvp.kat";
+  std::fstream file(kat_file);
+
+  while (true) {
+    std::string msg_line;
+
+    if (!std::getline(file, msg_line).eof()) {
+      std::string pkey_line;
+      std::string skey_line;
+      std::string ctx_line;
+      std::string sig_line;
+      std::string testPassed_line;
+      std::string reason_line;
+
+      std::getline(file, pkey_line);
+      std::getline(file, skey_line);
+      std::getline(file, ctx_line);
+      std::getline(file, sig_line);
+      std::getline(file, testPassed_line);
+      std::getline(file, reason_line);
+
+      const auto msg = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(msg_line);
+      const auto pkey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::PubKeyByteLen>(pkey_line);
+      const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SecKeyByteLen>(skey_line);
+      const auto ctx = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(ctx_line);
+      const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SigByteLen>(sig_line);
+      const auto test_passed = testPassed_line.substr(testPassed_line.find("="sv) + 2, testPassed_line.size()) == "True";
+
+      const auto is_valid = ml_dsa_44::verify(pkey, msg, ctx, sig);
+
+      if (test_passed) {
+        EXPECT_TRUE(is_valid);
+      } else {
+        EXPECT_FALSE(is_valid);
+      }
+
+      std::string empty_line;
+      std::getline(file, empty_line);
+    } else {
+      break;
+    }
+  }
+
+  file.close();
+}
+
+// Use ML-DSA-44 verify_internal known answer tests (KATs) from NIST ACVP Server to ensure functional correctness and compatibility
+// of this ML-DSA library implementation with ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
+TEST(ML_DSA, ML_DSA_44_Verify_Internal_ACVP_KnownAnswerTests)
+{
+  const std::string kat_file = "./kats/ml_dsa_44_verify_internal.acvp.kat";
+  std::fstream file(kat_file);
+
+  while (true) {
+    std::string mu_line;
+
+    if (!std::getline(file, mu_line).eof()) {
+      std::string pkey_line;
+      std::string skey_line;
+      std::string sig_line;
+      std::string testPassed_line;
+      std::string reason_line;
+
+      std::getline(file, pkey_line);
+      std::getline(file, skey_line);
+      std::getline(file, sig_line);
+      std::getline(file, testPassed_line);
+      std::getline(file, reason_line);
+
+      const auto mu = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::MessageRepresentativeByteLen>(mu_line);
+      const auto pkey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::PubKeyByteLen>(pkey_line);
+      const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SecKeyByteLen>(skey_line);
+      const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_44::SigByteLen>(sig_line);
+      const auto test_passed = testPassed_line.substr(testPassed_line.find("="sv) + 2, testPassed_line.size()) == "True";
+
+      const auto is_valid = ml_dsa_44::verify_internal(pkey, mu, sig);
+
+      if (test_passed) {
+        EXPECT_TRUE(is_valid);
+      } else {
+        EXPECT_FALSE(is_valid);
+      }
 
       std::string empty_line;
       std::getline(file, empty_line);
