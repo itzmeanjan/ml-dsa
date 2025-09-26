@@ -316,16 +316,11 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   constexpr size_t skoff2 = skoff1 + 32;
   constexpr size_t skoff3 = skoff2 + 64;
 
-  auto rho = seckey.template subspan<skoff0, skoff1 - skoff0>();
   auto tr = seckey.template subspan<skoff2, skoff3 - skoff2>();
-
-  std::array<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> A{};
-  ml_dsa_sampling::expand_a<k, l>(rho, A);
+  const std::array<uint8_t, 2> domain_separator{ 0, static_cast<uint8_t>(ctx.size()) };
 
   std::array<uint8_t, MU_BYTE_LEN> mu{};
   auto mu_span = std::span(mu);
-
-  const std::array<uint8_t, 2> domain_separator{ 0, static_cast<uint8_t>(ctx.size()) };
 
   shake256::shake256_t hasher;
   hasher.absorb(tr);
