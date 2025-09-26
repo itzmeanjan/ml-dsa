@@ -56,6 +56,26 @@ main()
 
   ml_dsa_44::keygen(seed_span, pubkey_span, seckey_span);
   const bool has_signed = ml_dsa_44::sign(rnd_span, seckey_span, msg_span, ctx_span, sig_span);
+
+  // ML-DSA exposes an internal signing API, where one can pass an externally computed `mu` of 64 -bytes i.e. the message representative
+  // to be signed, instead of passing message and optional context string. How is `mu` computed ?
+  //
+  // ```cpp
+  // std::array<uint8_t, MU_BYTE_LEN> mu{};
+  // auto mu_span = std::span(mu);
+  //
+  // shake256::shake256_t hasher;
+  //
+  // hasher.absorb(tr); // `tr` is hash of public key. It is embedded in the secret key.
+  // hasher.absorb(domain_separator);
+  // hasher.absorb(ctx);
+  // hasher.absorb(msg);
+  // hasher.finalize();
+  //
+  // hasher.squeeze(mu_span);
+  // ```
+  // const bool has_signed = ml_dsa_44::sign_internal(rnd_span, seckey_span, mu_span, sig_span);
+
   const bool is_valid = ml_dsa_44::verify(pubkey_span, msg_span, ctx_span, sig_span);
 
   std::cout << "ML-DSA-44 @ NIST security level 2\n";
