@@ -1,6 +1,8 @@
 #include "bench_helper.hpp"
 #include "ml_dsa/ml_dsa_44.hpp"
+#include <array>
 #include <benchmark/benchmark.h>
+#include <limits>
 
 // Benchmark performance of ML-DSA-44 key generation algorithm.
 void
@@ -41,7 +43,9 @@ ml_dsa_44_sign(benchmark::State& state)
   std::array<uint8_t, ml_dsa_44::SigningSeedByteLen> rnd{};
   std::array<uint8_t, ml_dsa_44::SigByteLen> sig{};
 
-  randomshake::randomshake_t<128> csprng;
+  const std::array<uint8_t, 128 / std::numeric_limits<uint8_t>::digits> CSPRNG_SEED{ 0 };
+  randomshake::randomshake_t<128> csprng(CSPRNG_SEED);
+
   csprng.generate(seed);
   csprng.generate(rnd);
   csprng.generate(msg_span);
