@@ -41,7 +41,9 @@ ml_dsa_65_sign(benchmark::State& state)
   std::array<uint8_t, ml_dsa_65::SigningSeedByteLen> rnd{};
   std::array<uint8_t, ml_dsa_65::SigByteLen> sig{};
 
-  randomshake::randomshake_t<192> csprng;
+  const std::array<uint8_t, 192 / std::numeric_limits<uint8_t>::digits> CSPRNG_SEED{ 0 };
+  randomshake::randomshake_t<192> csprng(CSPRNG_SEED);
+
   csprng.generate(seed);
   csprng.generate(rnd);
   csprng.generate(msg_span);
