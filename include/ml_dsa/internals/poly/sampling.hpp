@@ -1,11 +1,12 @@
 #pragma once
 #include "bit_packing.hpp"
+#include "blake3.h"
+#include "ml_dsa/internals/hashing/blake3.hpp"
 #include "ml_dsa/internals/math/field.hpp"
 #include "ml_dsa/internals/utility/params.hpp"
 #include "ntt.hpp"
 #include "poly.hpp"
 #include "sha3/shake128.hpp"
-#include "sha3/shake256.hpp"
 #include <cstdint>
 #include <limits>
 
@@ -19,7 +20,7 @@ using poly_t = std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N>;
 //
 // See algorithm 32 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l>
-static inline constexpr void
+static inline void
 expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> mat)
 {
   std::array<uint8_t, rho.size() + 2> msg{};
@@ -34,7 +35,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
       msg[32] = static_cast<uint8_t>(j);
       msg[33] = static_cast<uint8_t>(i);
 
-      shake128::shake128_t hasher;
+      ml_dsa_hashing::blake3_hasher_t hasher;
       hasher.absorb(msg_span);
       hasher.finalize();
 
@@ -70,7 +71,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
 //
 // See algorithm 33 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t eta, size_t k, uint16_t nonce>
-static inline constexpr void
+static inline void
 expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_eta(eta) && ml_dsa_params::check_nonce(nonce))
 {
@@ -88,7 +89,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
     msg[64] = static_cast<uint8_t>(new_nonce >> 0);
     msg[65] = static_cast<uint8_t>(new_nonce >> 8);
 
-    shake256::shake256_t hasher;
+    ml_dsa_hashing::blake3_hasher_t hasher;
     hasher.absorb(msg_span);
     hasher.finalize();
 
@@ -139,7 +140,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
 //
 // See algorithm 34 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t gamma1, size_t l>
-static inline constexpr void
+static inline void
 expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_gamma1(gamma1))
 {
@@ -160,7 +161,7 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
     msg[64] = static_cast<uint8_t>(new_nonce >> 0);
     msg[65] = static_cast<uint8_t>(new_nonce >> 8);
 
-    shake256::shake256_t hasher;
+    ml_dsa_hashing::blake3_hasher_t hasher;
     hasher.absorb(msg_span);
     hasher.finalize();
     hasher.squeeze(buf_span);
@@ -175,17 +176,17 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
 //
 // See algorithm 29 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t tau, size_t lambda>
-static inline constexpr void
+static inline void
 sample_in_ball(std::span<const uint8_t, (2 * lambda) / std::numeric_limits<uint8_t>::digits> seed, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
   requires(ml_dsa_params::check_tau(tau))
 {
   std::array<uint8_t, 8> tau_bits{};
-  std::array<uint8_t, shake256::RATE / std::numeric_limits<uint8_t>::digits> buf{};
+  std::array<uint8_t, BLAKE3_OUT_LEN> buf{};
 
   auto tau_bits_span = std::span(tau_bits);
   auto buf_span = std::span(buf);
 
-  shake256::shake256_t hasher;
+  ml_dsa_hashing::blake3_hasher_t hasher;
   hasher.absorb(seed);
   hasher.finalize();
   hasher.squeeze(tau_bits_span);

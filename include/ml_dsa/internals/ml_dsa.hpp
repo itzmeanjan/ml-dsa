@@ -1,4 +1,5 @@
 #pragma once
+#include "ml_dsa/internals/hashing/blake3.hpp"
 #include "ml_dsa/internals/math/field.hpp"
 #include "ml_dsa/internals/poly/polyvec.hpp"
 #include "ml_dsa/internals/poly/sampling.hpp"
@@ -26,7 +27,7 @@ static constexpr size_t MU_BYTE_LEN = 64;
 //
 // See algorithm 1 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t eta>
-static inline constexpr void
+static inline void
 keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
        std::span<uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
        std::span<uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey)
@@ -37,7 +38,7 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
   std::array<uint8_t, 32 + 64 + 32> seed_hash{};
   auto seed_hash_span = std::span(seed_hash);
 
-  shake256::shake256_t hasher;
+  ml_dsa_hashing::blake3_hasher_t hasher;
   hasher.absorb(ξ);
   hasher.absorb(domain_separator);
   hasher.finalize();
@@ -127,7 +128,7 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
 //
 // See algorithm 7 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t eta, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static inline constexpr bool
+static inline bool
 sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
               std::span<const uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey,
               std::span<const uint8_t, MU_BYTE_LEN> mu,
@@ -155,7 +156,7 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 
   std::array<uint8_t, 64> rho_prime{};
 
-  shake256::shake256_t hasher;
+  ml_dsa_hashing::blake3_hasher_t hasher;
   hasher.reset();
   hasher.absorb(key);
   hasher.absorb(rnd);
@@ -299,7 +300,7 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 //
 // See algorithm 2 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t eta, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static inline constexpr bool
+static inline bool
 sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
      std::span<const uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey,
      std::span<const uint8_t> msg,
@@ -322,7 +323,7 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   std::array<uint8_t, MU_BYTE_LEN> mu{};
   auto mu_span = std::span(mu);
 
-  shake256::shake256_t hasher;
+  ml_dsa_hashing::blake3_hasher_t hasher;
   hasher.absorb(tr);
   hasher.absorb(domain_separator);
   hasher.absorb(ctx);
@@ -339,7 +340,7 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 //
 // See algorithm 8 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static inline constexpr bool
+static inline bool
 verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
                 std::span<const uint8_t, MU_BYTE_LEN> mu,
                 std::span<const uint8_t, ml_dsa_utils::sig_len(k, l, gamma1, omega, lambda)> sig)
@@ -422,7 +423,7 @@ verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey
 
   std::array<uint8_t, c_tilda.size()> c_tilda_prime{};
 
-  shake256::shake256_t hasher;
+  ml_dsa_hashing::blake3_hasher_t hasher;
   hasher.absorb(mu);
   hasher.absorb(w1_encoded);
   hasher.finalize();
@@ -437,7 +438,7 @@ verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey
 //
 // See algorithm 3 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static inline constexpr bool
+static inline bool
 verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
        std::span<const uint8_t> msg,
        std::span<const uint8_t> ctx,
@@ -451,7 +452,7 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
   std::array<uint8_t, 64> mu{};
   std::array<uint8_t, 64> tr{};
 
-  shake256::shake256_t hasher;
+  ml_dsa_hashing::blake3_hasher_t hasher;
   hasher.absorb(pubkey);
   hasher.finalize();
   hasher.squeeze(tr);
