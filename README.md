@@ -19,11 +19,11 @@ Verify | Public Key, N(>=) bytes message and an optional context (of max 255 -by
 
 Here I'm maintaining `ml-dsa` - a C++20, header-only, fully `constexpr` library, implementing NIST FIPS 204 ML-DSA standard, supporting ML-DSA-{44, 65, 87} parameter sets, as defined in table 1 of ML-DSA standard. For more details on using this library, see [below](#usage). It shows following performance characteristics on desktop and server grade CPUs.
 
-ML-DSA-65 Algorithm | Time taken on "12th Gen Intel(R) Core(TM) i7-1260P" | Time taken on "AWS EC2 Instance c8g.large"
---- | --: | --:
-keygen | 92.9 us | 126.2 us
-sign | 160.5 us | 231.7 us
-verify | 94.8 us | 134.4 us
+ML-DSA-65 Algorithm | `(a)` Time taken on "12th Gen Intel(R) Core(TM) i7-1260P" | `(b)` Time taken on "AWS EC2 Instance c8g.large" | Ratio `(a / b)`
+--- | --: | --: | --:
+keygen | 92.9 us | 126.2 us | 0.74
+sign | 604 us | 879 us | 0.69
+verify | 94.8 us | 134.4 us | 0.71
 
 > [!NOTE]
 > All numbers in the table above represent the median time required to execute a specific algorithm, except for signing. In the case of signing, the number represents the minimum time required to sign a 32 -bytes message. To understand why this is done for signing, please refer to [this](#benchmarking) section.
@@ -136,11 +136,11 @@ make perf -j       # If you have built google-benchmark library with libPFM supp
 
 ### On 12th Gen Intel(R) Core(TM) i7-1260P
 
-Benchmark result in JSON format @ [bench_result_on_Linux_6.11.0-19-generic_x86_64_with_g++_14.json](./bench_result_on_Linux_6.11.0-19-generic_x86_64_with_g++_14.json).
+Benchmark result in JSON format @ [bench_result_at_commit_25f3161_on_Linux_6.17.0-5-generic_x86_64_with_g++_15.json](./bench_result_at_commit_25f3161_on_Linux_6.17.0-5-generic_x86_64_with_g++_15.json).
 
 ### On AWS EC2 Instance `c8g.large` i.e. AWS Graviton4
 
-Benchmark result in JSON format @ [bench_result_on_Linux_6.8.0-1021-aws_aarch64_with_g++_13.json](./bench_result_on_Linux_6.8.0-1021-aws_aarch64_with_g++_13.json).
+Benchmark result in JSON format @ [bench_result_at_commit_25f3161_on_Linux_6.14.0-1011-aws_aarch64_with_g++_13.json](./bench_result_at_commit_25f3161_on_Linux_6.14.0-1011-aws_aarch64_with_g++_13.json).
 
 More about this EC2 instance @ <https://aws.amazon.com/ec2/instance-types/c8g>.
 
