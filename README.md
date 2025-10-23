@@ -2,6 +2,9 @@
 
 NIST FIPS 204 (ML-DSA) standard compliant, C++20, fully `constexpr`, header-only library
 
+> [!NOTE]
+> `constexpr` ? Yes, you can compile-time execute keygen, sign and verify. But why? I don't know, some usecase might arise.
+
 > [!CAUTION]
 > This ML-DSA implementation is conformant with ML-DSA standard @ <https://doi.org/10.6028/NIST.FIPS.204>. I also try to make it timing leakage free, but be informed that this implementation is not yet audited. **If you consider using it in production, be careful !**
 
@@ -122,7 +125,7 @@ PASSED TESTS (37/37):
 ## Benchmarking
 
 > [!WARNING]
-> Relying only on average timing measurement for understanding performance characteristics of ML-DSA `sign` algorithm may not be a good idea, given that it's a post-quantum digital signature scheme of **"Fiat-Shamir with Aborts"** paradigm - simply put, during signing procedure it may need to abort and restart again, multiple times, based on what message is being signed or what random seed is being used for default **hedged** signing. So it's a better idea to also compute other statistics such as minimum, maximum and median when timing execution of `sign` procedure. In following benchmark results, you'll see such statistics demonstrating broader performance characteristics of ML-DSA `sign` procedure for various parameter sets.
+> Relying only on average timing measurement for understanding performance characteristics of ML-DSA `sign` algorithm may not be a good idea, given that it's a post-quantum digital signature scheme of **"Fiat-Shamir with Aborts"** paradigm - simply put, during signing procedure it may need to abort and restart again, multiple times, based on what message is being signed or what random seed is being used for default **hedged** signing. So it's a better idea to also compute other statistics such as minimum, maximum and median when timing execution of `sign` procedure. In following benchmark results, you'll see such statistics demonstrating broader performance characteristics of ML-DSA `sign` procedure for various parameter sets. Also to easily compare performance benchmarking result of sign function across different configurations, we use a fixed seed to initialize RandomShake CSPRNG. This gives us deterministic result.
 
 Benchmarking key generation, signing and verification algorithms for various instantiations of ML-DSA can be done, by running following command.
 
