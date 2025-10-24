@@ -6,7 +6,7 @@ BENCHMARK_LINK_FLAGS := -lbenchmark -lbenchmark_main -lpthread
 BENCHMARK_BINARY := $(BENCHMARK_BUILD_DIR)/bench.out
 PERF_LINK_FLAGS := -lbenchmark -lbenchmark_main -lpfm -lpthread
 PERF_BINARY := $(BENCHMARK_BUILD_DIR)/perf.out
-BENCHMARK_OUT_FILE := bench_result_on_$(shell uname -s)_$(shell uname -r)_$(shell uname -m)_with_$(CXX)_$(shell $(CXX) -dumpversion).json
+BENCHMARK_OUT_FILE := bench_result_at_commit_$(shell git log -1 --pretty=format:"%h")_on_$(shell uname -s)_$(shell uname -r)_$(shell uname -m)_with_$(CXX)_$(shell $(CXX) -dumpversion).json
 
 $(BENCHMARK_BUILD_DIR):
 	mkdir -p $@
