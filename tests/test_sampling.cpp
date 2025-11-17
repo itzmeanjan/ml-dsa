@@ -12,7 +12,7 @@ test_sample_in_ball()
   std::array<uint8_t, (2 * lambda) / std::numeric_limits<uint8_t>::digits> seed{};
   std::array<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly{};
 
-  randomshake::randomshake_t<256> csprng;
+  randomshake::randomshake_t csprng;
   csprng.generate(seed);
 
   ml_dsa_sampling::sample_in_ball<tau, lambda>(seed, poly);

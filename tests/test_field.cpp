@@ -9,7 +9,7 @@ TEST(ML_DSA, ArithmeticOverZq)
   constexpr size_t itr_cnt = 1ul << 20;
   constexpr auto zero = ml_dsa_field::zq_t::zero();
 
-  randomshake::randomshake_t<256> csprng;
+  randomshake::randomshake_t csprng;
 
   for (size_t i = 0; i < itr_cnt; i++) {
     const auto a = ml_dsa_field::zq_t::random(csprng);

@@ -18,7 +18,7 @@ test_encode_decode_of_polynomials()
   std::array<ml_dsa_field::zq_t, ml_dsa_ntt::N> polyb{};
   std::array<uint8_t, poly_byte_len> poly_bytes{};
 
-  randomshake::randomshake_t<256> csprng;
+  randomshake::randomshake_t csprng;
 
   for (size_t i = 0; i < ml_dsa_ntt::N; i++) {
     polya[i] = ml_dsa_field::zq_t::random(csprng);
