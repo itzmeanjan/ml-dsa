@@ -149,8 +149,7 @@ public:
   inline constexpr zq_t operator<<(const size_t l) const { return zq_t(this->v << l); }
 
   // Generate a random field element
-  template<size_t bit_security_level>
-  static inline zq_t random(randomshake::randomshake_t<bit_security_level>& csprng)
+  static inline zq_t random(randomshake::randomshake_t<>& csprng)
   {
     uint32_t res = 0;
     csprng.generate(std::span(reinterpret_cast<uint8_t*>(&res), sizeof(res)));

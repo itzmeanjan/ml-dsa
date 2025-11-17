@@ -44,7 +44,7 @@ main()
   auto seckey_span = std::span<uint8_t, ml_dsa_44::SecKeyByteLen>(seckey);
   auto sig_span = std::span<uint8_t, ml_dsa_44::SigByteLen>(sig);
 
-  randomshake::randomshake_t<128> csprng;
+  randomshake::randomshake_t csprng;
 
   csprng.generate(seed_span);
   csprng.generate(msg_span);

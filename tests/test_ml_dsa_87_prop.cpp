@@ -35,7 +35,7 @@ test_ml_dsa_87_signing(const size_t mlen, const size_t ctx_len)
   auto ctx_span = std::span(ctx);
   auto ctx_copy_span = std::span(ctx_copy);
 
-  randomshake::randomshake_t<256> csprng;
+  randomshake::randomshake_t csprng;
   csprng.generate(seed);
   csprng.generate(msg_span);
   csprng.generate(rnd);

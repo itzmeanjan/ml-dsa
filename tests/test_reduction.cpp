@@ -12,7 +12,7 @@ TEST(ML_DSA, Power2Round)
   constexpr size_t d = 13;
   constexpr ml_dsa_field::zq_t two_to_d(1u << d);
 
-  randomshake::randomshake_t<256> csprng;
+  randomshake::randomshake_t csprng;
 
   for (size_t i = 0; i < itr_cnt; i++) {
     const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(csprng);
@@ -31,7 +31,7 @@ template<uint32_t alpha, uint32_t z, size_t rounds = 65536ul>
 static void
 test_decompose()
 {
-  randomshake::randomshake_t<256> csprng;
+  randomshake::randomshake_t csprng;
 
   for (size_t i = 0; i < rounds; i++) {
     const ml_dsa_field::zq_t r = ml_dsa_field::zq_t::random(csprng);

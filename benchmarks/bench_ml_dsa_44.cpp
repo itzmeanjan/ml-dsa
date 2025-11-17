@@ -1,11 +1,8 @@
 #include "bench_helper.hpp"
 #include "ml_dsa/ml_dsa_44.hpp"
+#include "randomshake/randomshake.hpp"
 #include <array>
 #include <benchmark/benchmark.h>
-#include <limits>
-
-static constexpr size_t BIT_SECURITY_LEVEL = ml_dsa_44::lambda;
-static constexpr std::array<uint8_t, BIT_SECURITY_LEVEL / std::numeric_limits<uint8_t>::digits> CSPRNG_SEED{ 0 };
 
 // Benchmark performance of ML-DSA-44 key generation algorithm.
 void
@@ -15,7 +12,7 @@ ml_dsa_44_keygen(benchmark::State& state)
   std::array<uint8_t, ml_dsa_44::PubKeyByteLen> pubkey{};
   std::array<uint8_t, ml_dsa_44::SecKeyByteLen> seckey{};
 
-  randomshake::randomshake_t<BIT_SECURITY_LEVEL> csprng;
+  randomshake::randomshake_t csprng;
   csprng.generate(seed);
 
   for (auto _ : state) {
@@ -46,7 +43,9 @@ ml_dsa_44_sign(benchmark::State& state)
   std::array<uint8_t, ml_dsa_44::SigningSeedByteLen> rnd{};
   std::array<uint8_t, ml_dsa_44::SigByteLen> sig{};
 
-  randomshake::randomshake_t<BIT_SECURITY_LEVEL> csprng(CSPRNG_SEED);
+  constexpr std::array<uint8_t, randomshake::randomshake_t<>::seed_byte_len> CSPRNG_SEED{ 0 };
+  randomshake::randomshake_t csprng(CSPRNG_SEED);
+
   csprng.generate(seed);
   csprng.generate(rnd);
   csprng.generate(msg_span);
@@ -87,7 +86,7 @@ ml_dsa_44_verify(benchmark::State& state)
   std::array<uint8_t, ml_dsa_44::SigningSeedByteLen> rnd{};
   std::array<uint8_t, ml_dsa_44::SigByteLen> sig{};
 
-  randomshake::randomshake_t<BIT_SECURITY_LEVEL> csprng;
+  randomshake::randomshake_t csprng;
   csprng.generate(seed);
   csprng.generate(rnd);
   csprng.generate(msg_span);
