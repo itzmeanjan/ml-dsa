@@ -1,0 +1,28 @@
+---
+Checks: '
+  bugprone-*,
+  cert-*,
+  cppcoreguidelines-*,
+  misc-*,
+  performance-*,
+  readability-*,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -cppcoreguidelines-pro-bounds-constant-array-index,
+  -cppcoreguidelines-avoid-magic-numbers,
+  -readability-magic-numbers,
+  -readability-named-parameter,
+  -readability-container-size-empty,
+  -bugprone-easily-swappable-parameters,
+  -clang-analyzer-deadcode.DeadStores,
+  -cppcoreguidelines-pro-type-reinterpret-cast,
+  -cppcoreguidelines-avoid-c-arrays
+'
+
+CheckOptions:
+  readability-identifier-length.IgnoredParameterNames: 'r|h|z|n|v|l|k|d|a|b|c|w|mu'
+  readability-identifier-length.IgnoredVariableNames: 'd|z|m|k|l|n|v|i|j|h|t|c|y|s|r|w|ss|R|N|Q|A|t0|t1|t2|t3|t4|t5|t6|t7|h0|h1|r0|r1|w0|w1|w2|s1|s2|hi|lo|br|s_'
+  readability-identifier-length.IgnoredLoopCounterNames: 'i|j|k|l'
+  readability-identifier-length.MinimumLoopCounterLength: 1
+WarningsAsErrors: '*'
+HeaderFilterRegex: 'include/ml_dsa/.*'
