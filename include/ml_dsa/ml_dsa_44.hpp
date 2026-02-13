@@ -1,12 +1,17 @@
 #pragma once
+#include "ml_dsa/internals/math/field.hpp"
 #include "ml_dsa/internals/ml_dsa.hpp"
+#include "ml_dsa/internals/utility/utils.hpp"
+#include <cstddef>
+#include <cstdint>
+#include <span>
 
 namespace ml_dsa_44 {
 
 // See table 1 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204
 static constexpr size_t d = 13;
 static constexpr uint32_t tau = 39;
-static constexpr uint32_t gamma1 = 1u << 17;
+static constexpr uint32_t gamma1 = 1U << 17;
 static constexpr uint32_t gamma2 = (ml_dsa_field::Q - 1) / 88;
 static constexpr size_t k = 4;
 static constexpr size_t l = 4;
@@ -35,9 +40,9 @@ static constexpr size_t SigByteLen = ml_dsa_utils::sig_len(k, l, gamma1, omega, 
 
 // Given a 32 -bytes seed, this routine can be used for generating a fresh ML-DSA-44 keypair, in deterministic fashion.
 constexpr void
-keygen(std::span<const uint8_t, KeygenSeedByteLen> ξ, std::span<uint8_t, PubKeyByteLen> pubkey, std::span<uint8_t, SecKeyByteLen> seckey)
+keygen(std::span<const uint8_t, KeygenSeedByteLen> seed, std::span<uint8_t, PubKeyByteLen> pubkey, std::span<uint8_t, SecKeyByteLen> seckey)
 {
-  ml_dsa::keygen<k, l, d, eta>(ξ, pubkey, seckey);
+  ml_dsa::keygen<k, l, d, eta>(seed, pubkey, seckey);
 }
 
 // Given a 32 -bytes seed `rnd` and ML-DSA-44 secret key, this routine can be used for signing any arbitrary (>=0)

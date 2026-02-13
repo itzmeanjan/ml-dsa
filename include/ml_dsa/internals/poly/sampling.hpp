@@ -6,8 +6,13 @@
 #include "poly.hpp"
 #include "sha3/shake128.hpp"
 #include "sha3/shake256.hpp"
+#include <algorithm>
+#include <array>
+#include <bit>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <span>
 
 // Routines related to sampling of polynomials/ vector of polynomials
 namespace ml_dsa_sampling {
@@ -19,7 +24,7 @@ using poly_t = std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N>;
 //
 // See algorithm 32 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l>
-static inline constexpr void
+static constexpr void
 expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> mat)
 {
   std::array<uint8_t, rho.size() + 2> msg{};
@@ -70,7 +75,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
 //
 // See algorithm 33 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t eta, size_t k, uint16_t nonce>
-static inline constexpr void
+static constexpr void
 expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_eta(eta) && ml_dsa_params::check_nonce(nonce))
 {
@@ -103,31 +108,27 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
         const uint8_t t0 = buf_span[boff] & 0x0f;
         const uint8_t t1 = buf_span[boff] >> 4;
 
-        if constexpr (eta == 2u) {
+        if constexpr (eta == 2U) {
           const uint32_t t2 = static_cast<uint32_t>(t0 % 5);
           const bool flg0 = t0 < 15;
 
           vec[off + n] = eta_value - ml_dsa_field::zq_t(t2);
-          n += flg0 * 1;
+          n += static_cast<size_t>(flg0);
 
           const uint32_t t3 = static_cast<uint32_t>(t1 % 5);
           const bool flg1 = (t1 < 15) & (n < ml_dsa_ntt::N);
-          const ml_dsa_field::zq_t br[]{ vec[off], eta_value - ml_dsa_field::zq_t(t3) };
-
-          vec[off + flg1 * n] = br[flg1];
-          n += flg1 * 1;
+          vec[off + (static_cast<size_t>(flg1) * n)] = flg1 ? (eta_value - ml_dsa_field::zq_t(t3)) : vec[off];
+          n += static_cast<size_t>(flg1);
         } else {
           const bool flg0 = t0 < 9;
 
           vec[off + n] = eta_value - ml_dsa_field::zq_t(static_cast<uint32_t>(t0));
-          n += flg0 * 1;
+          n += static_cast<size_t>(flg0);
 
           const bool flg1 = (t1 < 9) & (n < ml_dsa_ntt::N);
           const auto t2 = eta_value - ml_dsa_field::zq_t(static_cast<uint32_t>(t1));
-          const ml_dsa_field::zq_t br[]{ vec[off], t2 };
-
-          vec[off + flg1 * n] = br[flg1];
-          n += flg1 * 1;
+          vec[off + (static_cast<size_t>(flg1) * n)] = flg1 ? (t2) : vec[off];
+          n += static_cast<size_t>(flg1);
         }
       }
     }
@@ -139,7 +140,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
 //
 // See algorithm 34 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t gamma1, size_t l>
-static inline constexpr void
+static constexpr void
 expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_gamma1(gamma1))
 {
@@ -175,7 +176,7 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
 //
 // See algorithm 29 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t tau, size_t lambda>
-static inline constexpr void
+static constexpr void
 sample_in_ball(std::span<const uint8_t, (2 * lambda) / std::numeric_limits<uint8_t>::digits> seed, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
   requires(ml_dsa_params::check_tau(tau))
 {
@@ -200,7 +201,7 @@ sample_in_ball(std::span<const uint8_t, (2 * lambda) / std::numeric_limits<uint8
       const size_t tau_bit = i - frm;
 
       const size_t tau_byte_off = tau_bit >> 3;
-      const size_t tau_bit_off = tau_bit & 7ul;
+      const size_t tau_bit_off = tau_bit & 7UL;
 
       const uint8_t s = (tau_bits_span[tau_byte_off] >> tau_bit_off) & 0b1;
       const bool s_ = static_cast<bool>(s);
@@ -208,13 +209,13 @@ sample_in_ball(std::span<const uint8_t, (2 * lambda) / std::numeric_limits<uint8
       const auto tmp = buf_span[off];
       const bool flg = tmp <= static_cast<uint8_t>(i);
 
-      const ml_dsa_field::zq_t br0[]{ poly[i], poly[tmp] };
-      const ml_dsa_field::zq_t br1[]{ poly[tmp], ml_dsa_field::zq_t::one() - ml_dsa_field::zq_t(2u * s_) };
+      const std::array<ml_dsa_field::zq_t, 2> br0{ poly[i], poly[tmp] };
+      const std::array<ml_dsa_field::zq_t, 2> br1{ poly[tmp], ml_dsa_field::zq_t::one() - ml_dsa_field::zq_t(2U * s_) };
 
-      poly[i] = br0[flg];
-      poly[tmp] = br1[flg];
+      poly[i] = flg ? br0[1] : br0[0];
+      poly[tmp] = flg ? br1[1] : br1[0];
 
-      i += 1ul * flg;
+      i += static_cast<size_t>(flg);
     }
   };
 }

@@ -1,11 +1,16 @@
 #pragma once
 #include "ml_dsa/internals/math/field.hpp"
+#include "ml_dsa/internals/poly/bit_packing.hpp"
+#include "ml_dsa/internals/poly/ntt.hpp"
 #include "ml_dsa/internals/poly/polyvec.hpp"
 #include "ml_dsa/internals/poly/sampling.hpp"
 #include "ml_dsa/internals/utility/params.hpp"
 #include "ml_dsa/internals/utility/utils.hpp"
+#include "sha3/shake256.hpp"
 #include <algorithm>
 #include <array>
+#include <bit>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <span>
@@ -26,8 +31,8 @@ static constexpr size_t MU_BYTE_LEN = 64;
 //
 // See algorithm 1 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t eta>
-static inline constexpr void
-keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
+static constexpr void
+keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> seed,
        std::span<uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
        std::span<uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey)
   requires(ml_dsa_params::check_keygen_params(k, l, d, eta))
@@ -38,7 +43,7 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
   auto seed_hash_span = std::span(seed_hash);
 
   shake256::shake256_t hasher;
-  hasher.absorb(ξ);
+  hasher.absorb(seed);
   hasher.absorb(domain_separator);
   hasher.finalize();
   hasher.squeeze(seed_hash_span);
@@ -111,7 +116,7 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
   ml_dsa_polyvec::encode<l, eta_bw>(s1, seckey.template subspan<skoff3, skoff4 - skoff3>());
   ml_dsa_polyvec::encode<k, eta_bw>(s2, seckey.template subspan<skoff4, skoff5 - skoff4>());
 
-  constexpr uint32_t t0_rng = 1u << (d - 1);
+  constexpr uint32_t t0_rng = 1U << (d - 1);
 
   ml_dsa_polyvec::sub_from_x<k, t0_rng>(t0);
   ml_dsa_polyvec::encode<k, d>(t0, seckey.template subspan<skoff5, skoff6 - skoff5>());
@@ -127,14 +132,14 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> ξ,
 //
 // See algorithm 7 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t eta, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static inline constexpr bool
+static constexpr bool
 sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
               std::span<const uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey,
               std::span<const uint8_t, MU_BYTE_LEN> mu,
               std::span<uint8_t, ml_dsa_utils::sig_len(k, l, gamma1, omega, lambda)> sig)
   requires(ml_dsa_params::check_signing_params(k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda))
 {
-  constexpr uint32_t t0_rng = 1u << (d - 1);
+  constexpr uint32_t t0_rng = 1U << (d - 1);
 
   constexpr size_t eta_bw = std::bit_width(2 * eta);
   constexpr size_t s1_len = l * eta_bw * 32;
@@ -202,8 +207,8 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
     ml_dsa_polyvec::intt<k>(w);
 
     constexpr uint32_t alpha = gamma2 << 1;
-    constexpr uint32_t m = (ml_dsa_field::Q - 1u) / alpha;
-    constexpr size_t w1bw = std::bit_width(m - 1u);
+    constexpr uint32_t m = (ml_dsa_field::Q - 1U) / alpha;
+    constexpr size_t w1bw = std::bit_width(m - 1U);
 
     std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w1{};
     std::array<uint8_t, k * w1bw * 32> w1_encoded{};
@@ -238,9 +243,6 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
     const ml_dsa_field::zq_t z_norm = ml_dsa_polyvec::infinity_norm<l>(z);
     const ml_dsa_field::zq_t r0_norm = ml_dsa_polyvec::infinity_norm<k>(r0);
 
-    constexpr ml_dsa_field::zq_t bound0(gamma1 - beta);
-    constexpr ml_dsa_field::zq_t bound1(gamma2 - beta);
-
     if ((z_norm >= ml_dsa_field::zq_t(gamma1 - beta)) || (r0_norm >= ml_dsa_field::zq_t(gamma2 - beta))) {
       has_signed = false;
     } else {
@@ -259,13 +261,7 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
       const ml_dsa_field::zq_t ct0_norm = ml_dsa_polyvec::infinity_norm<k>(h1);
       const size_t count_1s = ml_dsa_polyvec::count_1s<k>(h);
 
-      constexpr ml_dsa_field::zq_t bound2(gamma2);
-
-      if ((ct0_norm >= ml_dsa_field::zq_t(gamma2)) || (count_1s > omega)) {
-        has_signed = false;
-      } else {
-        has_signed = true;
-      }
+      has_signed = (ct0_norm < ml_dsa_field::zq_t(gamma2)) && (count_1s <= omega);
     }
 
     kappa += static_cast<uint16_t>(l);
@@ -299,7 +295,7 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 //
 // See algorithm 2 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t eta, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static inline constexpr bool
+static constexpr bool
 sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
      std::span<const uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey,
      std::span<const uint8_t> msg,
@@ -339,7 +335,7 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 //
 // See algorithm 8 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static inline constexpr bool
+static constexpr bool
 verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
                 std::span<const uint8_t, MU_BYTE_LEN> mu,
                 std::span<const uint8_t, ml_dsa_utils::sig_len(k, l, gamma1, omega, lambda)> sig)
@@ -350,7 +346,7 @@ verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey
 
   // Decode signature
   constexpr size_t sigoff0 = 0;
-  constexpr size_t sigoff1 = sigoff0 + (2 * lambda) / std::numeric_limits<uint8_t>::digits;
+  constexpr size_t sigoff1 = sigoff0 + ((2 * lambda) / std::numeric_limits<uint8_t>::digits);
   constexpr size_t sigoff2 = sigoff1 + (32 * l * gamma1_bw);
   constexpr size_t sigoff3 = sig.size();
 
@@ -412,8 +408,8 @@ verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey
   ml_dsa_polyvec::intt<k>(w2);
 
   constexpr uint32_t alpha = gamma2 << 1;
-  constexpr uint32_t m = (ml_dsa_field::Q - 1u) / alpha;
-  constexpr size_t w1bw = std::bit_width(m - 1u);
+  constexpr uint32_t m = (ml_dsa_field::Q - 1U) / alpha;
+  constexpr size_t w1bw = std::bit_width(m - 1U);
 
   ml_dsa_polyvec::use_hint<k, alpha>(h, w2, w1);
 
@@ -437,7 +433,7 @@ verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey
 //
 // See algorithm 3 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static inline constexpr bool
+static constexpr bool
 verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
        std::span<const uint8_t> msg,
        std::span<const uint8_t> ctx,

@@ -2,8 +2,14 @@
 #include "bit_packing.hpp"
 #include "ml_dsa/internals/math/field.hpp"
 #include "ml_dsa/internals/utility/params.hpp"
+#include "ntt.hpp"
 #include "poly.hpp"
+#include <algorithm>
+#include <array>
+#include <cstddef>
+#include <cstdint>
 #include <limits>
+#include <span>
 
 // Utility functions applied on vector of degree-255 polynomials
 namespace ml_dsa_polyvec {
@@ -13,7 +19,7 @@ using poly_t = std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N>;
 
 // Applies NTT on a vector ( of dimension k x 1 ) of degree-255 polynomials.
 template<size_t k>
-static inline constexpr void
+static constexpr void
 ntt(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
@@ -24,7 +30,7 @@ ntt(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 
 // Applies iNTT on a vector ( of dimension k x 1 ) of degree-255 polynomials.
 template<size_t k>
-static inline constexpr void
+static constexpr void
 intt(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
@@ -35,7 +41,7 @@ intt(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 
 // Compresses vector ( of dimension k x 1 ) of degree-255 polynomials by extracting out high and low order bits.
 template<size_t k, size_t d>
-static inline constexpr void
+static constexpr void
 power2round(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly,
             std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly_hi,
             std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly_lo)
@@ -50,7 +56,7 @@ power2round(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> poly,
 // Given two matrices ( in NTT domain ) of compatible dimension, where each matrix element is a degree-255 polynomial
 // over Z_q, this routine multiplies them, computing resulting matrix.
 template<size_t a_rows, size_t a_cols, size_t b_rows, size_t b_cols>
-static inline constexpr void
+static constexpr void
 matrix_multiply(std::span<const ml_dsa_field::zq_t, a_rows * a_cols * ml_dsa_ntt::N> a,
                 std::span<const ml_dsa_field::zq_t, b_rows * b_cols * ml_dsa_ntt::N> b,
                 std::span<ml_dsa_field::zq_t, a_rows * b_cols * ml_dsa_ntt::N> c)
@@ -80,7 +86,7 @@ matrix_multiply(std::span<const ml_dsa_field::zq_t, a_rows * a_cols * ml_dsa_ntt
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine adds it to another polynomial vector of
 // same dimension s.t. destination vector is mutated.
 template<size_t k>
-static inline constexpr void
+static constexpr void
 add_to(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
@@ -94,7 +100,7 @@ add_to(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<ml_
 
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine negates each coefficient.
 template<size_t k>
-static inline constexpr void
+static constexpr void
 neg(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
@@ -109,7 +115,7 @@ neg(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials s.t. each coefficient ∈ [-x, x], this routine
 // subtracts each coefficient from x so that coefficients now stay in [0, 2x].
 template<size_t k, uint32_t x>
-static inline constexpr void
+static constexpr void
 sub_from_x(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {
@@ -121,7 +127,7 @@ sub_from_x(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials, this routine encodes each of those polynomials into
 // 32 x sbw -bytes, writing to a (k x 32 x sbw) -bytes destination array.
 template<size_t k, size_t sbw>
-static inline constexpr void
+static constexpr void
 encode(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<uint8_t, (k * sbw * ml_dsa_ntt::N) / std::numeric_limits<uint8_t>::digits> dst)
 {
   // Byte length of degree-255 polynomial after serialization
@@ -138,7 +144,7 @@ encode(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<uin
 // Given a byte array of length (k x 32 x sbw) -bytes, this routine decodes them into k degree-255 polynomials, writing
 // them to a column vector of dimension k x 1.
 template<size_t k, size_t sbw>
-static inline constexpr void
+static constexpr void
 decode(std::span<const uint8_t, (k * sbw * ml_dsa_ntt::N) / std::numeric_limits<uint8_t>::digits> src, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   // Byte length of degree-255 polynomial after serialization
@@ -154,7 +160,7 @@ decode(std::span<const uint8_t, (k * sbw * ml_dsa_ntt::N) / std::numeric_limits<
 
 // Given a vector (of dimension k x 1) of degree-255 polynomials, it extracts out high order bits from each coefficient.
 template<size_t k, uint32_t alpha>
-static inline constexpr void
+static constexpr void
 highbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
@@ -165,7 +171,7 @@ highbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<m
 
 // Given a vector (of dimension k x 1) of degree-255 polynomials, it extracts out low order bits from each coefficient.
 template<size_t k, uint32_t alpha>
-static inline constexpr void
+static constexpr void
 lowbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst)
 {
   for (size_t i = 0; i < k; i++) {
@@ -177,7 +183,7 @@ lowbits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src, std::span<ml
 // Given a vector ( of dimension k x 1 ) of degree-255 polynomials and one multiplier polynomial, this routine performs
 // k pointwise polynomial multiplications when each of these polynomials are in their NTT representation.
 template<size_t k>
-static inline constexpr void
+static constexpr void
 mul_by_poly(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
             std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> src_vec,
             std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> dst_vec)
@@ -190,7 +196,7 @@ mul_by_poly(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
 
 // Computes infinity norm of a vector ( of dimension k x 1 ) of degree-255 polynomials.
 template<size_t k>
-static inline constexpr ml_dsa_field::zq_t
+static constexpr ml_dsa_field::zq_t
 infinity_norm(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   auto res = ml_dsa_field::zq_t::zero();
@@ -206,7 +212,7 @@ infinity_norm(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 // Given two vectors (of dimension k x 1) of degree-255 polynomials, this routine computes hint bit for each
 // coefficient, using `make_hint` routine.
 template<size_t k, uint32_t alpha>
-static inline constexpr void
+static constexpr void
 make_hint(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polya,
           std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyb,
           std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyc)
@@ -221,7 +227,7 @@ make_hint(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polya,
 // Recovers high order bits of a vector of degree-255 polynomials (i.e. r + z) s.t. hint bits (say h) and another
 // polynomial vector (say r) are provided.
 template<size_t k, uint32_t alpha>
-static inline constexpr void
+static constexpr void
 use_hint(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyh,
          std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyr,
          std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyrz)
@@ -235,7 +241,7 @@ use_hint(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> polyh,
 
 // Given a vector (of dimension k x 1) of degree-255 polynomials, it counts number of coefficients having value 1.
 template<size_t k>
-static inline constexpr size_t
+static constexpr size_t
 count_1s(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   size_t cnt = 0;
@@ -250,7 +256,7 @@ count_1s(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 
 // Given a vector (of dimension k x 1) of degree-255 polynomials, it shifts each coefficient leftwards by d bits.
 template<size_t k, size_t d>
-static inline constexpr void
+static constexpr void
 shl(std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
 {
   for (size_t i = 0; i < k; i++) {

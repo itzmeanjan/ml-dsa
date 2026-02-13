@@ -1,6 +1,8 @@
 #pragma once
 #include "ml_dsa/internals/math/field.hpp"
 #include <array>
+#include <cstddef>
+#include <cstdint>
 #include <span>
 
 // Number Theoretic Transform for degree-255 polynomial
@@ -21,15 +23,15 @@ static constexpr auto INV_N = ml_dsa_field::zq_t(N).inv();
 //
 // See https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L74-L93 for source of inspiration.
 template<size_t mbw>
-static inline constexpr size_t
+static constexpr size_t
 bit_rev(const size_t v)
   requires(mbw == LOG2N)
 {
-  size_t v_rev = 0ul;
+  size_t v_rev = 0UL;
 
   for (size_t i = 0; i < mbw; i++) {
     const size_t bit = (v >> i) & 0b1;
-    v_rev ^= bit << (mbw - 1ul - i);
+    v_rev ^= bit << (mbw - 1UL - i);
   }
 
   return v_rev;
@@ -64,14 +66,14 @@ static constexpr auto zeta_NEG_EXP = []() {
 //
 // Implementation inspired from https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L95-L129.
 // See algorithm 41 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
-static inline constexpr void
+static constexpr void
 ntt(std::span<ml_dsa_field::zq_t, N> poly)
 {
 #if (not defined __clang__) && (defined __GNUG__)
 #pragma GCC unroll 8
 #endif
   for (int64_t l = LOG2N - 1; l >= 0; l--) {
-    const size_t len = 1ul << l;
+    const size_t len = 1UL << l;
     const size_t lenx2 = len << 1;
     const size_t k_beg = N >> (l + 1);
 
@@ -84,7 +86,7 @@ ntt(std::span<ml_dsa_field::zq_t, N> poly)
 #pragma GCC ivdep
 #endif
       for (size_t i = start; i < start + len; i++) {
-        auto tmp = zeta_exp * poly[i + len];
+        const auto tmp = zeta_exp * poly[i + len];
 
         poly[i + len] = poly[i] - tmp;
         poly[i] += tmp;
@@ -101,14 +103,14 @@ ntt(std::span<ml_dsa_field::zq_t, N> poly)
 //
 // Implementation inspired from https://github.com/itzmeanjan/kyber/blob/3cd41a5/include/ntt.hpp#L131-L172.
 // See algorithm 42 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
-static inline constexpr void
+static constexpr void
 intt(std::span<ml_dsa_field::zq_t, N> poly)
 {
 #if (not defined __clang__) && (defined __GNUG__)
 #pragma GCC unroll 8
 #endif
   for (size_t l = 0; l < LOG2N; l++) {
-    const size_t len = 1ul << l;
+    const size_t len = 1UL << l;
     const size_t lenx2 = len << 1;
     const size_t k_beg = (N >> l) - 1;
 

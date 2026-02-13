@@ -4,14 +4,17 @@
 #include "ml_dsa/internals/utility/params.hpp"
 #include "ntt.hpp"
 #include <algorithm>
+#include <cstddef>
+#include <cstdint>
 #include <numeric>
+#include <span>
 
 // Degree-255 polynomial arithmetic
 namespace ml_dsa_poly {
 
 // Given a degree-255 polynomial, this routine extracts out high and low order bits from each coefficient.
 template<size_t d>
-static inline constexpr void
+static constexpr void
 power2round(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
             std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly_hi,
             std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly_lo)
@@ -26,7 +29,7 @@ power2round(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly,
 }
 
 // Given two degree-255 polynomials in NTT representation, this routine performs element-wise multiplication over Z_q.
-static inline constexpr void
+static constexpr void
 mul(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polya, std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyb, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> polyc)
 {
 #if (not defined __clang__) && (defined __GNUG__)
@@ -41,7 +44,7 @@ mul(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polya, std::span<const ml
 // Given a degree-255 polynomial, which has all of its coefficients in [-x, x], this routine subtracts each coefficient
 // from x, so that they stay in [0, 2x].
 template<uint32_t x>
-static inline constexpr void
+static constexpr void
 sub_from_x(std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 {
   constexpr ml_dsa_field::zq_t x_cap(x);
@@ -56,7 +59,7 @@ sub_from_x(std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 
 // Given a degree-255 polynomial, this routine extracts out high order bits.
 template<uint32_t alpha>
-static inline constexpr void
+static constexpr void
 highbits(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> src, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> dst)
 {
   for (size_t i = 0; i < src.size(); i++) {
@@ -66,7 +69,7 @@ highbits(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> src, std::span<ml_ds
 
 // Given a degree-255 polynomial, this routine extracts out low order bits.
 template<uint32_t alpha>
-static inline constexpr void
+static constexpr void
 lowbits(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> src, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> dst)
 {
   for (size_t i = 0; i < src.size(); i++) {
@@ -77,7 +80,7 @@ lowbits(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> src, std::span<ml_dsa
 // Computes infinity norm of a degree-255 polynomial.
 //
 // See section 2.3 of ML-DSA standard https://doi.org/10.6028/NIST.FIPS.204.
-static inline constexpr ml_dsa_field::zq_t
+static constexpr ml_dsa_field::zq_t
 infinity_norm(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 {
   constexpr ml_dsa_field::zq_t qby2(ml_dsa_field::Q / 2);
@@ -94,7 +97,7 @@ infinity_norm(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
     const bool flg = poly[i] > qby2;
     const ml_dsa_field::zq_t br[]{ poly[i], -poly[i] };
 
-    res = std::max(res, br[flg]);
+    res = std::max(res, br[static_cast<size_t>(flg)]);
 #endif
   }
 
@@ -103,7 +106,7 @@ infinity_norm(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 
 // Given two degree-255 polynomials, this routine computes hint bit for each coefficient.
 template<uint32_t alpha>
-static inline constexpr void
+static constexpr void
 make_hint(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polya,
           std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyb,
           std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> polyc)
@@ -117,7 +120,7 @@ make_hint(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polya,
 // Z_q, this routine recovers high order bits of r + z s.t. hint bit was computed using `make_hint` routine and z is
 // another degree-255 polynomial with small coefficients.
 template<uint32_t alpha>
-static inline constexpr void
+static constexpr void
 use_hint(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyh,
          std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyr,
          std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> polyrz)
@@ -130,15 +133,15 @@ use_hint(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> polyh,
 // Given a degree-255 polynomial, this routine counts number of coefficients having value 1.
 // Note, following implementation makes an assumption, coefficieints of input polynomial must be either 0 or 1.
 // In case, one invokes this function with arbitrary polynomial, expect wrong result.
-static inline constexpr size_t
+static constexpr size_t
 count_1s(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 {
-  return std::accumulate(poly.begin(), poly.end(), 0ul, [](auto acc, auto cur) -> auto { return acc + cur.raw(); });
+  return std::accumulate(poly.begin(), poly.end(), 0UL, [](auto acc, auto cur) -> auto { return acc + cur.raw(); });
 }
 
 // Given a degree-255 polynomial, this routine shifts each coefficient leftwards, by d bits.
 template<size_t d>
-static inline constexpr void
+static constexpr void
 shl(std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
 {
   for (size_t i = 0; i < poly.size(); i++) {
