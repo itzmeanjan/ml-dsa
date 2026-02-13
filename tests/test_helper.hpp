@@ -15,10 +15,8 @@ template<size_t L>
 static inline std::array<uint8_t, L>
 from_hex(std::string_view bytes)
 {
-  const size_t blen = bytes.length();
-
-  assert(blen % 2 == 0);
-  assert(blen / 2 == L);
+  assert(bytes.length() % 2 == 0);
+  assert(bytes.length() / 2 == L);
 
   std::array<uint8_t, L> res{};
 
@@ -43,6 +41,7 @@ from_hex(std::string_view hex)
 {
   const size_t hlen = hex.length();
   assert(hlen % 2 == 0);
+  (void)hlen;
 
   const size_t blen = hlen / 2;
   std::vector<uint8_t> res(blen, 0);
@@ -119,15 +118,15 @@ random_bit_flip(std::span<uint8_t> arr)
   const size_t idx = dis(gen);
   const size_t bidx = dis(gen) & 7ul;
 
-  const uint8_t mask0 = 0xff << (bidx + 1);
-  const uint8_t mask1 = 0xff >> (8 - bidx);
-  const uint8_t mask2 = 1 << bidx;
+  const uint8_t mask0 = static_cast<uint8_t>(0xff << (bidx + 1));
+  const uint8_t mask1 = static_cast<uint8_t>(0xff >> (8 - bidx));
+  const uint8_t mask2 = static_cast<uint8_t>(1 << bidx);
 
   const uint8_t msb = arr[idx] & mask0;
   const uint8_t lsb = arr[idx] & mask1;
   const uint8_t bit = (arr[idx] & mask2) >> bidx;
 
-  arr[idx] = msb | ((1 - bit) << bidx) | lsb;
+  arr[idx] = static_cast<uint8_t>(msb | (static_cast<uint32_t>(1 - bit) << bidx) | lsb);
 }
 
 }
