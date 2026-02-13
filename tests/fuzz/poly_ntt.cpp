@@ -1,7 +1,7 @@
-#include <cstddef>
-#include <cstdint>
 #include "ml_dsa/internals/math/field.hpp"
 #include "ml_dsa/internals/poly/ntt.hpp"
+#include <cstddef>
+#include <cstdint>
 
 extern "C" int
 LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
