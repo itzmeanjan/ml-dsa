@@ -82,6 +82,7 @@ phase_configure() {
     -DCMAKE_CXX_COMPILER="$CXX" \
     -DCMAKE_BUILD_TYPE=Release \
     -DML_DSA_BUILD_FUZZERS=ON \
+    -DML_DSA_ENABLE_LTO=OFF \
     "$PROJECT_ROOT"
   ok "CMake configured."
 }
@@ -174,7 +175,11 @@ phase_fuzz() {
   if [[ ${#pids[@]} -gt 0 ]]; then
     info "Waiting for remaining ${#pids[@]} fuzzer(s) to finish..."
     for pid in "${pids[@]}"; do
-      wait "$pid" || true
+      if ! wait "$pid"; then
+        fail "A fuzzer in the current batch failed (potential bug found!)."
+        fail "Review logs in $REPORT_DIR and artifacts in $CORPUS_DIR"
+        exit 1
+      fi
     done
   fi
   ok "All fuzzers completed."
@@ -237,6 +242,22 @@ phase_report() {
   } | tee "$report_file"
 
   ok "Report saved to: $report_file"
+
+  # Check for any crashes
+  local crash_count=0
+  for name in "${ALL_FUZZERS[@]}"; do
+    local log_file="$REPORT_DIR/${name}.log"
+    if [[ -f "$log_file" ]] && grep -qi "crash-\|leak-\|SUMMARY:.*ERROR" "$log_file" 2>/dev/null; then
+      crash_count=$((crash_count + 1))
+      warn "Potential finding in $name — see $log_file"
+    fi
+  done
+
+  if [[ $crash_count -eq 0 ]]; then
+    ok "No crashes or sanitizer errors found across all ${#ALL_FUZZERS[@]} fuzzers."
+  else
+    warn "$crash_count fuzzer(s) reported potential findings. Review the log files."
+  fi
 }
 
 main() {
