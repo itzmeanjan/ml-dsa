@@ -1,9 +1,6 @@
 [submodule "sha3"]
 	path = sha3
 	url = https://github.com/itzmeanjan/sha3.git
-[submodule "gtest-parallel"]
-	path = gtest-parallel
-	url = https://github.com/google/gtest-parallel.git
 [submodule "RandomShake"]
 	path = RandomShake
 	url = https://github.com/itzmeanjan/RandomShake.git
