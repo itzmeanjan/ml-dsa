@@ -138,7 +138,7 @@ TEST(ML_DSA, ML_DSA_87_Sign_ACVP_KnownAnswerTests)
       std::getline(file, sig_line);
 
       const auto msg = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(msg_line);
-      const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::PubKeyByteLen>(pkey_line);
+      [[maybe_unused]] const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::PubKeyByteLen>(pkey_line);
       const auto skey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SecKeyByteLen>(skey_line);
       const auto ctx = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(ctx_line);
       const auto rnd = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SigningSeedByteLen>(rnd_line);
@@ -181,7 +181,7 @@ TEST(ML_DSA, ML_DSA_87_Sign_Internal_ACVP_KnownAnswerTests)
       std::getline(file, sig_line);
 
       const auto mu = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::MessageRepresentativeByteLen>(mu_line);
-      const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::PubKeyByteLen>(pkey_line);
+      [[maybe_unused]] const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::PubKeyByteLen>(pkey_line);
       const auto skey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SecKeyByteLen>(skey_line);
       const auto rnd = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SigningSeedByteLen>(rnd_line);
       const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SigByteLen>(sig_line);
@@ -228,7 +228,7 @@ TEST(ML_DSA, ML_DSA_87_Verify_ACVP_KnownAnswerTests)
 
       const auto msg = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(msg_line);
       const auto pkey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::PubKeyByteLen>(pkey_line);
-      const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SecKeyByteLen>(skey_line);
+      [[maybe_unused]] const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SecKeyByteLen>(skey_line);
       const auto ctx = ml_dsa_test_helper::extract_and_parse_variable_length_hex_string(ctx_line);
       const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SigByteLen>(sig_line);
       const auto test_passed = testPassed_line.substr(testPassed_line.find("="sv) + 2, testPassed_line.size()) == "True";
@@ -276,7 +276,7 @@ TEST(ML_DSA, ML_DSA_87_Verify_Internal_ACVP_KnownAnswerTests)
 
       const auto mu = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::MessageRepresentativeByteLen>(mu_line);
       const auto pkey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::PubKeyByteLen>(pkey_line);
-      const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SecKeyByteLen>(skey_line);
+      [[maybe_unused]] const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SecKeyByteLen>(skey_line);
       const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SigByteLen>(sig_line);
       const auto test_passed = testPassed_line.substr(testPassed_line.find("="sv) + 2, testPassed_line.size()) == "True";
 

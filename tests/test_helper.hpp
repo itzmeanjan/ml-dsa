@@ -124,7 +124,7 @@ random_bit_flip(std::span<uint8_t> arr)
 
   const uint8_t msb = arr[idx] & mask0;
   const uint8_t lsb = arr[idx] & mask1;
-  const uint8_t bit = (arr[idx] & mask2) >> bidx;
+  const uint8_t bit = static_cast<uint8_t>((arr[idx] & mask2) >> bidx);
 
   arr[idx] = static_cast<uint8_t>(msb | (static_cast<uint32_t>(1 - bit) << bidx) | lsb);
 }
