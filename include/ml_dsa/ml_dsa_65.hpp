@@ -9,6 +9,7 @@
 namespace ml_dsa_65 {
 
 // See table 1 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204
+
 static constexpr size_t d = 13;
 static constexpr uint32_t tau = 49;
 static constexpr uint32_t gamma1 = 1U << 19;
@@ -20,22 +21,11 @@ static constexpr uint32_t beta = tau * eta;
 static constexpr size_t omega = 55;
 static constexpr size_t lambda = 192;
 
-// Byte length ( = 32 ) of ML-DSA-65 key generation seed.
 static constexpr size_t KeygenSeedByteLen = ml_dsa::KEYGEN_SEED_BYTE_LEN;
-
-// Byte length ( = 1952 ) of ML-DSA-65 public key.
 static constexpr size_t PubKeyByteLen = ml_dsa_utils::pub_key_len(k, d);
-
-// Byte length ( = 4032 ) of ML-DSA-65 secret key.
 static constexpr size_t SecKeyByteLen = ml_dsa_utils::sec_key_len(k, l, eta, d);
-
-// Byte length ( = 32 ) of ML-DSA-65 signing seed.
 static constexpr size_t SigningSeedByteLen = ml_dsa::RND_BYTE_LEN;
-
-// Byte length ( = 64 ) of ML-DSA-65 message representative.
 static constexpr size_t MessageRepresentativeByteLen = ml_dsa::MU_BYTE_LEN;
-
-// Byte length ( = 3309 ) of ML-DSA-65 signature.
 static constexpr size_t SigByteLen = ml_dsa_utils::sig_len(k, l, gamma1, omega, lambda);
 
 // Given a 32 -bytes seed, this routine can be used for generating a fresh ML-DSA-65 keypair, in deterministic fashion.
