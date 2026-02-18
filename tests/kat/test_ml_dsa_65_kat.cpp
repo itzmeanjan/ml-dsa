@@ -145,7 +145,8 @@ TEST(ML_DSA, ML_DSA_65_Sign_ACVP_KnownAnswerTests)
       const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_65::SigByteLen>(sig_line);
 
       std::array<uint8_t, ml_dsa_65::SigByteLen> computed_sig{};
-      ml_dsa_65::sign(rnd, skey, msg, ctx, computed_sig);
+      const auto sign_ok = ml_dsa_65::sign(rnd, skey, msg, ctx, computed_sig);
+      ASSERT_TRUE(sign_ok);
 
       EXPECT_EQ(sig, computed_sig);
 
@@ -187,7 +188,8 @@ TEST(ML_DSA, ML_DSA_65_Sign_Internal_ACVP_KnownAnswerTests)
       const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_65::SigByteLen>(sig_line);
 
       std::array<uint8_t, ml_dsa_65::SigByteLen> computed_sig{};
-      ml_dsa_65::sign_internal(rnd, skey, mu, computed_sig);
+      const auto sign_ok = ml_dsa_65::sign_internal(rnd, skey, mu, computed_sig);
+      ASSERT_TRUE(sign_ok);
 
       EXPECT_EQ(sig, computed_sig);
 

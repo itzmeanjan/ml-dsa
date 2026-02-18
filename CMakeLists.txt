@@ -19,12 +19,10 @@ find_program(CLANG_TIDY_EXE clang-tidy)
 find_program(CLANG_FORMAT_EXE clang-format)
 
 if(CLANG_TIDY_EXE)
-  file(GLOB_RECURSE TIDY_SOURCES
-       "include/**/*.hpp"
-       "examples/*.cpp")
+  file(GLOB_RECURSE TIDY_SOURCES "examples/*.cpp")
 
   add_custom_target(tidy
-    COMMAND ${CLANG_TIDY_EXE} --config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy --header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/ml_dsa/.* ${TIDY_SOURCES}
+    COMMAND ${CLANG_TIDY_EXE} -p ${CMAKE_BINARY_DIR} --config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy --header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/ml_dsa/.* ${TIDY_SOURCES}
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     COMMENT "Running clang-tidy"
   )
@@ -34,7 +32,9 @@ if(CLANG_FORMAT_EXE)
   file(GLOB_RECURSE FORMAT_SOURCES
        "include/**/*.hpp"
        "examples/*.cpp"
+       "benchmarks/*.hpp"
        "benchmarks/*.cpp"
+       "tests/*.hpp"
        "tests/*.cpp")
 
   add_custom_target(format
@@ -51,10 +51,10 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 # --- Compiler Warnings ---
 if(MSVC)
-  set(ML_DSA_WARNING_FLAGS /W4) # ml-kem uses /W3, but we can aim higher or match it
+  set(ML_DSA_WARNING_FLAGS /W4)
   add_compile_definitions(_CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
 else()
-  set(ML_DSA_WARNING_FLAGS -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wformat=2 -Werror)
+  set(ML_DSA_WARNING_FLAGS -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wformat=2 -Wcast-qual -Wold-style-cast -Wundef -Werror)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     list(APPEND ML_DSA_WARNING_FLAGS -Wno-pass-failed)
   endif()
@@ -141,6 +141,13 @@ if(ML_DSA_BUILD_TESTS)
   target_link_libraries(ml_dsa_tests PRIVATE ml-dsa GTest::gtest_main)
   target_include_directories(ml_dsa_tests PRIVATE tests)
   target_compile_options(ml_dsa_tests PRIVATE ${ML_DSA_WARNING_FLAGS})
+
+  # Compile-time (constexpr) tests require higher evaluation limits for ML-DSA signing's rejection loop.
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    set_source_files_properties(tests/prop/test_constexpr.cpp PROPERTIES COMPILE_OPTIONS "-fconstexpr-steps=4294967295")
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    set_source_files_properties(tests/prop/test_constexpr.cpp PROPERTIES COMPILE_OPTIONS "-fconstexpr-ops-limit=4294967295")
+  endif()
 
   include(GoogleTest)
   gtest_discover_tests(ml_dsa_tests)

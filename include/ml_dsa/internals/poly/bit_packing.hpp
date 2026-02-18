@@ -1,5 +1,6 @@
 #pragma once
 #include "ml_dsa/internals/math/field.hpp"
+#include "ml_dsa/internals/utility/force_inline.hpp"
 #include "ml_dsa/internals/utility/params.hpp"
 #include "ntt.hpp"
 #include <algorithm>
@@ -16,7 +17,7 @@ namespace ml_dsa_bit_packing {
 //
 // See algorithm 16 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t sbw>
-static constexpr void
+static forceinline constexpr void
 encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_t, (ml_dsa_ntt::N * sbw) / std::numeric_limits<uint8_t>::digits> arr)
   requires(ml_dsa_params::check_sbw(sbw))
 {
@@ -161,7 +162,7 @@ encode(std::span<const ml_dsa_field::zq_t, ml_dsa_ntt::N> poly, std::span<uint8_
 // This function reverses what `encode` does.
 // See algorithm 18 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t sbw>
-static constexpr void
+static forceinline constexpr void
 decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
   requires(ml_dsa_params::check_sbw(sbw))
 {
@@ -294,7 +295,7 @@ decode(std::span<const uint8_t, ml_dsa_ntt::N * sbw / 8> arr, std::span<ml_dsa_f
 //
 // See algorithm 20 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t omega>
-static constexpr void
+static forceinline constexpr void
 encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::span<uint8_t, omega + k> arr)
 {
   std::fill(arr.begin(), arr.end(), 0);
@@ -307,7 +308,7 @@ encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::
 
     for (size_t j = 0; j < ml_dsa_ntt::N; j++) {
       const bool flg = h[off + j] != zero;
-      const uint8_t br[]{ arr[idx], static_cast<uint8_t>(j) };
+      const std::array<uint8_t, 2> br{ arr[idx], static_cast<uint8_t>(j) };
 
       arr[idx] = br[static_cast<size_t>(flg)];
       idx += static_cast<size_t>(flg);
@@ -325,7 +326,7 @@ encode_hint_bits(std::span<const ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h, std::
 //
 // See algorithm 21 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t omega>
-static constexpr bool
+[[nodiscard]] static forceinline constexpr bool
 decode_hint_bits(std::span<const uint8_t, omega + k> arr, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h)
 {
   std::fill(h.begin(), h.end(), ml_dsa_field::zq_t::zero());

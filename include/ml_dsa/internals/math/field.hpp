@@ -1,4 +1,5 @@
 #pragma once
+#include "ml_dsa/internals/utility/force_inline.hpp"
 #include "randomshake/randomshake.hpp"
 #include <bit>
 #include <cstddef>
@@ -29,30 +30,35 @@ struct zq_t
 {
 public:
   // Constructor(s)
-  constexpr zq_t() = default;
-  constexpr zq_t(const uint32_t val /* val ∈ [0, Q) */)
+  forceinline constexpr zq_t() = default;
+  explicit forceinline constexpr zq_t(const uint32_t val /* val ∈ [0, Q) */)
     : v(val)
   {
   }
-  static constexpr zq_t from_non_reduced(const uint32_t val /* val ∈ [0, 2^32) */) { return barrett_reduce(val); }
+  forceinline constexpr zq_t& operator=(const uint32_t rhs)
+  {
+    this->v = rhs;
+    return *this;
+  }
+  [[nodiscard]] static forceinline constexpr zq_t from_non_reduced(const uint32_t val /* val ∈ [0, 2^32) */) { return zq_t{ barrett_reduce(val) }; }
 
   // Accessor
-  constexpr uint32_t raw() const { return this->v; }
+  [[nodiscard]] forceinline constexpr uint32_t raw() const { return this->v; }
 
-  static constexpr zq_t zero() { return zq_t(0U); }
-  static constexpr zq_t one() { return zq_t(1U); }
+  [[nodiscard]] static forceinline constexpr zq_t zero() { return zq_t(0U); }
+  [[nodiscard]] static forceinline constexpr zq_t one() { return zq_t(1U); }
 
   // Modulo Addition
-  constexpr zq_t operator+(const zq_t rhs) const { return reduce_once(this->v + rhs.v); }
-  constexpr void operator+=(const zq_t rhs) { *this = *this + rhs; }
+  forceinline constexpr zq_t operator+(const zq_t rhs) const { return zq_t{ reduce_once(this->v + rhs.v) }; }
+  forceinline constexpr void operator+=(const zq_t rhs) { *this = *this + rhs; }
 
   // Modulo Negation and subtraction
-  constexpr zq_t operator-() const { return Q - this->v; }
-  constexpr zq_t operator-(const zq_t rhs) const { return *this + (-rhs); }
-  constexpr void operator-=(const zq_t rhs) { *this = *this - rhs; }
+  forceinline constexpr zq_t operator-() const { return zq_t{ Q - this->v }; }
+  forceinline constexpr zq_t operator-(const zq_t rhs) const { return *this + (-rhs); }
+  forceinline constexpr void operator-=(const zq_t rhs) { *this = *this - rhs; }
 
   // Modulo Multiplication
-  constexpr zq_t operator*(const zq_t rhs) const
+  forceinline constexpr zq_t operator*(const zq_t rhs) const
   {
 #ifdef __SIZEOF_INT128__
     __extension__ using uint128_t = unsigned __int128;
@@ -64,7 +70,7 @@ public:
     const uint64_t resQ = res * static_cast<uint64_t>(Q); // (24+23) significant bits, from LSB
 
     const uint32_t reduced = reduce_once(static_cast<uint32_t>(t - resQ));
-    return reduced;
+    return zq_t{ reduced };
 #else
     const uint64_t t0 = static_cast<uint64_t>(this->v);
     const uint64_t t1 = static_cast<uint64_t>(rhs.v);
@@ -119,10 +125,10 @@ public:
     return zq_t(t7);
 #endif
   }
-  constexpr void operator*=(const zq_t rhs) { *this = *this * rhs; }
+  forceinline constexpr void operator*=(const zq_t rhs) { *this = *this * rhs; }
 
   // Modulo Exponentiation
-  constexpr zq_t operator^(const size_t n) const
+  forceinline constexpr zq_t operator^(const size_t n) const
   {
     zq_t base = *this;
 
@@ -141,20 +147,21 @@ public:
   }
 
   // Modulo multiplicative inverse and division
-  constexpr zq_t inv() const { return *this ^ static_cast<size_t>(Q - 2); }
-  constexpr zq_t operator/(const zq_t rhs) const { return *this * rhs.inv(); }
+  [[nodiscard]] forceinline constexpr zq_t inv() const { return *this ^ static_cast<size_t>(Q - 2); }
+  forceinline constexpr zq_t operator/(const zq_t rhs) const { return *this * rhs.inv(); }
 
   // Comparison operations, see https://en.cppreference.com/w/cpp/language/default_comparisons
-  constexpr auto operator<=>(const zq_t&) const = default;
+  forceinline constexpr auto operator<=>(const zq_t&) const = default;
 
   // Modulo left shift by `l` -bits
-  constexpr zq_t operator<<(const size_t l) const { return zq_t(this->v << l); }
+  forceinline constexpr zq_t operator<<(const size_t l) const { return zq_t(this->v << l); }
 
   // Generate a random field element
-  static zq_t random(randomshake::randomshake_t<>& csprng)
+  [[nodiscard]] static zq_t random(randomshake::randomshake_t<>& csprng)
   {
-    uint32_t res = 0;
-    csprng.generate(std::span(reinterpret_cast<uint8_t*>(&res), sizeof(res)));
+    std::array<uint8_t, sizeof(uint32_t)> buf{};
+    csprng.generate(buf);
+    const auto res = static_cast<uint32_t>(buf[0]) | (static_cast<uint32_t>(buf[1]) << 8) | (static_cast<uint32_t>(buf[2]) << 16) | (static_cast<uint32_t>(buf[3]) << 24);
     return zq_t::from_non_reduced(res);
   }
 
@@ -169,7 +176,7 @@ private:
   // without using division/ modulo division operator.
   //
   // ∀ v ∈ [0, 2^32), barrett_reduce(v) == (v % Q) - must hold !
-  static constexpr uint32_t barrett_reduce(const uint32_t val)
+  static forceinline constexpr uint32_t barrett_reduce(const uint32_t val)
   {
     constexpr uint32_t mask23 = (1U << 23) - 1U;
     constexpr uint32_t mask13 = (1U << 13) - 1U;
@@ -190,7 +197,7 @@ private:
   }
 
   // Given a 32 -bit unsigned integer `v` such that `v` ∈ [0, 2*Q), this routine can be invoked for reducing `v` modulo prime Q.
-  static constexpr uint32_t reduce_once(const uint32_t val)
+  static forceinline constexpr uint32_t reduce_once(const uint32_t val)
   {
     const uint32_t t0 = val - Q;
     const uint32_t t1 = 0U - (t0 >> 31);

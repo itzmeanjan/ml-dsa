@@ -1,5 +1,6 @@
 #pragma once
 #include "field.hpp"
+#include "ml_dsa/internals/utility/force_inline.hpp"
 #include <cstddef>
 #include <cstdint>
 #include <utility>
@@ -16,7 +17,7 @@ namespace ml_dsa_reduction {
 // See algorithm 35 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
 // This implementation collects some ideas from https://github.com/pq-crystals/dilithium/blob/3e9b9f1/ref/rounding.c#L5-L23.
 template<size_t d>
-static constexpr std::pair<ml_dsa_field::zq_t, ml_dsa_field::zq_t>
+static forceinline constexpr std::pair<ml_dsa_field::zq_t, ml_dsa_field::zq_t>
 power2round(const ml_dsa_field::zq_t r)
 {
   constexpr uint32_t max = 1U << (d - 1);
@@ -39,7 +40,7 @@ power2round(const ml_dsa_field::zq_t r)
 //
 // See algorithm 36 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
-static constexpr std::pair<ml_dsa_field::zq_t, ml_dsa_field::zq_t>
+static forceinline constexpr std::pair<ml_dsa_field::zq_t, ml_dsa_field::zq_t>
 decompose(const ml_dsa_field::zq_t r)
 {
   constexpr uint32_t t0 = alpha >> 1;
@@ -63,7 +64,7 @@ decompose(const ml_dsa_field::zq_t r)
 // Given an element ∈ Z_q, this routine extracts out high order bits of r.
 // See algorithm 37 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
-static constexpr ml_dsa_field::zq_t
+static forceinline constexpr ml_dsa_field::zq_t
 highbits(const ml_dsa_field::zq_t r)
 {
   const auto s = decompose<alpha>(r);
@@ -73,7 +74,7 @@ highbits(const ml_dsa_field::zq_t r)
 // Given an element ∈ Z_q, this routine extracts out low order bits of r.
 // See algorithm 38 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
-static constexpr ml_dsa_field::zq_t
+static forceinline constexpr ml_dsa_field::zq_t
 lowbits(const ml_dsa_field::zq_t r)
 {
   const auto s = decompose<alpha>(r);
@@ -86,7 +87,7 @@ lowbits(const ml_dsa_field::zq_t r)
 // This hint is essentially the “carry” caused by `z` in the addition. Note, `z` is small.
 // See algorithm 39 of ML-DSA specification https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
-static constexpr ml_dsa_field::zq_t
+static forceinline constexpr ml_dsa_field::zq_t
 make_hint(const ml_dsa_field::zq_t z, const ml_dsa_field::zq_t r)
 {
   const ml_dsa_field::zq_t r1 = highbits<alpha>(r);
@@ -98,25 +99,25 @@ make_hint(const ml_dsa_field::zq_t z, const ml_dsa_field::zq_t r)
 // 1 -bit hint ( read `h` ) is used to recover higher order bits of `r + z`.
 // See algorithm 40 of ML-DSA algorithm https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t alpha>
-static constexpr ml_dsa_field::zq_t
+static forceinline constexpr ml_dsa_field::zq_t
 use_hint(const ml_dsa_field::zq_t h, const ml_dsa_field::zq_t r)
 {
   constexpr uint32_t m = (ml_dsa_field::Q - 1) / alpha;
   constexpr ml_dsa_field::zq_t t0{ alpha >> 1 };
-  constexpr ml_dsa_field::zq_t t1 = ml_dsa_field::zq_t{ ml_dsa_field::Q } - t0;
+  const ml_dsa_field::zq_t t1 = ml_dsa_field::zq_t{ ml_dsa_field::Q } - t0;
   constexpr auto one = ml_dsa_field::zq_t::one();
 
   const auto s = decompose<alpha>(r);
 
   if ((h == one) && ((s.second > ml_dsa_field::zq_t::zero()) && (s.second < t1))) {
     const bool flg = s.first == ml_dsa_field::zq_t{ m - 1U };
-    const ml_dsa_field::zq_t br[]{ s.first + one, ml_dsa_field::zq_t{ 0U } };
+    const std::array<ml_dsa_field::zq_t, 2> br{ s.first + one, ml_dsa_field::zq_t{ 0U } };
 
     return br[static_cast<size_t>(flg)];
   }
   if ((h == one) && (s.second >= t1)) {
     const bool flg = s.first == ml_dsa_field::zq_t{ 0U };
-    const ml_dsa_field::zq_t br[]{ s.first - one, ml_dsa_field::zq_t{ m - 1 } };
+    const std::array<ml_dsa_field::zq_t, 2> br{ s.first - one, ml_dsa_field::zq_t{ m - 1 } };
 
     return br[static_cast<size_t>(flg)];
   }

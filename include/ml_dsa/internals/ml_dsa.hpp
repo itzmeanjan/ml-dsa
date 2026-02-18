@@ -4,6 +4,7 @@
 #include "ml_dsa/internals/poly/ntt.hpp"
 #include "ml_dsa/internals/poly/polyvec.hpp"
 #include "ml_dsa/internals/poly/sampling.hpp"
+#include "ml_dsa/internals/utility/force_inline.hpp"
 #include "ml_dsa/internals/utility/params.hpp"
 #include "ml_dsa/internals/utility/utils.hpp"
 #include "sha3/shake256.hpp"
@@ -31,7 +32,7 @@ static constexpr size_t MU_BYTE_LEN = 64;
 //
 // See algorithm 1 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t eta>
-static constexpr void
+static forceinline constexpr void
 keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> seed,
        std::span<uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
        std::span<uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey)
@@ -39,7 +40,7 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> seed,
 {
   constexpr std::array<uint8_t, 2> domain_separator{ k, l };
 
-  std::array<uint8_t, 32 + 64 + 32> seed_hash{};
+  std::array<uint8_t, ml_dsa_utils::RHO_BYTE_LEN + ml_dsa_utils::RHO_PRIME_BYTE_LEN + ml_dsa_utils::KEY_BYTE_LEN> seed_hash{};
   auto seed_hash_span = std::span(seed_hash);
 
   shake256::shake256_t hasher;
@@ -48,9 +49,9 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> seed,
   hasher.finalize();
   hasher.squeeze(seed_hash_span);
 
-  auto rho = seed_hash_span.template first<32>();
-  auto rho_prime = seed_hash_span.template subspan<rho.size(), 64>();
-  auto key = seed_hash_span.template last<32>();
+  auto rho = seed_hash_span.template first<ml_dsa_utils::RHO_BYTE_LEN>();
+  auto rho_prime = seed_hash_span.template subspan<rho.size(), ml_dsa_utils::RHO_PRIME_BYTE_LEN>();
+  auto key = seed_hash_span.template last<ml_dsa_utils::KEY_BYTE_LEN>();
 
   std::array<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> A{};
   ml_dsa_sampling::expand_a<k, l>(rho, A);
@@ -78,7 +79,7 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> seed,
   ml_dsa_polyvec::power2round<k, d>(t, t1, t0);
 
   constexpr size_t t1_bw = std::bit_width(ml_dsa_field::Q) - d;
-  std::array<uint8_t, 64> tr{};
+  std::array<uint8_t, ml_dsa_utils::TR_BYTE_LEN> tr{};
 
   // Prepare public key
   constexpr size_t pkoff0 = 0;
@@ -120,6 +121,11 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> seed,
 
   ml_dsa_polyvec::sub_from_x<k, t0_rng>(t0);
   ml_dsa_polyvec::encode<k, d>(t0, seckey.template subspan<skoff5, skoff6 - skoff5>());
+
+  ml_dsa_utils::secure_zeroize(seed_hash);
+  ml_dsa_utils::secure_zeroize(s1);
+  ml_dsa_utils::secure_zeroize(s2);
+  ml_dsa_utils::secure_zeroize(t);
 }
 
 // Given a ML-DSA secret key and 64 -bytes message representative, this routine computes a hedged/ deterministic signature.
@@ -132,7 +138,7 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> seed,
 //
 // See algorithm 7 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t eta, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static constexpr bool
+[[nodiscard]] static forceinline constexpr bool
 sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
               std::span<const uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey,
               std::span<const uint8_t, MU_BYTE_LEN> mu,
@@ -146,9 +152,9 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   constexpr size_t s2_len = k * eta_bw * 32;
 
   constexpr size_t skoff0 = 0;
-  constexpr size_t skoff1 = skoff0 + 32;
-  constexpr size_t skoff2 = skoff1 + 32;
-  constexpr size_t skoff3 = skoff2 + 64;
+  constexpr size_t skoff1 = skoff0 + ml_dsa_utils::RHO_BYTE_LEN;
+  constexpr size_t skoff2 = skoff1 + ml_dsa_utils::KEY_BYTE_LEN;
+  constexpr size_t skoff3 = skoff2 + ml_dsa_utils::TR_BYTE_LEN;
   constexpr size_t skoff4 = skoff3 + s1_len;
   constexpr size_t skoff5 = skoff4 + s2_len;
 
@@ -158,7 +164,7 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   std::array<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> A{};
   ml_dsa_sampling::expand_a<k, l>(rho, A);
 
-  std::array<uint8_t, 64> rho_prime{};
+  std::array<uint8_t, ml_dsa_utils::RHO_PRIME_BYTE_LEN> rho_prime{};
 
   shake256::shake256_t hasher;
   hasher.reset();
@@ -281,6 +287,13 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 
   ml_dsa_bit_packing::encode_hint_bits<k, omega>(h, sig.template subspan<sigoff2, sigoff3 - sigoff2>());
 
+  ml_dsa_utils::secure_zeroize(rho_prime);
+  ml_dsa_utils::secure_zeroize(s1);
+  ml_dsa_utils::secure_zeroize(s2);
+  ml_dsa_utils::secure_zeroize(t0);
+  ml_dsa_utils::secure_zeroize(z);
+  ml_dsa_utils::secure_zeroize(h);
+
   return has_signed;
 }
 
@@ -295,7 +308,7 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 //
 // See algorithm 2 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t eta, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static constexpr bool
+[[nodiscard]] static forceinline constexpr bool
 sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
      std::span<const uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey,
      std::span<const uint8_t> msg,
@@ -308,9 +321,9 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   }
 
   constexpr size_t skoff0 = 0;
-  constexpr size_t skoff1 = skoff0 + 32;
-  constexpr size_t skoff2 = skoff1 + 32;
-  constexpr size_t skoff3 = skoff2 + 64;
+  constexpr size_t skoff1 = skoff0 + ml_dsa_utils::RHO_BYTE_LEN;
+  constexpr size_t skoff2 = skoff1 + ml_dsa_utils::KEY_BYTE_LEN;
+  constexpr size_t skoff3 = skoff2 + ml_dsa_utils::TR_BYTE_LEN;
 
   auto tr = seckey.template subspan<skoff2, skoff3 - skoff2>();
   const std::array<uint8_t, 2> domain_separator{ 0, static_cast<uint8_t>(ctx.size()) };
@@ -335,7 +348,7 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 //
 // See algorithm 8 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static constexpr bool
+[[nodiscard]] static forceinline constexpr bool
 verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
                 std::span<const uint8_t, MU_BYTE_LEN> mu,
                 std::span<const uint8_t, ml_dsa_utils::sig_len(k, l, gamma1, omega, lambda)> sig)
@@ -380,7 +393,7 @@ verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey
 
   // Decode public key
   constexpr size_t pkoff0 = 0;
-  constexpr size_t pkoff1 = pkoff0 + 32;
+  constexpr size_t pkoff1 = pkoff0 + ml_dsa_utils::RHO_BYTE_LEN;
   constexpr size_t pkoff2 = pubkey.size();
 
   auto rho = pubkey.template subspan<pkoff0, pkoff1 - pkoff0>();
@@ -433,7 +446,7 @@ verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey
 //
 // See algorithm 3 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
-static constexpr bool
+[[nodiscard]] static forceinline constexpr bool
 verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
        std::span<const uint8_t> msg,
        std::span<const uint8_t> ctx,
@@ -444,8 +457,8 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
     return false;
   }
 
-  std::array<uint8_t, 64> mu{};
-  std::array<uint8_t, 64> tr{};
+  std::array<uint8_t, MU_BYTE_LEN> mu{};
+  std::array<uint8_t, ml_dsa_utils::TR_BYTE_LEN> tr{};
 
   shake256::shake256_t hasher;
   hasher.absorb(pubkey);

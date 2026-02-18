@@ -1,8 +1,8 @@
 #pragma once
 #include "bit_packing.hpp"
 #include "ml_dsa/internals/math/field.hpp"
+#include "ml_dsa/internals/utility/force_inline.hpp"
 #include "ml_dsa/internals/utility/params.hpp"
-#include "ntt.hpp"
 #include "poly.hpp"
 #include "sha3/shake128.hpp"
 #include "sha3/shake256.hpp"
@@ -24,7 +24,7 @@ using poly_t = std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N>;
 //
 // See algorithm 32 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l>
-static constexpr void
+static forceinline constexpr void
 expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> mat)
 {
   std::array<uint8_t, rho.size() + 2> msg{};
@@ -75,7 +75,7 @@ expand_a(std::span<const uint8_t, 32> rho, std::span<ml_dsa_field::zq_t, k * l *
 //
 // See algorithm 33 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t eta, size_t k, uint16_t nonce>
-static constexpr void
+static forceinline constexpr void
 expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_eta(eta) && ml_dsa_params::check_nonce(nonce))
 {
@@ -140,7 +140,7 @@ expand_s(std::span<const uint8_t, 64> rho_prime, std::span<ml_dsa_field::zq_t, k
 //
 // See algorithm 34 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t gamma1, size_t l>
-static constexpr void
+static forceinline constexpr void
 expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> vec)
   requires(ml_dsa_params::check_gamma1(gamma1))
 {
@@ -176,7 +176,7 @@ expand_mask(std::span<const uint8_t, 64> seed, const uint16_t nonce, std::span<m
 //
 // See algorithm 29 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<uint32_t tau, size_t lambda>
-static constexpr void
+static forceinline constexpr void
 sample_in_ball(std::span<const uint8_t, (2 * lambda) / std::numeric_limits<uint8_t>::digits> seed, std::span<ml_dsa_field::zq_t, ml_dsa_ntt::N> poly)
   requires(ml_dsa_params::check_tau(tau))
 {

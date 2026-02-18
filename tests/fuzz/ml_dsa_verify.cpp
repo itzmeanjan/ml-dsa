@@ -65,7 +65,7 @@ LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     std::copy(data + OFF_LOGIC_MU, data + OFF_LOGIC_END, mu.begin());
 
     md::keygen(seed, pubkey, skey);
-    md::sign_internal(rnd, skey, mu, sig);
+    (void)md::sign_internal(rnd, skey, mu, sig);
   }
 
   (void)md::verify_internal(pubkey, mu, sig);

@@ -51,7 +51,7 @@ keygen(std::span<const uint8_t, KeygenSeedByteLen> seed, std::span<uint8_t, PubK
 //
 // Default (and recommended) signing mode is "hedged" i.e. using 32B input randomness for signing, results into
 // randomized signature. For "deterministic" signing mode, simply fill `rnd` with zero bytes.
-constexpr bool
+[[nodiscard]] constexpr bool
 sign(std::span<const uint8_t, SigningSeedByteLen> rnd,
      std::span<const uint8_t, SecKeyByteLen> seckey,
      std::span<const uint8_t> msg,
@@ -66,7 +66,7 @@ sign(std::span<const uint8_t, SigningSeedByteLen> rnd,
 //
 // Default (and recommended) signing mode is "hedged" i.e. using 32B input randomness for signing, results into
 // randomized signature. For "deterministic" signing mode, simply fill `rnd` with zero bytes.
-constexpr bool
+[[nodiscard]] constexpr bool
 sign_internal(std::span<const uint8_t, SigningSeedByteLen> rnd,
               std::span<const uint8_t, SecKeyByteLen> seckey,
               std::span<const uint8_t, MessageRepresentativeByteLen> mu,
@@ -78,7 +78,7 @@ sign_internal(std::span<const uint8_t, SigningSeedByteLen> rnd,
 // Given a ML-DSA-87 public key, a message M, an optional context C (of length at max 255 -bytes) and a signature S,
 // this routine can be used for verifying if the signature is valid for the provided message or not, returning truth
 // value only in case of successful signature verification, otherwise false is returned.
-constexpr bool
+[[nodiscard]] constexpr bool
 verify(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t> ctx, std::span<const uint8_t, SigByteLen> sig)
 {
   return ml_dsa::verify<k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, msg, ctx, sig);
@@ -87,7 +87,7 @@ verify(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> 
 // Given a ML-DSA-87 public key, a message representative mu and a signature S,
 // this routine can be used for verifying if the signature is valid for the provided message or not, returning truth
 // value only in case of successful signature verification, otherwise false is returned.
-constexpr bool
+[[nodiscard]] constexpr bool
 verify_internal(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t, MessageRepresentativeByteLen> mu, std::span<const uint8_t, SigByteLen> sig)
 {
   return ml_dsa::verify_internal<k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, mu, sig);

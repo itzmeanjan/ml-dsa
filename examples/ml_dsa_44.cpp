@@ -1,7 +1,6 @@
 #include "ml_dsa/ml_dsa_44.hpp"
 #include "randomshake/randomshake.hpp" // IWYU pragma: keep
 #include <cassert>
-#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <iomanip>
@@ -20,8 +19,8 @@ to_hex(std::span<const uint8_t> bytes)
   std::stringstream ss;
   ss << std::hex;
 
-  for (size_t i = 0; i < bytes.size(); i++) {
-    ss << std::setw(2) << std::setfill('0') << static_cast<uint32_t>(bytes[i]);
+  for (const unsigned char byte : bytes) {
+    ss << std::setw(2) << std::setfill('0') << static_cast<uint32_t>(byte);
   }
 
   return ss.str();
