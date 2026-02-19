@@ -24,15 +24,15 @@ LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
 
   // Malformed Input Mode (Mode A)
   constexpr size_t OFF_MALFORM_PUBKEY = OFF_DISCRIMINATOR + 1;
-  constexpr size_t OFF_MALFORM_MU = OFF_MALFORM_PUBKEY + md::PubKeyByteLen;
-  constexpr size_t OFF_MALFORM_SIG = OFF_MALFORM_MU + md::MessageRepresentativeByteLen;
+  constexpr size_t OFF_MALFORM_M_PRIME = OFF_MALFORM_PUBKEY + md::PubKeyByteLen;
+  constexpr size_t OFF_MALFORM_SIG = OFF_MALFORM_M_PRIME + md::MessageRepresentativeByteLen;
   constexpr size_t OFF_MALFORM_END = OFF_MALFORM_SIG + md::SigByteLen;
 
   // Logic Discovery Mode (Mode B)
   constexpr size_t OFF_LOGIC_SEED = OFF_DISCRIMINATOR + 1;
   constexpr size_t OFF_LOGIC_RND = OFF_LOGIC_SEED + md::KeygenSeedByteLen;
-  constexpr size_t OFF_LOGIC_MU = OFF_LOGIC_RND + md::SigningSeedByteLen;
-  constexpr size_t OFF_LOGIC_END = OFF_LOGIC_MU + md::MessageRepresentativeByteLen;
+  constexpr size_t OFF_LOGIC_M_PRIME = OFF_LOGIC_RND + md::SigningSeedByteLen;
+  constexpr size_t OFF_LOGIC_END = OFF_LOGIC_M_PRIME + md::MessageRepresentativeByteLen;
 
   if (size < OFF_DISCRIMINATOR + 1) {
     return -1;
@@ -46,13 +46,13 @@ LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
   }
 
   std::array<uint8_t, md::PubKeyByteLen> pubkey{};
-  std::array<uint8_t, md::MessageRepresentativeByteLen> mu{};
+  std::array<uint8_t, md::MessageRepresentativeByteLen> m_prime{};
   std::array<uint8_t, md::SigByteLen> sig{};
 
   if (is_mode_a) {
     // Mode A: Possibly malformed input mode
-    std::copy(data + OFF_MALFORM_PUBKEY, data + OFF_MALFORM_MU, pubkey.begin());
-    std::copy(data + OFF_MALFORM_MU, data + OFF_MALFORM_SIG, mu.begin());
+    std::copy(data + OFF_MALFORM_PUBKEY, data + OFF_MALFORM_M_PRIME, pubkey.begin());
+    std::copy(data + OFF_MALFORM_M_PRIME, data + OFF_MALFORM_SIG, m_prime.begin());
     std::copy(data + OFF_MALFORM_SIG, data + OFF_MALFORM_END, sig.begin());
   } else {
     // Mode B: Valid input mode
@@ -61,13 +61,13 @@ LLVMFuzzerTestOneInput(const uint8_t* data, size_t size)
     std::array<uint8_t, md::SecKeyByteLen> skey{};
 
     std::copy(data + OFF_LOGIC_SEED, data + OFF_LOGIC_RND, seed.begin());
-    std::copy(data + OFF_LOGIC_RND, data + OFF_LOGIC_MU, rnd.begin());
-    std::copy(data + OFF_LOGIC_MU, data + OFF_LOGIC_END, mu.begin());
+    std::copy(data + OFF_LOGIC_RND, data + OFF_LOGIC_M_PRIME, rnd.begin());
+    std::copy(data + OFF_LOGIC_M_PRIME, data + OFF_LOGIC_END, m_prime.begin());
 
     md::keygen(seed, pubkey, skey);
-    (void)md::sign_internal(rnd, skey, mu, sig);
+    (void)md::sign_internal(rnd, skey, m_prime, sig);
   }
 
-  (void)md::verify_internal(pubkey, mu, sig);
+  (void)md::verify_internal(pubkey, m_prime, sig);
   return 0;
 }
