@@ -4,7 +4,7 @@ NIST FIPS 204 (ML-DSA) standard compliant, C++20, fully `constexpr`, header-only
 FIPS 204 compliance is assured by testing this implementation against NIST ACVP Known Answer Tests and tons of property based tests. We also fuzz the library and its internal components with LLVM libFuzzer to get an extra level of assurance.
 
 > [!NOTE]
-> `constexpr` ? Yes, you can compile-time execute keygen, sign or verify. But why? I don't know, some usecase might arise.
+> `constexpr` ? Yes, you can compile-time execute keygen, sign or verify.
 
 > [!CAUTION]
 > This ML-DSA implementation is conformant with ML-DSA standard <https://doi.org/10.6028/NIST.FIPS.204> and I also *try* to make it timing leakage free, but be informed that this implementation is not *yet* audited. **If you consider using it in production, please be careful !**
@@ -18,8 +18,14 @@ ML-DSA's security is based on the hardness of finding short vectors in module (i
 Algorithm | Input | Output | What does it do ?
 --- | --- | --- | ---
 KeyGen | 32 -bytes seed | Public and Secret Key | 32 -bytes seed is used for *deterministically* deriving a ML-DSA keypair.
-Sign | 32 -bytes optional seed, N (>=0) -bytes message and an optional context string (of max 255 -bytes) | Signature | For default and recommended **hedged** (i.e. randomized) message signing, one must provide with 32 -bytes random seed. For **deterministic** message signing, one should simply fill seed with 32 zero bytes.
-Verify | Public Key, N(>=) bytes message and an optional context (of max 255 -bytes) | Boolean value | Truth value denotes successful signature verification.
+Sign | 32 -bytes seed, secret key, message, context | Signature | Signs a message with an optional context string (max 255 -bytes). **Hedged** (randomized) signing is default and recommended; for **deterministic** signing, fill seed with zero bytes.
+Verify | Public key, message, context, signature | Boolean | Verifies a signature against a message and optional context.
+HashSign | 32 -bytes seed, secret key, message, context | Signature | Pre-hash mode signing (FIPS 204 §5.4). Pre-hashes the message with a SHA3 hash function before signing. Same hedged/deterministic modes as Sign.
+HashVerify | Public key, message, context, signature | Boolean | Pre-hash mode verification (FIPS 204 §5.5). Verifies a signature against the pre-hashed representation of a message.
+Sign_internal | 32 -bytes seed, secret key, M' | Signature | FIPS 204 Algorithm 7. Signs using the encoded message M' directly (bypassing context encoding).
+Verify_internal | Public key, M', signature | Boolean | FIPS 204 Algorithm 8. Verifies using the encoded message M' directly.
+Sign_core | 32 -bytes seed, secret key, 64 -bytes mu | Signature | Core signing operation. Accepts the 64 -bytes message representative mu directly. Caller is responsible for computing mu.
+Verify_core | Public key, 64 -bytes mu, signature | Boolean | Core verification operation. Accepts the 64 -bytes message representative mu directly.
 
 Here I'm maintaining `ml-dsa` - a C++20 header-only fully `constexpr` library, implementing ML-DSA, supporting ML-DSA-{44, 65, 87} parameter sets, as defined in table 1 of ML-DSA standard. It's easy to use, see [usage](#usage).
 
@@ -40,11 +46,11 @@ verify | 94.8us | 134.4us
 This implementation is built with a "Security-First" approach, incorporating programming language features and multiple tools for enforcement:
 
 - **No Raw Pointers**: Completely avoids dealing with raw pointers. Everything is wrapped in statically-sized `std::span`, which provides much better type safety and compile-time error reporting as the exact byte lengths for all buffers (seeds, keys, signatures) are known for each parameter set.
-- **Strict Build Guards**: Compiled with `-Werror` and comprehensive warning flags (`-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wformat=2`). Any warnings triggered during compilation are treated as fatal errors.
+- **Strict Build Guards**: Compiled with `-Werror` and comprehensive warning flags (`-Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wformat=2 -Wcast-qual -Wold-style-cast -Wundef`). Any warnings triggered during compilation are treated as fatal errors.
 - **Memory Safety**: Verified using AddressSanitizer (ASan) in both release and debug build configuration.
 - **Undefined Behavior**: Hardened with UndefinedBehaviorSanitizer (UBSan), configured to treat any undefined behavior as a fatal, non-recoverable error.
 - **Continuous Fuzzing**: Includes a suite of **13 specialized fuzzer binaries** (9 signature variants + 4 internal component units).
-- **Static Analysis**: Integrated with `clang-tidy` using security-focused profiles (`bugprone-*`, `cert-*`, `cppcoreguidelines-*`).
+- **Static Analysis**: Integrated with `clang-tidy` using an extensive check suite (`bugprone-*`, `cert-*`, `clang-analyzer-*`, `concurrency-*`, `cppcoreguidelines-*`, `hicpp-*`, `misc-*`, `modernize-*`, `performance-*`, `portability-*`, `readability-*`) with all warnings treated as errors.
 - **CI-Verified**: Automatically tested on every push across a matrix of operating systems (Linux, macOS) and compilers (`clang++`, `g++`).
 
 ## Prerequisites
@@ -67,7 +73,7 @@ This implementation is built with a "Security-First" approach, incorporating pro
 For testing functional correctness of this implementation and conformance with ML-DSA standard, you have to run following command(s).
 
 > [!NOTE]
-> All Known Answer Test (KAT) files live inside [kats](./kats/) directory. KAT files from official reference implementation and NIST ACVP server. ACVP KATs can be synced by building `sync_acvp_kats` target.
+> All Known Answer Test (KAT) files live inside [kats](./kats/) directory. KAT files from official reference implementation, are generated by following (reproducible) steps, described in <https://gist.github.com/itzmeanjan/d14afc3866b82119221682f0f3c9822d>. ACVP KATs can be synced by building `sync_acvp_kats` target.
 
 ### CMake Options
 
@@ -237,7 +243,8 @@ target_link_libraries(my_app PRIVATE ml-dsa)
 ### Development Tools
 
 ```bash
-cmake -B build
+# Configure
+cmake -B build -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_BUILD_TYPE=Release -DML_DSA_BUILD_TESTS=ON -DML_DSA_BUILD_EXAMPLES=ON -DML_DSA_FETCH_DEPS=ON
 
 # Static analysis (requires clang-tidy)
 cmake --build build --target tidy
