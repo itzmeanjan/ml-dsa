@@ -8,6 +8,8 @@
 
 namespace ml_dsa_44 {
 
+using ml_dsa_prehash::hash_algorithm;
+
 // See table 1 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204
 
 static constexpr size_t d = 13;
@@ -35,6 +37,8 @@ keygen(std::span<const uint8_t, KeygenSeedByteLen> seed, std::span<uint8_t, PubK
   ml_dsa::keygen<k, l, d, eta>(seed, pubkey, seckey);
 }
 
+// ML-DSA.Sign
+//
 // Given a 32 -bytes seed `rnd` and ML-DSA-44 secret key, this routine can be used for signing any arbitrary (>=0)
 // length message M, while also including an optional context (whose length must be capped at 255 -bytes),
 // producing a ML-DSA-44 signature S.
@@ -51,20 +55,42 @@ sign(std::span<const uint8_t, SigningSeedByteLen> rnd,
   return ml_dsa::sign<k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, msg, ctx, sig);
 }
 
-// Given a 32 -bytes seed `rnd` and ML-DSA-44 secret key, this routine can be used for signing a 64 -bytes message representative,
+// HashML-DSA.Sign
+//
+// Given a 32 -bytes seed `rnd` and ML-DSA-44 secret key, this routine can be used for signing the pre-hash of any
+// arbitrary (>=0) length message M, while also including an optional context (whose length must be capped at 255 -bytes),
 // producing a ML-DSA-44 signature S.
+//
+// Supports pre-hashing with only SHA3 family of hash functions, from FIPS 202.
 //
 // Default (and recommended) signing mode is "hedged" i.e. using 32B input randomness for signing, results into
 // randomized signature. For "deterministic" signing mode, simply fill `rnd` with zero bytes.
+template<hash_algorithm ph>
+[[nodiscard]] constexpr bool
+hash_sign(std::span<const uint8_t, SigningSeedByteLen> rnd,
+          std::span<const uint8_t, SecKeyByteLen> seckey,
+          std::span<const uint8_t> msg,
+          std::span<const uint8_t> ctx,
+          std::span<uint8_t, SigByteLen> sig)
+{
+  return ml_dsa::hash_sign<ph, k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, msg, ctx, sig);
+}
+
+// ML-DSA.Sign_internal
+//
+// Given a 32 -bytes seed `rnd`, ML-DSA-44 secret key and a variable-length message M', this routine computes
+// mu = H(tr || M') and signs, producing a ML-DSA-44 signature S. This is FIPS 204 Algorithm 7.
 [[nodiscard]] constexpr bool
 sign_internal(std::span<const uint8_t, SigningSeedByteLen> rnd,
               std::span<const uint8_t, SecKeyByteLen> seckey,
-              std::span<const uint8_t, MessageRepresentativeByteLen> mu,
+              std::span<const uint8_t> m_prime,
               std::span<uint8_t, SigByteLen> sig)
 {
-  return ml_dsa::sign_internal<k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, mu, sig);
+  return ml_dsa::sign_internal<k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, m_prime, sig);
 }
 
+// ML-DSA.Verify
+//
 // Given a ML-DSA-44 public key, a message M, an optional context C (of length at max 255 -bytes) and a signature S,
 // this routine can be used for verifying if the signature is valid for the provided message or not, returning truth
 // value only in case of successful signature verification, otherwise false is returned.
@@ -74,13 +100,26 @@ verify(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> 
   return ml_dsa::verify<k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, msg, ctx, sig);
 }
 
-// Given a ML-DSA-44 public key, a message representative mu and a signature S,
-// this routine can be used for verifying if the signature is valid for the provided message or not, returning truth
-// value only in case of successful signature verification, otherwise false is returned.
+// HashML-DSA.Verify
+//
+// Given a ML-DSA-44 public key, a message M, an optional context C (of length at max 255 -bytes) and a signature S,
+// this routine can be used for verifying if the signature is valid for the pre-hashed representation of given message
+// or not, returning truth value only in case of successful signature verification, otherwise false is returned.
+template<hash_algorithm ph>
 [[nodiscard]] constexpr bool
-verify_internal(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t, MessageRepresentativeByteLen> mu, std::span<const uint8_t, SigByteLen> sig)
+hash_verify(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t> ctx, std::span<const uint8_t, SigByteLen> sig)
 {
-  return ml_dsa::verify_internal<k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, mu, sig);
+  return ml_dsa::hash_verify<ph, k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, msg, ctx, sig);
+}
+
+// ML-DSA.Verify_internal
+//
+// Given a ML-DSA-44 public key, a variable-length message M' and a signature S, this routine verifies
+// the signature. This is FIPS 204 Algorithm 8.
+[[nodiscard]] constexpr bool
+verify_internal(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> m_prime, std::span<const uint8_t, SigByteLen> sig)
+{
+  return ml_dsa::verify_internal<k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, m_prime, sig);
 }
 
 }

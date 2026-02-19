@@ -6,6 +6,7 @@
 #include "ml_dsa/internals/poly/sampling.hpp"
 #include "ml_dsa/internals/utility/force_inline.hpp"
 #include "ml_dsa/internals/utility/params.hpp"
+#include "ml_dsa/internals/utility/prehash.hpp"
 #include "ml_dsa/internals/utility/utils.hpp"
 #include "sha3/shake256.hpp"
 #include <algorithm>
@@ -15,6 +16,7 @@
 #include <cstdint>
 #include <limits>
 #include <span>
+#include <vector>
 
 // ML-DSA FIPS 204
 namespace ml_dsa {
@@ -128,20 +130,19 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> seed,
   ml_dsa_utils::secure_zeroize(t);
 }
 
-// Given a ML-DSA secret key and 64 -bytes message representative, this routine computes a hedged/ deterministic signature.
+// Given a ML-DSA secret key, variable-length message M' and 32 -bytes randomness, this routine computes
+// mu = H(tr || M') and then produces a hedged/ deterministic signature. Hedged signing is recommended.
+// Hedged signing requires passing fresh 32 bytes randomness for each signature, given the same secret key.
+// For deterministic signing, pass `rnd` filled with 32 zeros. It's not recommended to use that.
 //
-// Notice, first parameter of this function, `rnd`, which lets you pass 32 -bytes randomness for generating default
-// "hedged" signature. In case you don't need randomized message signature, you can instead fill `rnd` with zeros, and
-// it'll generate a deterministic signature.
-//
-// Note, hedged signing is the default and recommended version.
+// This is FIPS 204 Algorithm 7 ML-DSA.Sign_internal(sk, M', rnd).
 //
 // See algorithm 7 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t eta, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
 [[nodiscard]] static forceinline constexpr bool
 sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
               std::span<const uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey,
-              std::span<const uint8_t, MU_BYTE_LEN> mu,
+              std::span<const uint8_t> m_prime,
               std::span<uint8_t, ml_dsa_utils::sig_len(k, l, gamma1, omega, lambda)> sig)
   requires(ml_dsa_params::check_signing_params(k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda))
 {
@@ -160,17 +161,26 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 
   auto rho = seckey.template subspan<skoff0, skoff1 - skoff0>();
   auto key = seckey.template subspan<skoff1, skoff2 - skoff1>();
+  auto tr = seckey.template subspan<skoff2, skoff3 - skoff2>();
+
+  std::array<uint8_t, MU_BYTE_LEN> mu{};
+  auto mu_span = std::span(mu);
+
+  shake256::shake256_t hasher;
+  hasher.absorb(tr);
+  hasher.absorb(m_prime);
+  hasher.finalize();
+  hasher.squeeze(mu_span);
 
   std::array<ml_dsa_field::zq_t, k * l * ml_dsa_ntt::N> A{};
   ml_dsa_sampling::expand_a<k, l>(rho, A);
 
   std::array<uint8_t, ml_dsa_utils::RHO_PRIME_BYTE_LEN> rho_prime{};
 
-  shake256::shake256_t hasher;
   hasher.reset();
   hasher.absorb(key);
   hasher.absorb(rnd);
-  hasher.absorb(mu);
+  hasher.absorb(mu_span);
   hasher.finalize();
   hasher.squeeze(rho_prime);
 
@@ -223,7 +233,7 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
     ml_dsa_polyvec::encode<k, w1bw>(w1, w1_encoded);
 
     hasher.reset();
-    hasher.absorb(mu);
+    hasher.absorb(mu_span);
     hasher.absorb(w1_encoded);
     hasher.finalize();
     hasher.squeeze(c_tilda_span);
@@ -287,6 +297,7 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
 
   ml_dsa_bit_packing::encode_hint_bits<k, omega>(h, sig.template subspan<sigoff2, sigoff3 - sigoff2>());
 
+  ml_dsa_utils::secure_zeroize(mu);
   ml_dsa_utils::secure_zeroize(rho_prime);
   ml_dsa_utils::secure_zeroize(s1);
   ml_dsa_utils::secure_zeroize(s2);
@@ -320,40 +331,90 @@ sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
     return false;
   }
 
-  constexpr size_t skoff0 = 0;
-  constexpr size_t skoff1 = skoff0 + ml_dsa_utils::RHO_BYTE_LEN;
-  constexpr size_t skoff2 = skoff1 + ml_dsa_utils::KEY_BYTE_LEN;
-  constexpr size_t skoff3 = skoff2 + ml_dsa_utils::TR_BYTE_LEN;
+  std::vector<uint8_t> m_prime;
+  m_prime.reserve(2 + ctx.size() + msg.size());
+  m_prime.push_back(0x00);
+  m_prime.push_back(static_cast<uint8_t>(ctx.size()));
+  m_prime.insert(m_prime.end(), ctx.begin(), ctx.end());
+  m_prime.insert(m_prime.end(), msg.begin(), msg.end());
 
-  auto tr = seckey.template subspan<skoff2, skoff3 - skoff2>();
-  const std::array<uint8_t, 2> domain_separator{ 0, static_cast<uint8_t>(ctx.size()) };
-
-  std::array<uint8_t, MU_BYTE_LEN> mu{};
-  auto mu_span = std::span(mu);
-
-  shake256::shake256_t hasher;
-  hasher.absorb(tr);
-  hasher.absorb(domain_separator);
-  hasher.absorb(ctx);
-  hasher.absorb(msg);
-  hasher.finalize();
-  hasher.squeeze(mu_span);
-
-  return sign_internal<k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, mu_span, sig);
+  return sign_internal<k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, m_prime, sig);
 }
 
-// Given a ML-DSA public key, 64 -bytes message representative and serialized signature, this routine verifies validity of the signature,
-// returning boolean result, denoting status of signature verification. For example, say it returns true, it means signature is valid for
-// given message and public key.
+// HashML-DSA.Sign: Given a ML-DSA secret key, 32 bytes randomness message M, context ctx and pre-hash algorithm PH,
+// this routine computes PH(M), constructs M' = 0x01 || len(ctx) || ctx || OID(PH) || PH(M), and produces a
+// hedged/ deterministic signature.
+//
+// It is recommended to pass fresh randomness for each signing, from the same secret key.
+// For deterministic signing, fill `rnd` with 32 zeros.
+//
+// See algorithm 4 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
+template<ml_dsa_prehash::hash_algorithm ph,
+         size_t k,
+         size_t l,
+         size_t d,
+         uint32_t eta,
+         uint32_t gamma1,
+         uint32_t gamma2,
+         uint32_t tau,
+         uint32_t beta,
+         size_t omega,
+         size_t lambda>
+[[nodiscard]] static forceinline constexpr bool
+hash_sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
+          std::span<const uint8_t, ml_dsa_utils::sec_key_len(k, l, eta, d)> seckey,
+          std::span<const uint8_t> msg,
+          std::span<const uint8_t> ctx,
+          std::span<uint8_t, ml_dsa_utils::sig_len(k, l, gamma1, omega, lambda)> sig)
+  requires(ml_dsa_params::check_signing_params(k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda))
+{
+  if (ctx.size() > std::numeric_limits<uint8_t>::max()) {
+    return false;
+  }
+
+  std::array<uint8_t, ml_dsa_prehash::MAX_DIGEST_BYTE_LEN> ph_digest{};
+  const size_t ph_len = ml_dsa_prehash::compute_prehash<ph>(msg, ph_digest);
+
+  constexpr auto oid = ml_dsa_prehash::oid_of(ph);
+
+  std::vector<uint8_t> m_prime;
+  m_prime.reserve(2 + ctx.size() + oid.size() + ph_len);
+  m_prime.push_back(0x01);
+  m_prime.push_back(static_cast<uint8_t>(ctx.size()));
+  m_prime.insert(m_prime.end(), ctx.begin(), ctx.end());
+  m_prime.insert(m_prime.end(), oid.begin(), oid.end());
+  m_prime.insert(m_prime.end(), ph_digest.begin(), ph_digest.begin() + ph_len);
+
+  return sign_internal<k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, m_prime, sig);
+}
+
+// Given a ML-DSA public key, variable-length message M' and serialized signature, this routine computes
+// tr = H(pk), mu = H(tr || M') and verifies the signature.
+//
+// This is FIPS 204 Algorithm 8 ML-DSA.Verify_internal(pk, M', sigma).
 //
 // See algorithm 8 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
 template<size_t k, size_t l, size_t d, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
 [[nodiscard]] static forceinline constexpr bool
 verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
-                std::span<const uint8_t, MU_BYTE_LEN> mu,
+                std::span<const uint8_t> m_prime,
                 std::span<const uint8_t, ml_dsa_utils::sig_len(k, l, gamma1, omega, lambda)> sig)
   requires(ml_dsa_params::check_verify_params(k, l, d, gamma1, gamma2, tau, beta, omega, lambda))
 {
+  std::array<uint8_t, ml_dsa_utils::TR_BYTE_LEN> tr{};
+  std::array<uint8_t, MU_BYTE_LEN> mu{};
+
+  shake256::shake256_t hasher;
+  hasher.absorb(pubkey);
+  hasher.finalize();
+  hasher.squeeze(tr);
+
+  hasher.reset();
+  hasher.absorb(tr);
+  hasher.absorb(m_prime);
+  hasher.finalize();
+  hasher.squeeze(mu);
+
   constexpr size_t t1_bw = std::bit_width(ml_dsa_field::Q) - d;
   constexpr size_t gamma1_bw = std::bit_width(gamma1);
 
@@ -431,7 +492,7 @@ verify_internal(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey
 
   std::array<uint8_t, c_tilda.size()> c_tilda_prime{};
 
-  shake256::shake256_t hasher;
+  hasher.reset();
   hasher.absorb(mu);
   hasher.absorb(w1_encoded);
   hasher.finalize();
@@ -457,25 +518,47 @@ verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
     return false;
   }
 
-  std::array<uint8_t, MU_BYTE_LEN> mu{};
-  std::array<uint8_t, ml_dsa_utils::TR_BYTE_LEN> tr{};
+  std::vector<uint8_t> m_prime;
+  m_prime.reserve(2 + ctx.size() + msg.size());
+  m_prime.push_back(0x00);
+  m_prime.push_back(static_cast<uint8_t>(ctx.size()));
+  m_prime.insert(m_prime.end(), ctx.begin(), ctx.end());
+  m_prime.insert(m_prime.end(), msg.begin(), msg.end());
 
-  shake256::shake256_t hasher;
-  hasher.absorb(pubkey);
-  hasher.finalize();
-  hasher.squeeze(tr);
+  return verify_internal<k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, m_prime, sig);
+}
 
-  const std::array<uint8_t, 2> domain_separator{ 0, static_cast<uint8_t>(ctx.size()) };
+// HashML-DSA.Verify: Given a ML-DSA public key, message M, context ctx, pre-hash algorithm PH
+// and a signature, this routine computes PH(M), constructs M' = 0x01 || len(ctx) || ctx || OID(PH) || PH(M),
+// and verifies the signature.
+//
+// See algorithm 5 of ML-DSA standard @ https://doi.org/10.6028/NIST.FIPS.204.
+template<ml_dsa_prehash::hash_algorithm ph, size_t k, size_t l, size_t d, uint32_t gamma1, uint32_t gamma2, uint32_t tau, uint32_t beta, size_t omega, size_t lambda>
+[[nodiscard]] static forceinline constexpr bool
+hash_verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
+            std::span<const uint8_t> msg,
+            std::span<const uint8_t> ctx,
+            std::span<const uint8_t, ml_dsa_utils::sig_len(k, l, gamma1, omega, lambda)> sig)
+  requires(ml_dsa_params::check_verify_params(k, l, d, gamma1, gamma2, tau, beta, omega, lambda))
+{
+  if (ctx.size() > std::numeric_limits<uint8_t>::max()) {
+    return false;
+  }
 
-  hasher.reset();
-  hasher.absorb(tr);
-  hasher.absorb(domain_separator);
-  hasher.absorb(ctx);
-  hasher.absorb(msg);
-  hasher.finalize();
-  hasher.squeeze(mu);
+  std::array<uint8_t, ml_dsa_prehash::MAX_DIGEST_BYTE_LEN> ph_digest{};
+  const size_t ph_len = ml_dsa_prehash::compute_prehash<ph>(msg, ph_digest);
 
-  return verify_internal<k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, mu, sig);
+  constexpr auto oid = ml_dsa_prehash::oid_of(ph);
+
+  std::vector<uint8_t> m_prime;
+  m_prime.reserve(2 + ctx.size() + oid.size() + ph_len);
+  m_prime.push_back(0x01);
+  m_prime.push_back(static_cast<uint8_t>(ctx.size()));
+  m_prime.insert(m_prime.end(), ctx.begin(), ctx.end());
+  m_prime.insert(m_prime.end(), oid.begin(), oid.end());
+  m_prime.insert(m_prime.end(), ph_digest.begin(), ph_digest.begin() + ph_len);
+
+  return verify_internal<k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, m_prime, sig);
 }
 
 }
