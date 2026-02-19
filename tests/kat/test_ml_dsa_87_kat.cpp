@@ -210,10 +210,52 @@ TEST(ML_DSA, ML_DSA_87_Verify_ACVP_KnownAnswerTests)
   file.close();
 }
 
-// Use ML-DSA-87 sign_internal (M'-taking, externalMu=False) known answer tests from NIST ACVP Server.
-TEST(ML_DSA, ML_DSA_87_Sign_Internal_MuFalse_ACVP_KnownAnswerTests)
+// Use ML-DSA-87 sign_core (mu-taking, externalMu=True) known answer tests from NIST ACVP Server.
+TEST(ML_DSA, ML_DSA_87_Sign_Core_ACVP_KnownAnswerTests)
 {
-  const std::string kat_file = "./kats/ml_dsa_87_sign_internal_mu_false.acvp.kat";
+  const std::string kat_file = "./kats/ml_dsa_87_sign_core.acvp.kat";
+  std::fstream file(kat_file);
+
+  while (true) {
+    std::string mu_line;
+
+    if (!std::getline(file, mu_line).eof()) {
+      std::string pkey_line;
+      std::string skey_line;
+      std::string rnd_line;
+      std::string sig_line;
+
+      std::getline(file, pkey_line);
+      std::getline(file, skey_line);
+      std::getline(file, rnd_line);
+      std::getline(file, sig_line);
+
+      const auto mu = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::MessageRepresentativeByteLen>(mu_line);
+      [[maybe_unused]] const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::PubKeyByteLen>(pkey_line);
+      const auto skey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SecKeyByteLen>(skey_line);
+      const auto rnd = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SigningSeedByteLen>(rnd_line);
+      const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SigByteLen>(sig_line);
+
+      std::array<uint8_t, ml_dsa_87::SigByteLen> computed_sig{};
+      const auto sign_ok = ml_dsa_87::sign_core(rnd, skey, mu, computed_sig);
+      ASSERT_TRUE(sign_ok);
+
+      EXPECT_EQ(sig, computed_sig);
+
+      std::string empty_line;
+      std::getline(file, empty_line);
+    } else {
+      break;
+    }
+  }
+
+  file.close();
+}
+
+// Use ML-DSA-87 sign_internal (M'-taking, externalMu=False) known answer tests from NIST ACVP Server.
+TEST(ML_DSA, ML_DSA_87_Sign_Internal_ACVP_KnownAnswerTests)
+{
+  const std::string kat_file = "./kats/ml_dsa_87_sign_internal.acvp.kat";
   std::fstream file(kat_file);
 
   while (true) {
@@ -252,10 +294,56 @@ TEST(ML_DSA, ML_DSA_87_Sign_Internal_MuFalse_ACVP_KnownAnswerTests)
   file.close();
 }
 
-// Use ML-DSA-87 verify_internal (M'-taking, externalMu=False) known answer tests from NIST ACVP Server.
-TEST(ML_DSA, ML_DSA_87_Verify_Internal_MuFalse_ACVP_KnownAnswerTests)
+// Use ML-DSA-87 verify_core (mu-taking, externalMu=True) known answer tests from NIST ACVP Server.
+TEST(ML_DSA, ML_DSA_87_Verify_Core_ACVP_KnownAnswerTests)
 {
-  const std::string kat_file = "./kats/ml_dsa_87_verify_internal_mu_false.acvp.kat";
+  const std::string kat_file = "./kats/ml_dsa_87_verify_core.acvp.kat";
+  std::fstream file(kat_file);
+
+  while (true) {
+    std::string mu_line;
+
+    if (!std::getline(file, mu_line).eof()) {
+      std::string pkey_line;
+      std::string skey_line;
+      std::string sig_line;
+      std::string testPassed_line;
+      std::string reason_line;
+
+      std::getline(file, pkey_line);
+      std::getline(file, skey_line);
+      std::getline(file, sig_line);
+      std::getline(file, testPassed_line);
+      std::getline(file, reason_line);
+
+      const auto mu = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::MessageRepresentativeByteLen>(mu_line);
+      const auto pkey = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::PubKeyByteLen>(pkey_line);
+      [[maybe_unused]] const auto _ = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SecKeyByteLen>(skey_line);
+      const auto sig = ml_dsa_test_helper::extract_and_parse_fixed_length_hex_string<ml_dsa_87::SigByteLen>(sig_line);
+      const auto test_passed = testPassed_line.substr(testPassed_line.find("="sv) + 2, testPassed_line.size()) == "True";
+
+      const auto is_valid = ml_dsa_87::verify_core(pkey, mu, sig);
+
+      if (test_passed) {
+        EXPECT_TRUE(is_valid);
+      } else {
+        EXPECT_FALSE(is_valid);
+      }
+
+      std::string empty_line;
+      std::getline(file, empty_line);
+    } else {
+      break;
+    }
+  }
+
+  file.close();
+}
+
+// Use ML-DSA-87 verify_internal (M'-taking, externalMu=False) known answer tests from NIST ACVP Server.
+TEST(ML_DSA, ML_DSA_87_Verify_Internal_ACVP_KnownAnswerTests)
+{
+  const std::string kat_file = "./kats/ml_dsa_87_verify_internal.acvp.kat";
   std::fstream file(kat_file);
 
   while (true) {
