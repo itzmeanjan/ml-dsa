@@ -9,6 +9,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <limits>
 #include <span>
 
 // Pre-hash utilities for HashML-DSA (FIPS 204, Section 5.4).
@@ -68,80 +69,73 @@ oid_of(hash_algorithm alg)
   return result;
 }
 
-// Maximum possible digest byte length across all supported hash algorithms.
-static constexpr size_t MAX_DIGEST_BYTE_LEN = 64;
-
-// Computes PH(M) for the given hash algorithm, writing into a fixed-size buffer.
-// Returns the actual number of digest bytes written.
-//
-// For two XOFs, SHAKE-128 output = 32 bytes, SHAKE-256 output = 64 bytes, per FIPS 204 Table 2.
-template<hash_algorithm alg>
-static forceinline constexpr size_t
-compute_prehash(std::span<const uint8_t> msg, std::span<uint8_t, MAX_DIGEST_BYTE_LEN> out)
+// Returns the digest byte length for the given hash algorithm.
+// For XOFs, SHAKE-128 output = 32 bytes, SHAKE-256 output = 64 bytes, per FIPS 204 Table 2.
+static constexpr size_t
+digest_byte_len(hash_algorithm alg)
 {
+  switch (alg) {
+    case hash_algorithm::SHA3_224:
+      return sha3_224::DIGEST_LEN;
+    case hash_algorithm::SHA3_256:
+      return sha3_256::DIGEST_LEN;
+    case hash_algorithm::SHA3_384:
+      return sha3_384::DIGEST_LEN;
+    case hash_algorithm::SHA3_512:
+      return sha3_512::DIGEST_LEN;
+    case hash_algorithm::SHAKE_128:
+      return (2 * shake128::TARGET_BIT_SECURITY_LEVEL) / std::numeric_limits<uint8_t>::digits;
+    case hash_algorithm::SHAKE_256:
+      return (2 * shake256::TARGET_BIT_SECURITY_LEVEL) / std::numeric_limits<uint8_t>::digits;
+  }
+}
+
+// Computes PH(M) for the given hash algorithm, returning a correctly-sized digest array.
+template<hash_algorithm alg>
+static forceinline constexpr std::array<uint8_t, digest_byte_len(alg)>
+compute_prehash(std::span<const uint8_t> msg)
+{
+  std::array<uint8_t, digest_byte_len(alg)> digest{};
+
   if constexpr (alg == hash_algorithm::SHA3_224) {
     sha3_224::sha3_224_t hasher;
-    std::array<uint8_t, sha3_224::DIGEST_LEN> digest{};
 
     hasher.absorb(msg);
     hasher.finalize();
     hasher.digest(digest);
-    std::copy(digest.begin(), digest.end(), out.begin());
-
-    return sha3_224::DIGEST_LEN;
   } else if constexpr (alg == hash_algorithm::SHA3_256) {
     sha3_256::sha3_256_t hasher;
-    std::array<uint8_t, sha3_256::DIGEST_LEN> digest{};
 
     hasher.absorb(msg);
     hasher.finalize();
     hasher.digest(digest);
-    std::copy(digest.begin(), digest.end(), out.begin());
-
-    return sha3_256::DIGEST_LEN;
   } else if constexpr (alg == hash_algorithm::SHA3_384) {
     sha3_384::sha3_384_t hasher;
-    std::array<uint8_t, sha3_384::DIGEST_LEN> digest{};
 
     hasher.absorb(msg);
     hasher.finalize();
     hasher.digest(digest);
-    std::copy(digest.begin(), digest.end(), out.begin());
-
-    return sha3_384::DIGEST_LEN;
   } else if constexpr (alg == hash_algorithm::SHA3_512) {
     sha3_512::sha3_512_t hasher;
-    std::array<uint8_t, sha3_512::DIGEST_LEN> digest{};
 
     hasher.absorb(msg);
     hasher.finalize();
     hasher.digest(digest);
-    std::copy(digest.begin(), digest.end(), out.begin());
-
-    return sha3_512::DIGEST_LEN;
   } else if constexpr (alg == hash_algorithm::SHAKE_128) {
-    constexpr size_t OUTPUT_LEN = 32;
     shake128::shake128_t hasher;
-    std::array<uint8_t, OUTPUT_LEN> digest{};
 
     hasher.absorb(msg);
     hasher.finalize();
     hasher.squeeze(digest);
-    std::copy(digest.begin(), digest.end(), out.begin());
-
-    return OUTPUT_LEN;
   } else if constexpr (alg == hash_algorithm::SHAKE_256) {
-    constexpr size_t OUTPUT_LEN = 64;
     shake256::shake256_t hasher;
-    std::array<uint8_t, OUTPUT_LEN> digest{};
 
     hasher.absorb(msg);
     hasher.finalize();
     hasher.squeeze(digest);
-    std::copy(digest.begin(), digest.end(), out.begin());
-
-    return OUTPUT_LEN;
   }
+
+  return digest;
 }
 
 }

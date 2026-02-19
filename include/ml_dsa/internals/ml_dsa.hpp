@@ -396,18 +396,16 @@ hash_sign(std::span<const uint8_t, RND_BYTE_LEN> rnd,
     return false;
   }
 
-  std::array<uint8_t, ml_dsa_prehash::MAX_DIGEST_BYTE_LEN> ph_digest{};
-  const size_t ph_len = ml_dsa_prehash::compute_prehash<ph>(msg, ph_digest);
-
+  const auto ph_digest = ml_dsa_prehash::compute_prehash<ph>(msg);
   constexpr auto oid = ml_dsa_prehash::oid_of(ph);
 
   std::vector<uint8_t> m_prime;
-  m_prime.reserve(2 + ctx.size() + oid.size() + ph_len);
+  m_prime.reserve(2 + ctx.size() + oid.size() + ph_digest.size());
   m_prime.push_back(0x01);
   m_prime.push_back(static_cast<uint8_t>(ctx.size()));
   m_prime.insert(m_prime.end(), ctx.begin(), ctx.end());
   m_prime.insert(m_prime.end(), oid.begin(), oid.end());
-  m_prime.insert(m_prime.end(), ph_digest.begin(), ph_digest.begin() + ph_len);
+  m_prime.insert(m_prime.end(), ph_digest.begin(), ph_digest.end());
 
   return sign_internal<k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, m_prime, sig);
 }
@@ -582,18 +580,16 @@ hash_verify(std::span<const uint8_t, ml_dsa_utils::pub_key_len(k, d)> pubkey,
     return false;
   }
 
-  std::array<uint8_t, ml_dsa_prehash::MAX_DIGEST_BYTE_LEN> ph_digest{};
-  const size_t ph_len = ml_dsa_prehash::compute_prehash<ph>(msg, ph_digest);
-
+  const auto ph_digest = ml_dsa_prehash::compute_prehash<ph>(msg);
   constexpr auto oid = ml_dsa_prehash::oid_of(ph);
 
   std::vector<uint8_t> m_prime;
-  m_prime.reserve(2 + ctx.size() + oid.size() + ph_len);
+  m_prime.reserve(2 + ctx.size() + oid.size() + ph_digest.size());
   m_prime.push_back(0x01);
   m_prime.push_back(static_cast<uint8_t>(ctx.size()));
   m_prime.insert(m_prime.end(), ctx.begin(), ctx.end());
   m_prime.insert(m_prime.end(), oid.begin(), oid.end());
-  m_prime.insert(m_prime.end(), ph_digest.begin(), ph_digest.begin() + ph_len);
+  m_prime.insert(m_prime.end(), ph_digest.begin(), ph_digest.end());
 
   return verify_internal<k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, m_prime, sig);
 }
