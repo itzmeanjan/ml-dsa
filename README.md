@@ -327,55 +327,64 @@ All the functions, in this ML-DSA header-only library, are implemented as `const
 
 ```cpp
 /**
- * Filename: compile_time_ml_dsa_44.cpp
+ * Filename: compile-time-ml-dsa-44.cpp
  *
  * Compile and run this program with
- * $ g++ -std=c++20 -Wall -Wextra -pedantic -fconstexpr-ops-limit=500000000 -I include -I sha3/include -I RandomShake/include compile_time_ml_dsa_44.cpp && ./a.out
+ * $ g++ -std=c++20 -Wall -Wextra -Wpedantic -fconstexpr-ops-limit=500000000 -I include -I sha3/include -I RandomShake/include compile-time-ml-dsa-44.cpp && ./a.out
  * or
- * $ clang++ -std=c++20 -Wall -Wextra -pedantic -fconstexpr-steps=500000000 -I include -I sha3/include -I RandomShake/include compile_time_ml_dsa_44.cpp && ./a.out
+ * $ clang++ -std=c++20 -Wall -Wextra -Wpedantic -fconstexpr-steps=500000000 -I include -I sha3/include -I RandomShake/include compile-time-ml-dsa-44.cpp && ./a.out
  */
 
 #include "ml_dsa/ml_dsa_44.hpp"
+#include <string_view>
 
-// Compile-time
-//
-// - Generation of a new keypair, given seed
-// - Signing of a known message (deterministic, with empty context)
-// - Verification of signature
-//
-// for ML-DSA-44.
-constexpr auto
-ml_dsa_44_keygen_sign_verify() -> bool
+// Compile-time hex character to nibble conversion.
+constexpr uint8_t
+hex_digit(char c)
 {
-  // 7c9935a0b07694aa0c6d10e4db6b1add2fd81a25ccb148032dcd739936737f2d
-  constexpr std::array<uint8_t, ml_dsa_44::KeygenSeedByteLen> seed = {
-    124, 153, 53, 160, 176, 118, 148, 170, 12, 109, 16,  228, 219, 107, 26,  221,
-    47,  216, 26, 37,  204, 177, 72,  3,   45, 205, 115, 153, 54,  115, 127, 45
-  };
-  // Deterministic signing: rnd filled with zero bytes
-  constexpr std::array<uint8_t, ml_dsa_44::SigningSeedByteLen> rnd{};
-  // d81c4d8d734fcbfbeade3d3f8a039faa2a2c9957e835ad55b22e75bf57bb556ac8
-  constexpr std::array<uint8_t, 33> msg = {
-    216, 28,  77, 141, 115, 79,  203, 251, 234, 222, 61,  63, 138, 3,  159, 170,
-    42,  44,  153, 87, 232, 53,  173, 85,  178, 46,  117, 191, 87, 187, 85, 106, 200
-  };
+  if (c >= '0' && c <= '9') return static_cast<uint8_t>(c - '0');
+  if (c >= 'a' && c <= 'f') return static_cast<uint8_t>(c - 'a' + 10);
+  if (c >= 'A' && c <= 'F') return static_cast<uint8_t>(c - 'A' + 10);
+  return 0;
+}
 
-  std::array<uint8_t, ml_dsa_44::PubKeyByteLen> pkey{};
-  std::array<uint8_t, ml_dsa_44::SecKeyByteLen> skey{};
+// Compile-time hex string to byte array conversion.
+template<size_t L>
+constexpr std::array<uint8_t, L>
+from_hex(std::string_view str)
+{
+  std::array<uint8_t, L> res{};
+  for (size_t i = 0; i < L; i++) {
+    res[i] = static_cast<uint8_t>((hex_digit(str[2 * i]) << 4) | hex_digit(str[(2 * i) + 1]));
+  }
+  return res;
+}
+
+// Compile-time evaluation of ML-DSA-44 keygen, signing and verification.
+constexpr bool
+eval_ml_dsa_44()
+{
+  constexpr auto seed = from_hex<32>("7c9935a0b07694aa0c6d10e4db6b1add2fd81a25ccb148032dcd739936737f2d");
+  constexpr auto msg = from_hex<33>("d81c4d8d734fcbfbeade3d3f8a039faa2a2c9957e835ad55b22e75bf57bb556ac8");
+  constexpr auto ctx = from_hex<33>("8626ed79d451140800e03b59b956f8210e556067407d13dc90fa9e8b872bfb8fab");
+  constexpr auto rnd = from_hex<32>("6255563ba961772146ca0867678d56787cad77ab4fc8fcfe9e02df839c99424d");
+
+  std::array<uint8_t, ml_dsa_44::PubKeyByteLen> pubkey{};
+  std::array<uint8_t, ml_dsa_44::SecKeyByteLen> seckey{};
   std::array<uint8_t, ml_dsa_44::SigByteLen> sig{};
 
-  ml_dsa_44::keygen(seed, pkey, skey);
-  const bool has_signed = ml_dsa_44::sign(rnd, skey, msg, {}, sig);
-  const bool is_valid = ml_dsa_44::verify(pkey, msg, {}, sig);
+  ml_dsa_44::keygen(seed, pubkey, seckey);
+  const auto signed_ok = ml_dsa_44::sign(rnd, seckey, msg, ctx, sig);
+  const auto verified = ml_dsa_44::verify(pubkey, msg, ctx, sig);
 
-  return has_signed && is_valid;
+  return signed_ok && verified;
 }
 
 int
 main()
 {
-  // Notice static_assert, yay !
-  static_assert(ml_dsa_44_keygen_sign_verify(), "Must be able to generate a keypair, sign a message and verify the signature at compile-time !");
+  // Entire ML-DSA-44 keygen + sign + verify round-trip, evaluated at compile-time.
+  static_assert(eval_ml_dsa_44(), "ML-DSA-44 keygen/sign/verify must be correct at compile-time");
   return 0;
 }
 ```
