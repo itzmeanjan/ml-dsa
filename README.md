@@ -31,9 +31,9 @@ Here I'm maintaining `ml-dsa` - a C++20 header-only fully `constexpr` library, i
 
 ML-DSA-65 Algorithm | Time taken on "12th Gen Intel(R) Core(TM) i7-1260P" (`x86_64`) | Time taken on "AWS EC2 Instance c8g.large, featuring ARM Neoverse-V2" (`aarch64`)
 --- | --: | --:
-keygen | 92.9us | 126.2us
-sign | 604us | 879us
-verify | 94.8us | 134.4us
+keygen | 82.1us | 126.2us
+sign | 587us | 879us
+verify | 86.3us | 134.4us
 
 > [!NOTE]
 > All numbers in the table above represent the median time, except for signing (minimum time). Find more details in [benchmarking](#benchmarking).
