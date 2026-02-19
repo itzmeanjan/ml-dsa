@@ -126,8 +126,10 @@ keygen(std::span<const uint8_t, KEYGEN_SEED_BYTE_LEN> seed,
 
   ml_dsa_utils::secure_zeroize(seed_hash);
   ml_dsa_utils::secure_zeroize(s1);
+  ml_dsa_utils::secure_zeroize(s1_prime);
   ml_dsa_utils::secure_zeroize(s2);
   ml_dsa_utils::secure_zeroize(t);
+  ml_dsa_utils::secure_zeroize(t0);
 }
 
 // Given a ML-DSA secret key, 64 -bytes message representative mu and 32 -bytes randomness, this routine produces
@@ -191,6 +193,8 @@ sign_core(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   bool has_signed = false;
   uint16_t kappa = 0;
 
+  std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> y{};
+  std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> y_prime{};
   std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> z{};
   std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> h{};
 
@@ -198,12 +202,9 @@ sign_core(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   auto c_tilda_span = std::span(c_tilda);
 
   while (!has_signed) {
-    std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> y{};
-    std::array<ml_dsa_field::zq_t, l * ml_dsa_ntt::N> y_prime{};
     std::array<ml_dsa_field::zq_t, k * ml_dsa_ntt::N> w{};
 
     ml_dsa_sampling::expand_mask<gamma1, l>(rho_prime, kappa, y);
-
     std::copy(y.begin(), y.end(), y_prime.begin());
 
     ml_dsa_polyvec::ntt<l>(y_prime);
@@ -289,6 +290,8 @@ sign_core(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   ml_dsa_utils::secure_zeroize(s1);
   ml_dsa_utils::secure_zeroize(s2);
   ml_dsa_utils::secure_zeroize(t0);
+  ml_dsa_utils::secure_zeroize(y);
+  ml_dsa_utils::secure_zeroize(y_prime);
   ml_dsa_utils::secure_zeroize(z);
   ml_dsa_utils::secure_zeroize(h);
 
@@ -327,8 +330,8 @@ sign_internal(std::span<const uint8_t, RND_BYTE_LEN> rnd,
   hasher.squeeze(mu);
 
   const bool result = sign_core<k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, mu, sig);
-
   ml_dsa_utils::secure_zeroize(mu);
+
   return result;
 }
 
