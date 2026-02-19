@@ -76,6 +76,19 @@ hash_sign(std::span<const uint8_t, SigningSeedByteLen> rnd,
   return ml_dsa::hash_sign<ph, k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, msg, ctx, sig);
 }
 
+// ML-DSA.Sign_core
+//
+// Given a 32 -bytes seed `rnd`, ML-DSA-65 secret key and 64 -bytes message representative mu, this routine
+// produces a ML-DSA-65 signature S. The caller is responsible for computing mu.
+[[nodiscard]] constexpr bool
+sign_core(std::span<const uint8_t, SigningSeedByteLen> rnd,
+          std::span<const uint8_t, SecKeyByteLen> seckey,
+          std::span<const uint8_t, MessageRepresentativeByteLen> mu,
+          std::span<uint8_t, SigByteLen> sig)
+{
+  return ml_dsa::sign_core<k, l, d, eta, gamma1, gamma2, tau, beta, omega, lambda>(rnd, seckey, mu, sig);
+}
+
 // ML-DSA.Sign_internal
 //
 // Given a 32 -bytes seed `rnd`, ML-DSA-65 secret key and a variable-length message M', this routine computes
@@ -110,6 +123,16 @@ template<hash_algorithm ph>
 hash_verify(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t> msg, std::span<const uint8_t> ctx, std::span<const uint8_t, SigByteLen> sig)
 {
   return ml_dsa::hash_verify<ph, k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, msg, ctx, sig);
+}
+
+// ML-DSA.Verify_core
+//
+// Given a ML-DSA-65 public key, 64 -bytes message representative mu and a signature S, this routine verifies
+// the signature. The caller is responsible for computing mu.
+[[nodiscard]] constexpr bool
+verify_core(std::span<const uint8_t, PubKeyByteLen> pubkey, std::span<const uint8_t, MessageRepresentativeByteLen> mu, std::span<const uint8_t, SigByteLen> sig)
+{
+  return ml_dsa::verify_core<k, l, d, gamma1, gamma2, tau, beta, omega, lambda>(pubkey, mu, sig);
 }
 
 // ML-DSA.Verify_internal
