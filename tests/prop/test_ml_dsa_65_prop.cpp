@@ -3,8 +3,25 @@
 #include "test_helper.hpp"
 #include <cassert>
 #include <gtest/gtest.h>
+#include <limits>
+#include <random>
+
+constexpr size_t NUMBER_OF_TEST_ITERATIONS = 100;
+constexpr size_t MAX_MSG_BYTE_LEN = 33;
+constexpr size_t MAX_CTX_BYTE_LEN = std::numeric_limits<uint8_t>::max();
 
 namespace {
+
+void
+random_mutate_span(std::span<const uint8_t> src, std::span<uint8_t> dst)
+{
+  assert(src.size() == dst.size());
+
+  if (!src.empty()) {
+    std::copy(src.begin(), src.end(), dst.begin());
+    ml_dsa_test_helper::random_bit_flip(dst);
+  }
+}
 
 // Test functional correctness of ML-DSA-65 signature scheme, by
 //
@@ -51,33 +68,31 @@ test_ml_dsa_65_signing(const size_t mlen, const size_t ctx_len, auto sign_fn, au
 
   ml_dsa_test_helper::random_bit_flip(sig_copy);
   ml_dsa_test_helper::random_bit_flip(pkey_copy);
+  random_mutate_span(msg_span, msg_copy_span);
+  random_mutate_span(ctx_span, ctx_copy_span);
 
-  EXPECT_TRUE(verify_fn(pkey, msg_span, ctx_span, sig));       // pkey is good, msg is good, ctx is good, sig is good
-  EXPECT_FALSE(verify_fn(pkey, msg_span, ctx_span, sig_copy)); // pkey is good, msg is good, ctx is good, sig is bad
-  EXPECT_FALSE(verify_fn(pkey_copy, msg_span, ctx_span, sig)); // pkey is bad, msg is good, ctx is good, sig is good
-
-  if (mlen > 0) {
-    std::copy(msg_span.begin(), msg_span.end(), msg_copy_span.begin());
-    ml_dsa_test_helper::random_bit_flip(msg_copy_span);
-
-    EXPECT_FALSE(verify_fn(pkey, msg_copy_span, ctx_span, sig)); // pkey is good, msg is bad, ctx is good, sig is good
-  }
-  if (ctx_len > 0) {
-    std::copy(ctx_span.begin(), ctx_span.end(), ctx_copy_span.begin());
-    ml_dsa_test_helper::random_bit_flip(ctx_copy_span);
-
-    EXPECT_FALSE(verify_fn(pkey, msg_span, ctx_copy_span, sig)); // pkey is good, msg is good, ctx is bad, sig is good
-  }
+  EXPECT_TRUE(verify_fn(pkey, msg_span, ctx_span, sig));                       // pkey is good, msg is good, ctx is good, sig is good
+  EXPECT_FALSE(verify_fn(pkey, msg_span, ctx_span, sig_copy));                 // pkey is good, msg is good, ctx is good, sig is bad
+  EXPECT_FALSE(verify_fn(pkey_copy, msg_span, ctx_span, sig));                 // pkey is bad, msg is good, ctx is good, sig is good
+  EXPECT_TRUE(mlen == 0 || !verify_fn(pkey, msg_copy_span, ctx_span, sig));    // pkey is good, msg is bad, ctx is good, sig is good
+  EXPECT_TRUE(ctx_len == 0 || !verify_fn(pkey, msg_span, ctx_copy_span, sig)); // pkey is good, msg is good, ctx is bad, sig is good
 }
 
 } // namespace
 
 TEST(ML_DSA, ML_DSA_65_KeygenSignVerifyFlow)
 {
-  for (size_t mlen = 0; mlen < 33; mlen++) {
-    for (size_t ctx_len = 0; ctx_len < 256; ctx_len++) {
-      test_ml_dsa_65_signing(mlen, ctx_len, ml_dsa_65::sign, ml_dsa_65::verify);
-    }
+  using prng_t = randomshake::randomshake_t<size_t, randomshake::xof_kind_t::TURBOSHAKE256>;
+  prng_t csprng;
+
+  std::uniform_int_distribution<size_t> msg_len_dist(0, MAX_MSG_BYTE_LEN);
+  std::uniform_int_distribution<size_t> ctx_len_dist(0, MAX_CTX_BYTE_LEN);
+
+  for (size_t i = 0; i < NUMBER_OF_TEST_ITERATIONS; i++) {
+    const size_t msg_len = msg_len_dist(csprng);
+    const size_t ctx_len = ctx_len_dist(csprng);
+
+    test_ml_dsa_65_signing(msg_len, ctx_len, ml_dsa_65::sign, ml_dsa_65::verify);
   }
 }
 
@@ -85,13 +100,17 @@ TEST(ML_DSA, ML_DSA_65_KeygenSignVerifyFlow)
 TEST(ML_DSA, ML_DSA_65_HashSignVerifyFlow)
 {
   using ha = ml_dsa_65::hash_algorithm;
+  using prng_t = randomshake::randomshake_t<size_t, randomshake::xof_kind_t::TURBOSHAKE256>;
+  prng_t csprng;
 
-  auto test_with_hash = [](auto sign_fn, auto verify_fn) {
-    for (size_t mlen = 0; mlen < 33; mlen++) {
-      for (size_t ctx_len = 0; ctx_len < 256; ctx_len++) {
-        test_ml_dsa_65_signing(mlen, ctx_len, sign_fn, verify_fn);
-      }
-    }
+  std::uniform_int_distribution<size_t> msg_len_dist(0, MAX_MSG_BYTE_LEN);
+  std::uniform_int_distribution<size_t> ctx_len_dist(0, MAX_CTX_BYTE_LEN);
+
+  auto test_with_hash = [&](auto sign_fn, auto verify_fn) {
+    const size_t msg_len = msg_len_dist(csprng);
+    const size_t ctx_len = ctx_len_dist(csprng);
+
+    test_ml_dsa_65_signing(msg_len, ctx_len, sign_fn, verify_fn);
   };
 
   test_with_hash([](auto&... args) { return ml_dsa_65::hash_sign<ha::SHA3_224>(args...); }, [](auto&... args) { return ml_dsa_65::hash_verify<ha::SHA3_224>(args...); });

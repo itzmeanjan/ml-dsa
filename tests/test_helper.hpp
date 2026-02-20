@@ -1,4 +1,5 @@
 #pragma once
+#include "randomshake/randomshake.hpp"
 #include <cassert>
 #include <charconv>
 #include <cstdint>
@@ -123,12 +124,13 @@ extract_and_parse_integer(std::string_view in_str)
 inline void
 random_bit_flip(std::span<uint8_t> arr)
 {
-  std::random_device rd;
-  std::mt19937_64 gen(rd());
+  using prng_t = randomshake::randomshake_t<size_t, randomshake::xof_kind_t::TURBOSHAKE256>;
+
+  prng_t csprng;
   std::uniform_int_distribution<size_t> dis{ 0, arr.size() - 1 };
 
-  const size_t idx = dis(gen);
-  const size_t bidx = dis(gen) & 7UL;
+  const size_t idx = dis(csprng);
+  const size_t bidx = dis(csprng) & 7UL;
 
   const uint8_t mask0 = static_cast<uint8_t>(0xff << (bidx + 1));
   const uint8_t mask1 = static_cast<uint8_t>(0xff >> (8 - bidx));
