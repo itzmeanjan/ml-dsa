@@ -4,7 +4,7 @@ NIST FIPS 204 (ML-DSA) standard compliant, C++20, fully `constexpr`, header-only
 FIPS 204 compliance is assured by testing this implementation against NIST ACVP Known Answer Tests and tons of property based tests. We also fuzz the library and its internal components with LLVM libFuzzer to get an extra level of assurance.
 
 > [!NOTE]
-> `constexpr` ? Yes, you can compile-time execute keygen, sign or verify.
+> `constexpr`? Yes, you can compile-time execute keygen, sign and verify.
 
 > [!CAUTION]
 > This ML-DSA implementation is conformant with ML-DSA standard <https://doi.org/10.6028/NIST.FIPS.204> and I also *try* to make it timing leakage free, but be informed that this implementation is not *yet* audited. **If you consider using it in production, please be careful !**
@@ -36,7 +36,7 @@ sign | 587us | 879us
 verify | 86.3us | 134.4us
 
 > [!NOTE]
-> All numbers in the table above represent the median time, except for signing (minimum time). Find more details in [benchmarking](#benchmarking).
+> All numbers in the table above represent the median time required to execute a specific algorithm, except for signing. In the case of signing, the number represents the minimum time required to sign a 32 -bytes message. Find more details in [benchmarking](#benchmarking).
 
 > [!NOTE]
 > Find ML-DSA standard @ <https://doi.org/10.6028/NIST.FIPS.204> - this is the document that I followed when implementing ML-DSA. I suggest you go through the specification to get an in-depth understanding of the scheme.
@@ -126,6 +126,9 @@ cmake --build build -j
 
 > [!CAUTION]
 > When benchmarking, ensure that you've disabled CPU frequency scaling, by following guide @ <https://github.com/google/benchmark/blob/main/docs/reducing_variance.md>.
+
+> [!WARNING]
+> Relying only on average timing measurement for understanding performance characteristics of ML-DSA sign algorithm may not be a good idea, given that it's a post-quantum digital signature scheme of "Fiat-Shamir with Aborts" paradigm - simply put, during signing procedure it may need to abort and restart again, multiple times, based on what message is being signed or what random seed is being used for default *hedged* signing. So it's a better idea to also compute other statistics such as minimum, maximum and median when timing execution of sign procedure. In following benchmark results, you'll see such statistics demonstrating broader performance characteristics of ML-DSA sign procedure for various parameter sets. Also to easily compare performance benchmarking result of sign function across different configurations, we use a fixed seed to initialize RandomShake CSPRNG. This gives us deterministic result.
 
 ```bash
 # In case it linked with libPFM, you can get CPU cycle count
