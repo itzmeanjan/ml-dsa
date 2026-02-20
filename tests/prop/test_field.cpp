@@ -6,7 +6,7 @@
 // execution of field operations on randomly generated field element.
 TEST(ML_DSA, ArithmeticOverZq)
 {
-  constexpr size_t itr_cnt = 1ul << 20;
+  constexpr size_t itr_cnt = 1UL << 20;
   constexpr auto zero = ml_dsa_field::zq_t::zero();
 
   randomshake::randomshake_t csprng;

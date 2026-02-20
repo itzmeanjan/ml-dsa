@@ -71,11 +71,11 @@ test_ml_dsa_87_signing(const size_t mlen, const size_t ctx_len, auto sign_fn, au
   random_mutate_span(msg_span, msg_copy_span);
   random_mutate_span(ctx_span, ctx_copy_span);
 
-  EXPECT_TRUE(verify_fn(pkey, msg_span, ctx_span, sig));                             // pkey is good, msg is good, ctx is good, sig is good
-  EXPECT_FALSE(verify_fn(pkey, msg_span, ctx_span, sig_copy));                       // pkey is good, msg is good, ctx is good, sig is bad
-  EXPECT_FALSE(verify_fn(pkey_copy, msg_span, ctx_span, sig));                       // pkey is bad, msg is good, ctx is good, sig is good
-  EXPECT_TRUE(mlen == 0 || !verify_fn(pkey, msg_copy_span, ctx_span, sig));           // pkey is good, msg is bad, ctx is good, sig is good
-  EXPECT_TRUE(ctx_len == 0 || !verify_fn(pkey, msg_span, ctx_copy_span, sig));       // pkey is good, msg is good, ctx is bad, sig is good
+  EXPECT_TRUE(verify_fn(pkey, msg_span, ctx_span, sig));                       // pkey is good, msg is good, ctx is good, sig is good
+  EXPECT_FALSE(verify_fn(pkey, msg_span, ctx_span, sig_copy));                 // pkey is good, msg is good, ctx is good, sig is bad
+  EXPECT_FALSE(verify_fn(pkey_copy, msg_span, ctx_span, sig));                 // pkey is bad, msg is good, ctx is good, sig is good
+  EXPECT_TRUE(mlen == 0 || !verify_fn(pkey, msg_copy_span, ctx_span, sig));    // pkey is good, msg is bad, ctx is good, sig is good
+  EXPECT_TRUE(ctx_len == 0 || !verify_fn(pkey, msg_span, ctx_copy_span, sig)); // pkey is good, msg is good, ctx is bad, sig is good
 }
 
 } // namespace
