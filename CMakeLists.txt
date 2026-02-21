@@ -102,7 +102,6 @@ FetchContent_Declare(
   GIT_REPOSITORY https://github.com/itzmeanjan/sha3.git
   GIT_TAG master
   GIT_SHALLOW TRUE
-  SYSTEM
 )
 FetchContent_MakeAvailable(sha3)
 
