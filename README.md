@@ -1,7 +1,7 @@
 # ML-DSA (formerly known as Dilithium)
 
 NIST FIPS 204 (ML-DSA) standard compliant, C++20, fully `constexpr`, header-only library implementation.
-FIPS 204 compliance is assured by testing this implementation against NIST ACVP Known Answer Tests and tons of property based tests. We also fuzz the library and its internal components with LLVM libFuzzer to get an extra level of assurance.
+FIPS 204 compliance is assured by testing this implementation against NIST ACVP Known Answer Tests and tons of property based tests. We also fuzz the library and its internal components with LLVM libFuzzer to get an extra level of assurance. Fuzzing is still work in progress.
 
 > [!NOTE]
 > `constexpr`? Yes, you can compile-time execute keygen, sign and verify.
@@ -9,11 +9,57 @@ FIPS 204 compliance is assured by testing this implementation against NIST ACVP 
 > [!CAUTION]
 > This ML-DSA implementation is conformant with ML-DSA standard <https://doi.org/10.6028/NIST.FIPS.204> and I also *try* to make it timing leakage free, but be informed that this implementation is not *yet* audited. **If you consider using it in production, please be careful !**
 
+## Quick Start
+
+Add `ml-dsa` to your CMake project via `FetchContent`:
+
+```cmake
+include(FetchContent)
+FetchContent_Declare(
+  ml-dsa
+  GIT_REPOSITORY https://github.com/itzmeanjan/ml-dsa.git
+  GIT_TAG master
+  GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(ml-dsa)
+
+target_link_libraries(my_app PRIVATE ml-dsa)
+```
+
+Generate a keypair, sign a message, and verify the signature:
+
+```cpp
+#include "ml_dsa/ml_dsa_65.hpp"
+#include "randomshake/randomshake.hpp"
+
+// Generate a keypair
+std::array<uint8_t, ml_dsa_65::KeygenSeedByteLen> seed{};
+std::array<uint8_t, ml_dsa_65::PubKeyByteLen> pubkey{};
+std::array<uint8_t, ml_dsa_65::SecKeyByteLen> seckey{};
+
+randomshake::randomshake_t csprng;
+csprng.generate(seed);
+ml_dsa_65::keygen(seed, pubkey, seckey);
+
+// Sign a message (hedged mode)
+std::array<uint8_t, ml_dsa_65::SigningSeedByteLen> rnd{};
+std::array<uint8_t, ml_dsa_65::SigByteLen> sig{};
+csprng.generate(rnd);
+
+std::vector<uint8_t> msg = { /* your message bytes */ };
+const bool signed_ok = ml_dsa_65::sign(rnd, seckey, msg, {}, sig);
+
+// Verify
+const bool valid = ml_dsa_65::verify(pubkey, msg, {}, sig);
+```
+
+See [examples/](./examples/) for a complete standalone CMake project.
+
 ## Motivation
 
 ML-DSA has been standardized by NIST as post-quantum secure digital signature algorithm (DSA), which can be used for verifying the authenticity of digital messages, giving the recipient confidence that the message indeed came from the known sender.
 
-ML-DSA's security is based on the hardness of finding short vectors in module (i.e., structured) lattices. It is built on the "Fiat-Shamir with Aborts" paradigm, where the signing procedure might abort and restart multiple times based on the message and randomness.
+ML-DSA's security is based on the hardness of finding short vectors in module (i.e., structured) lattices. It is built on the "Fiat-Shamir with Aborts" paradigm, where the signing procedure might abort and restart multiple times based on the message, context string and randomness.
 
 Algorithm | Input | Output | What does it do ?
 --- | --- | --- | ---
@@ -27,6 +73,19 @@ Verify_internal | Public key, M', signature | Boolean | FIPS 204 Algorithm 8. Ve
 Sign_core | 32 -bytes seed, secret key, 64 -bytes mu | Signature | Core signing operation. Accepts the 64 -bytes message representative mu directly. Caller is responsible for computing mu.
 Verify_core | Public key, 64 -bytes mu, signature | Boolean | Core verification operation. Accepts the 64 -bytes message representative mu directly.
 
+> [!TIP]
+> **API tiers:** Most users should use the **standard API** -- `keygen`, `sign`, `verify`, `hash_sign`, `hash_verify`. The **advanced API** (`sign_internal`, `verify_internal`, `sign_core`, `verify_core`) is for implementors who has direct access to the encoded message M' or the 64-byte message representative mu.
+
+<!-- -->
+
+> [!NOTE]
+> **Return values:** `sign()` and `hash_sign()` return `false` **only** if the context string exceeds 255 bytes. The internal rejection-sampling loop runs until a valid signature is produced -- it does not abort to the caller. In normal usage with valid inputs, signing always succeeds. `verify()` and `hash_verify()` return `false` if the context exceeds 255 bytes, or if the signature is invalid (malformed hint bits, norm check failure, or commitment mismatch).
+
+<!-- -->
+
+> [!NOTE]
+> **Context strings (`ctx`):** The context parameter is a domain-separation mechanism (FIPS 204 §5.2) that allows the same key to be safely used across different application protocols without cross-protocol attacks. The context used at signing time **must** match at verification time. Pass an empty span (`{}`) if you don't need domain separation. Maximum length: 255 bytes.
+
 Here I'm maintaining `ml-dsa` - a C++20 header-only fully `constexpr` library, implementing ML-DSA, supporting ML-DSA-{44, 65, 87} parameter sets, as defined in table 1 of ML-DSA standard. It's easy to use, see [usage](#usage).
 
 ML-DSA-65 Algorithm | Time taken on "12th Gen Intel(R) Core(TM) i7-1260P" (`x86_64`) | Time taken on "AWS EC2 Instance c8g.large, featuring ARM Neoverse-V2" (`aarch64`)
@@ -37,6 +96,8 @@ verify | 86.3us | 134.4us
 
 > [!NOTE]
 > All numbers in the table above represent the median time required to execute a specific algorithm, except for signing. In the case of signing, the number represents the minimum time required to sign a 32 -bytes message. Find more details in [benchmarking](#benchmarking).
+
+<!-- -->
 
 > [!NOTE]
 > Find ML-DSA standard @ <https://doi.org/10.6028/NIST.FIPS.204> - this is the document that I followed when implementing ML-DSA. I suggest you go through the specification to get an in-depth understanding of the scheme.
@@ -61,6 +122,13 @@ This implementation is built with a "Security-First" approach, incorporating pro
 - For benchmarking, `google-benchmark` is required. It can be installed globally or fetched automatically by setting `-DML_DSA_FETCH_DEPS=ON`.
 - For static analysis, you'll need `clang-tidy`.
 - For code formatting, you'll need `clang-format`.
+
+### Automatically Fetched Dependencies
+
+The following libraries are **automatically fetched** by CMake at configure time -- no manual installation needed:
+
+- [`sha3`](https://github.com/itzmeanjan/sha3): SHA3 suite of hash functions, from FIPS 202, used internally by ML-DSA.
+- [`randomshake`](https://github.com/itzmeanjan/RandomShake): A CSPRNG built on (Turbo)SHAKE256 XOF, seeded from OS entropy. Used in tests, benchmarks and examples for generating keygen seeds and signing randomness. You may use any cryptographically secure pseudo-random source to fill the seed/rnd arrays; the library does not mandate a specific RNG.
 
 > [!NOTE]
 > If you are on a machine running GNU/Linux kernel and you want to obtain *CPU cycle* count for ML-DSA routines, you should consider building `google-benchmark` library with `libPFM` support, following <https://gist.github.com/itzmeanjan/05dc3e946f635d00c5e0b21aae6203a7>, a step-by-step guide. Find more about libPFM @ <https://perfmon2.sourceforge.net>. When `libpfm` is installed, CMake will automatically detect and link it.
@@ -87,7 +155,7 @@ For testing functional correctness of this implementation and conformance with M
 | `ML_DSA_ENABLE_LTO` | Enable Interprocedural Optimization (LTO) | `ON` |
 
 > [!TIP]
-> If you are building for the same machine that will run the code (i.e., cross-compilation is not the goal), you should enable `-DML_DSA_NATIVE_OPT=ON` to allow the compiler to auto-vectorize, using processor-specific optimizations (like AVX2, NEON, etc.) for maximum performance.
+> If you are building for the same machine that will run the code (i.e., cross-compilation is not the goal), you should enable `-DML_DSA_NATIVE_OPT=ON` to allow the compiler to unroll loops and auto-vectorize, using processor-specific optimizations (like AVX2, NEON, etc.) for maximum performance.
 
 ### Testing
 
@@ -266,8 +334,10 @@ cmake --build build --target sync_acvp_kats
 
 ```bash
 git clone https://github.com/itzmeanjan/ml-dsa.git && cd ml-dsa
+
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DML_DSA_BUILD_TESTS=ON -DML_DSA_FETCH_DEPS=ON
-cmake --build build -j && ctest --test-dir build --output-on-failure -j
+cmake --build build -j
+ctest --test-dir build --output-on-failure -j
 ```
 
 - Write your program; include proper header files ( based on which variant of ML-DSA you want to use, see [include](./include/ml_dsa/) directory ), which includes declarations ( and definitions ) of all required ML-DSA routines and constants ( such as byte length of public/ private key, signature etc. ).
@@ -309,14 +379,39 @@ int main() {
 
 - If your project uses CMake, the recommended approach is to use `find_package` or `FetchContent` (see [Integration](#integration) section above).
 
+> [!NOTE]
+> **Randomness:** The examples use `randomshake::randomshake_t`, a CSPRNG seeded from OS entropy, to generate keygen seeds and signing randomness. You may use any cryptographically secure pseudo-random source to fill the `seed` and `rnd` arrays -- the library does not mandate a specific RNG. For **deterministic** signing, fill `rnd` with zero bytes. Though that is not the recommended way of using ML-DSA signing.
+
+<!-- -->
+
 > [!TIP]
 > Add `-march=native` to optimize for your specific CPU. Omit it if building for distribution or cross-compilation.
 
-ML-DSA Variant | Namespace | Header
-:-- | :-: | --:
-ML-DSA-44 Routines | `ml_dsa_44::` | `include/ml_dsa/ml_dsa_44.hpp`
-ML-DSA-65 Routines | `ml_dsa_65::` | `include/ml_dsa/ml_dsa_65.hpp`
-ML-DSA-87 Routines | `ml_dsa_87::` | `include/ml_dsa/ml_dsa_87.hpp`
+### Pre-Hash Mode (HashSign / HashVerify)
+
+For signing pre-hashed messages (FIPS 204 §5.4-5.5), use `hash_sign` and `hash_verify` with a `hash_algorithm` template parameter:
+
+```cpp
+#include "ml_dsa/ml_dsa_65.hpp"
+using ml_dsa_65::hash_algorithm;
+
+// Sign a pre-hashed message using SHA3-256
+const bool ok = ml_dsa_65::hash_sign<hash_algorithm::SHA3_256>(rnd, seckey, msg, ctx, sig);
+// Verify
+const bool valid = ml_dsa_65::hash_verify<hash_algorithm::SHA3_256>(pubkey, msg, ctx, sig);
+```
+
+Supported `hash_algorithm` values: `SHA3_224`, `SHA3_256`, `SHA3_384`, `SHA3_512`, `SHAKE_128`, `SHAKE_256`. We do not support using SHA2 hash functions for pre-hashing.
+
+### Choosing a Parameter Set
+
+Variant | NIST Security Level | Public Key | Secret Key | Signature | Namespace | Header
+:--- | :--- | ---: | ---: | ---: | :---: | :---
+ML-DSA-44 | 2 (comparable to AES-128) | 1,312 B | 2,560 B | 2,420 B | `ml_dsa_44::` | `include/ml_dsa/ml_dsa_44.hpp`
+**ML-DSA-65** | **3 (comparable to AES-192)** | **1,952 B** | **4,032 B** | **3,309 B** | **`ml_dsa_65::`** | **`include/ml_dsa/ml_dsa_65.hpp`**
+ML-DSA-87 | 5 (comparable to AES-256) | 2,592 B | 4,896 B | 4,627 B | `ml_dsa_87::` | `include/ml_dsa/ml_dsa_87.hpp`
+
+**ML-DSA-65 is recommended for general use.** Choose ML-DSA-44 when signature/key size is critical, or ML-DSA-87 when you need the highest security margin.
 
 > [!NOTE]
 > ML-DSA parameter sets are taken from table 1 of ML-DSA standard @ <https://doi.org/10.6028/NIST.FIPS.204>.
