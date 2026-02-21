@@ -78,4 +78,4 @@ jobs:
       - name: Run Examples
         if: ${{ matrix.sanitizer == 'none' && matrix.build_type == 'Release' }}
         run: |
-          ./build/ml_dsa_44
+          ./build/ml_dsa_44_example
