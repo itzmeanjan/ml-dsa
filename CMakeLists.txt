@@ -105,27 +105,22 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(sha3)
 
-# RandomShake (submodule dependency)
-find_package(Git QUIET)
-if(GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
-  if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.gitmodules")
-    execute_process(COMMAND ${GIT_EXECUTABLE} submodule update --init
-                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                    RESULT_VARIABLE GIT_SUBMOD_RESULT)
-    if(NOT GIT_SUBMOD_RESULT EQUAL "0")
-      message(WARNING "git submodule update --init failed.")
-    endif()
-  endif()
-endif()
+# randomshake (cmake dependency)
+FetchContent_Declare(
+  randomshake
+  GIT_REPOSITORY https://github.com/itzmeanjan/RandomShake.git
+  GIT_TAG main
+  GIT_SHALLOW TRUE
+)
+FetchContent_MakeAvailable(randomshake)
 
 # --- Library ---
 add_library(ml-dsa INTERFACE)
 target_include_directories(ml-dsa INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/RandomShake/include>
   $<INSTALL_INTERFACE:include>
 )
-target_link_libraries(ml-dsa INTERFACE sha3)
+target_link_libraries(ml-dsa INTERFACE sha3 randomshake)
 target_compile_features(ml-dsa INTERFACE cxx_std_20)
 
 # --- Tests ---
@@ -249,5 +244,4 @@ endif()
 include(GNUInstallDirs)
 install(TARGETS ml-dsa EXPORT ml-dsa-config INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY RandomShake/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT ml-dsa-config NAMESPACE ml-dsa:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ml-dsa)
