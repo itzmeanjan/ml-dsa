@@ -1,104 +1,112 @@
 cmake_minimum_required(VERSION 3.28)
 
 project(ml-dsa VERSION 0.1.0 LANGUAGES CXX)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # --- Options ---
 option(ML_DSA_BUILD_TESTS "Build tests" OFF)
 option(ML_DSA_BUILD_EXAMPLES "Build examples" OFF)
 option(ML_DSA_BUILD_BENCHMARKS "Build benchmarks" OFF)
 option(ML_DSA_BUILD_FUZZERS "Build fuzzers (requires clang)" OFF)
-option(ML_DSA_ENABLE_LTO "Enable Interprocedural Optimization (LTO)" ON)
-option(ML_DSA_NATIVE_OPT "Enable -march=native (not suitable for cross-compilation)" OFF)
-option(ML_DSA_ASAN "Enable AddressSanitizer" OFF)
-option(ML_DSA_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 option(ML_DSA_FETCH_DEPS "Fetch missing dependencies (GTest, Benchmark)" OFF)
 
-# --- Tools ---
-find_program(CLANG_TIDY_EXE clang-tidy)
-find_program(CLANG_FORMAT_EXE clang-format)
+# --- Top-level-only settings (skipped when consumed via FetchContent/add_subdirectory) ---
+if(PROJECT_IS_TOP_LEVEL)
+  set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-if(CLANG_TIDY_EXE)
-  file(GLOB_RECURSE TIDY_SOURCES "examples/*.cpp")
+  option(ML_DSA_ENABLE_LTO "Enable Interprocedural Optimization (LTO)" ON)
+  option(ML_DSA_NATIVE_OPT "Enable -march=native (not suitable for cross-compilation)" OFF)
+  option(ML_DSA_ASAN "Enable AddressSanitizer" OFF)
+  option(ML_DSA_UBSAN "Enable UndefinedBehaviorSanitizer" OFF)
 
-  add_custom_target(tidy
-    COMMAND ${CLANG_TIDY_EXE} -p ${CMAKE_BINARY_DIR} --config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy --header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/ml_dsa/.* ${TIDY_SOURCES}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Running clang-tidy"
-  )
-endif()
+  # --- Tools ---
+  find_program(CLANG_TIDY_EXE clang-tidy)
+  find_program(CLANG_FORMAT_EXE clang-format)
 
-if(CLANG_FORMAT_EXE)
-  file(GLOB_RECURSE FORMAT_SOURCES
-       "include/**/*.hpp"
-       "examples/*.cpp"
-       "benchmarks/*.hpp"
-       "benchmarks/*.cpp"
-       "tests/*.hpp"
-       "tests/*.cpp")
+  if(CLANG_TIDY_EXE)
+    file(GLOB_RECURSE TIDY_SOURCES "examples/*.cpp")
 
-  add_custom_target(format
-    COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${FORMAT_SOURCES}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-    COMMENT "Running clang-format"
-  )
-endif()
-
-# --- Standard settings ---
-set(CMAKE_CXX_STANDARD 20)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-
-# --- Compiler Warnings ---
-if(MSVC)
-  set(ML_DSA_WARNING_FLAGS /W4)
-  add_compile_definitions(_CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
-else()
-  set(ML_DSA_WARNING_FLAGS -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wformat=2 -Wcast-qual -Wold-style-cast -Wundef -Werror)
-  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
-    list(APPEND ML_DSA_WARNING_FLAGS -Wno-pass-failed)
+    add_custom_target(tidy
+      COMMAND ${CLANG_TIDY_EXE} -p ${CMAKE_BINARY_DIR} --config-file=${CMAKE_CURRENT_SOURCE_DIR}/.clang-tidy --header-filter=${CMAKE_CURRENT_SOURCE_DIR}/include/ml_dsa/.* ${TIDY_SOURCES}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMENT "Running clang-tidy"
+    )
   endif()
-endif()
 
-# --- Sanitizers ---
-if(ML_DSA_ASAN)
-  add_compile_options(-fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls)
-  add_link_options(-fsanitize=address)
-endif()
+  if(CLANG_FORMAT_EXE)
+    file(GLOB_RECURSE FORMAT_SOURCES
+         "include/**/*.hpp"
+         "examples/*.cpp"
+         "benchmarks/*.hpp"
+         "benchmarks/*.cpp"
+         "tests/*.hpp"
+         "tests/*.cpp")
 
-if(ML_DSA_UBSAN)
-  add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-sanitize-recover=undefined)
-  add_link_options(-fsanitize=undefined)
-endif()
+    add_custom_target(format
+      COMMAND ${CLANG_FORMAT_EXE} -i -style=file ${FORMAT_SOURCES}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      COMMENT "Running clang-format"
+    )
+  endif()
 
-# --- Native Optimization ---
-if(ML_DSA_NATIVE_OPT)
-  add_compile_options(-march=native)
-  message(STATUS "Enabled -march=native (machine-specific optimization)")
-endif()
+  # --- Standard settings ---
+  set(CMAKE_CXX_STANDARD 20)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
 
-# --- Library ---
-add_library(ml-dsa INTERFACE)
-target_include_directories(ml-dsa INTERFACE
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/sha3/include>
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/RandomShake/include>
-  $<INSTALL_INTERFACE:include>
-)
-target_compile_features(ml-dsa INTERFACE cxx_std_20)
-
-# --- LTO ---
-if(ML_DSA_ENABLE_LTO)
-  include(CheckIPOSupported)
-  check_ipo_supported(RESULT result OUTPUT output)
-  if(result)
-    set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+  # --- Compiler Warnings ---
+  if(MSVC)
+    set(ML_DSA_WARNING_FLAGS /W4)
+    add_compile_definitions(_CRT_SECURE_NO_WARNINGS _CRT_NONSTDC_NO_WARNINGS)
   else()
-    message(WARNING "LTO is not supported: ${output}")
+    set(ML_DSA_WARNING_FLAGS -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wformat=2 -Wcast-qual -Wold-style-cast -Wundef -Werror)
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+      list(APPEND ML_DSA_WARNING_FLAGS -Wno-pass-failed)
+    endif()
+  endif()
+
+  # --- Sanitizers ---
+  if(ML_DSA_ASAN)
+    add_compile_options(-fsanitize=address -fno-omit-frame-pointer -fno-optimize-sibling-calls)
+    add_link_options(-fsanitize=address)
+  endif()
+
+  if(ML_DSA_UBSAN)
+    add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer -fno-optimize-sibling-calls -fno-sanitize-recover=undefined)
+    add_link_options(-fsanitize=undefined)
+  endif()
+
+  # --- Native Optimization ---
+  if(ML_DSA_NATIVE_OPT)
+    add_compile_options(-march=native)
+    message(STATUS "Enabled -march=native (machine-specific optimization)")
+  endif()
+
+  # --- LTO ---
+  if(ML_DSA_ENABLE_LTO)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT result OUTPUT output)
+    if(result)
+      set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else()
+      message(WARNING "LTO is not supported: ${output}")
+    endif()
   endif()
 endif()
 
-# --- Submodule based dependencies ---
+# --- Dependencies ---
+include(FetchContent)
+
+# sha3 (cmake dependency)
+FetchContent_Declare(
+  sha3
+  GIT_REPOSITORY https://github.com/itzmeanjan/sha3.git
+  GIT_TAG master
+  GIT_SHALLOW TRUE
+  SYSTEM
+)
+FetchContent_MakeAvailable(sha3)
+
+# RandomShake (submodule dependency)
 find_package(Git QUIET)
 if(GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
   if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.gitmodules")
@@ -110,6 +118,16 @@ if(GIT_FOUND AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/.git")
     endif()
   endif()
 endif()
+
+# --- Library ---
+add_library(ml-dsa INTERFACE)
+target_include_directories(ml-dsa INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/RandomShake/include>
+  $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(ml-dsa INTERFACE sha3)
+target_compile_features(ml-dsa INTERFACE cxx_std_20)
 
 # --- Tests ---
 if(ML_DSA_BUILD_TESTS)
@@ -239,6 +257,5 @@ endif()
 include(GNUInstallDirs)
 install(TARGETS ml-dsa EXPORT ml-dsa-config INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY sha3/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(DIRECTORY RandomShake/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 install(EXPORT ml-dsa-config NAMESPACE ml-dsa:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/ml-dsa)
