@@ -168,6 +168,8 @@ FUZZ_JOBS=4 FUZZ_FORK=2 ./scripts/fuzz_all.sh
 
 After completion, the script prints a report showing corpus size, total executions, and status per fuzzer. Log files are saved to `fuzz_report/`.
 
+![fuzzer-1h-run-report](./fuzzer-1h-run-report.png)
+
 #### Manual Single-Fuzzer Run
 
 To run a specific fuzzer manually (requires `clang++`):
