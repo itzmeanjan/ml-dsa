@@ -65,9 +65,6 @@ This implementation is built with a "Security-First" approach, incorporating pro
 > [!NOTE]
 > If you are on a machine running GNU/Linux kernel and you want to obtain *CPU cycle* count for ML-DSA routines, you should consider building `google-benchmark` library with `libPFM` support, following <https://gist.github.com/itzmeanjan/05dc3e946f635d00c5e0b21aae6203a7>, a step-by-step guide. Find more about libPFM @ <https://perfmon2.sourceforge.net>. When `libpfm` is installed, CMake will automatically detect and link it.
 
-> [!TIP]
-> Git submodule based dependencies are automatically synchronized during CMake configuration.
-
 ## Building
 
 For testing functional correctness of this implementation and conformance with ML-DSA standard, you have to run following command(s).
@@ -268,10 +265,6 @@ cmake --build build --target sync_acvp_kats
 - Clone `ml-dsa` repository.
 
 ```bash
-# Single step cloning and importing of submodules
-git clone https://github.com/itzmeanjan/ml-dsa.git --recurse-submodules
-
-# Or clone and then run tests (submodules are fetched automatically)
 git clone https://github.com/itzmeanjan/ml-dsa.git && cd ml-dsa
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DML_DSA_BUILD_TESTS=ON -DML_DSA_FETCH_DEPS=ON
 cmake --build build -j && ctest --test-dir build --output-on-failure -j
@@ -314,14 +307,7 @@ int main() {
 }
 ```
 
-- If your project uses CMake, the recommended approach is to use `find_package` or `FetchContent` (see [Integration](#integration) section above). If you prefer manual compilation:
-
-```bash
-# Assuming `ml-dsa` was cloned just under $HOME
-ML_DSA=~/ml-dsa
-
-g++ -std=c++20 -Wall -Wextra -Wpedantic -O3 -I $ML_DSA/include -I $ML_DSA/sha3/include -I $ML_DSA/RandomShake/include main.cpp
-```
+- If your project uses CMake, the recommended approach is to use `find_package` or `FetchContent` (see [Integration](#integration) section above).
 
 > [!TIP]
 > Add `-march=native` to optimize for your specific CPU. Omit it if building for distribution or cross-compilation.
@@ -342,9 +328,10 @@ All the functions, in this ML-DSA header-only library, are implemented as `const
  * Filename: compile-time-ml-dsa-44.cpp
  *
  * Compile and run this program with
- * $ g++ -std=c++20 -Wall -Wextra -Wpedantic -fconstexpr-ops-limit=500000000 -I include -I sha3/include -I RandomShake/include compile-time-ml-dsa-44.cpp && ./a.out
- * or
- * $ clang++ -std=c++20 -Wall -Wextra -Wpedantic -fconstexpr-steps=500000000 -I include -I sha3/include -I RandomShake/include compile-time-ml-dsa-44.cpp && ./a.out
+ * Build and run using the CMake example project in examples/ directory, or
+ * use `cmake --install` to install ml-dsa system-wide and compile with:
+ * $ g++ -std=c++20 -Wall -Wextra -Wpedantic -fconstexpr-ops-limit=500000000 compile-time-ml-dsa-44.cpp && ./a.out
+ * $ clang++ -std=c++20 -Wall -Wextra -Wpedantic -fconstexpr-steps=500000000 compile-time-ml-dsa-44.cpp && ./a.out
  */
 
 #include "ml_dsa/ml_dsa_44.hpp"
