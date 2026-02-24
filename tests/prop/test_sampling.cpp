@@ -4,9 +4,11 @@
 #include <limits>
 #include <numeric>
 
+namespace {
+
 // Check whether hashing to a ball routine works as expected or not.
 template<uint32_t tau, size_t lambda>
-static void
+void
 test_sample_in_ball()
 {
   std::array<uint8_t, (2 * lambda) / std::numeric_limits<uint8_t>::digits> seed{};
@@ -21,17 +23,19 @@ test_sample_in_ball()
   EXPECT_EQ(sqrd_norm, ml_dsa_field::zq_t(tau));
 }
 
+}
+
 TEST(ML_DSA, SampleInBallFor_ML_DSA_44)
 {
-  test_sample_in_ball<39u, 128u>();
+  test_sample_in_ball<39U, 128U>();
 }
 
 TEST(ML_DSA, SampleInBallFor_ML_DSA_65)
 {
-  test_sample_in_ball<49u, 192u>();
+  test_sample_in_ball<49U, 192U>();
 }
 
 TEST(ML_DSA, SampleInBallFor_ML_DSA_87)
 {
-  test_sample_in_ball<60u, 256u>();
+  test_sample_in_ball<60U, 256U>();
 }

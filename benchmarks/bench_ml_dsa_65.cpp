@@ -31,7 +31,7 @@ ml_dsa_65_keygen(benchmark::State& state)
 void
 ml_dsa_65_sign(benchmark::State& state)
 {
-  const size_t mlen = state.range(0);
+  const size_t mlen = static_cast<size_t>(state.range(0));
 
   std::vector<uint8_t> msg(mlen, 0);
   auto msg_span = std::span(msg);
@@ -74,7 +74,7 @@ ml_dsa_65_sign(benchmark::State& state)
 void
 ml_dsa_65_verify(benchmark::State& state)
 {
-  const size_t mlen = state.range(0);
+  const size_t mlen = static_cast<size_t>(state.range(0));
 
   std::vector<uint8_t> msg(mlen, 0);
   auto msg_span = std::span(msg);
@@ -93,6 +93,7 @@ ml_dsa_65_verify(benchmark::State& state)
   ml_dsa_65::keygen(seed, pubkey, seckey);
   const bool has_signed = ml_dsa_65::sign(rnd, seckey, msg_span, {}, sig);
   assert(has_signed);
+  (void)has_signed;
 
   bool has_verified = true;
   for (auto _ : state) {

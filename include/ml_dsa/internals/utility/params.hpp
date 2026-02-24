@@ -18,7 +18,7 @@ check_sbw(const size_t sbw)
 consteval bool
 check_eta(const uint32_t eta)
 {
-  return (eta == 2u) || (eta == 4u);
+  return (eta == 2U) || (eta == 4U);
 }
 
 // Compile-time check to ensure that starting nonce belongs to allowed set of values when uniform sampling polynomial
@@ -33,7 +33,7 @@ check_nonce(const size_t nonce)
 consteval bool
 check_gamma1(const uint32_t gamma1)
 {
-  return (gamma1 == (1u << 17)) || (gamma1 == (1u << 19));
+  return (gamma1 == (1U << 17)) || (gamma1 == (1U << 19));
 }
 
 // Compile-time check to ensure that gamma2 has recommended value.
@@ -61,7 +61,7 @@ check_d(const size_t d)
 consteval bool
 check_matrix_dim(const size_t a_cols, const size_t b_rows)
 {
-  return !static_cast<bool>(a_cols ^ b_rows);
+  return a_cols == b_rows;
 }
 
 // Compile-time executable constraints for ensuring that ML-DSA key generation algorithm is only invoked with arguments
@@ -88,11 +88,11 @@ check_signing_params(const size_t k,
                      const size_t omega,
                      const size_t lambda)
 {
-  return ((k == 4) && (l == 4) && (d == 13) && (eta == 2) && (gamma1 == (1u << 17)) && (gamma2 == ((ml_dsa_field::Q - 1) / 88)) && (tau == 39) && (beta == tau * eta) &&
+  return ((k == 4) && (l == 4) && (d == 13) && (eta == 2) && (gamma1 == (1U << 17)) && (gamma2 == ((ml_dsa_field::Q - 1) / 88)) && (tau == 39) && (beta == tau * eta) &&
           (omega == 80) && (lambda == 128)) || // ML-DSA-44
-         ((k == 6) && (l == 5) && (d == 13) && (eta == 4) && (gamma1 == (1u << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 49) && (beta == tau * eta) &&
+         ((k == 6) && (l == 5) && (d == 13) && (eta == 4) && (gamma1 == (1U << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 49) && (beta == tau * eta) &&
           (omega == 55) && (lambda == 192)) || // ML-DSA-65
-         ((k == 8) && (l == 7) && (d == 13) && (eta == 2) && (gamma1 == (1u << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 60) && (beta == tau * eta) &&
+         ((k == 8) && (l == 7) && (d == 13) && (eta == 2) && (gamma1 == (1U << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 60) && (beta == tau * eta) &&
           (omega == 75) && (lambda == 256)); // ML-DSA-87
 }
 
@@ -109,11 +109,11 @@ check_verify_params(const size_t k,
                     const size_t omega,
                     const size_t lambda)
 {
-  return ((k == 4) && (l == 4) && (d == 13) && (gamma1 == (1u << 17)) && (gamma2 == ((ml_dsa_field::Q - 1) / 88)) && (tau == 39) && (beta == tau * 2) && (omega == 80) &&
+  return ((k == 4) && (l == 4) && (d == 13) && (gamma1 == (1U << 17)) && (gamma2 == ((ml_dsa_field::Q - 1) / 88)) && (tau == 39) && (beta == tau * 2) && (omega == 80) &&
           (lambda == 128)) || // ML-DSA-44
-         ((k == 6) && (l == 5) && (d == 13) && (gamma1 == (1u << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 49) && (beta == tau * 4) && (omega == 55) &&
+         ((k == 6) && (l == 5) && (d == 13) && (gamma1 == (1U << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 49) && (beta == tau * 4) && (omega == 55) &&
           (lambda == 192)) || // ML-DSA-65
-         ((k == 8) && (l == 7) && (d == 13) && (gamma1 == (1u << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 60) && (beta == tau * 2) && (omega == 75) &&
+         ((k == 8) && (l == 7) && (d == 13) && (gamma1 == (1U << 19)) && (gamma2 == ((ml_dsa_field::Q - 1) / 32)) && (tau == 60) && (beta == tau * 2) && (omega == 75) &&
           (lambda == 256)); // ML-DSA-87
 }
 

@@ -40,3 +40,10 @@ compile_commands.json
 
 # ACVP server
 ACVP-Server/
+
+# Build directory
+build*/
+
+# Fuzzing output
+fuzz_corpus/
+fuzz_report/
